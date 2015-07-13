@@ -42,7 +42,7 @@ module.exports = function (grunt) {
 		},
 		jasmine: {
 			all: {
-				src: 'src/**/*.js',
+				src: ['src/daspec.js', 'src/*/*.js'],
 				options: {
 					outfile: 'SpecRunner.html',
 					specs: 'test/*-spec.js',
