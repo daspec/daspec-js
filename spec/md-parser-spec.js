@@ -1,6 +1,18 @@
-/*global describe, expect, it, window, xit, DaSpec, beforeAll, require */
+/*global describe, expect, it, DaSpec  */
 
-
+describe('regex util', function () {
+	'use strict';
+	describe('replaceMatchGroup', function () {
+		it('replaces a substring corresponding to a match group by index', function () {
+			expect(new DaSpec.RegexUtil().replaceMatchGroup(
+				'Simple arithmetic: 22 plus 222 is 2 and 43',
+				/Simple arithmetic: (\d*) plus (\d*) is (\d*) and (\d*)/,
+				2,
+				'XXX'
+				)).toEqual('Simple arithmetic: 22 plus 222 is XXX and 43');
+		});
+	});
+});
 describe('hello from node jasmine', function () {
 	'use strict';
 
@@ -16,16 +28,16 @@ describe('hello from node jasmine', function () {
 		expect(DaSpec.ping()).toEqual('pong');
 	});
 	/***/
-	xit('processes a simple file', function () {
-		var runner = new DaSpec.Runnner(function (ctx) {
-				ctx.defineStep('Simple arithmentic: (\\d)* plus (\\d)* is (\\d)*', function (firstArg, secondArg, expectedResult) {
-						ctx.assertEquals(firstArg + secondArg, expectedResult, 2 /* parameter index to check */);
-					});
+	it('processes a simple file', function () {
+		var runner = new DaSpec.Runner(function (ctx) {
+				ctx.defineStep(/Simple arithmetic: (\d*) plus (\d*) is (\d*)/, function (firstArg, secondArg, expectedResult) {
+					ctx.assertEquals(expectedResult, parseFloat(firstArg) + parseFloat(secondArg), 2);
+				});
 			}),
-			example = this.loadExample('simple-arithmetic'),
+			example = this.loadExample('simple_arithmetic'),
 			result = runner.example(example.input);
+		expect(result.counts).toEqual({executed: 1, failed: 1, skipped: 0});
 		expect(result.output).toEqual(example.output);
-		expect(result.counts).toEqual({executed: 1, failed: 1});
 	});
 
 });
