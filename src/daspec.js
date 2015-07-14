@@ -58,7 +58,7 @@
 					self = this;
 			stepFunc(context);
 			self.example = function (inputText) {
-				var counts = {executed: 0, failed: 0, skipped: 0},
+				var counts = {executed: 0, failed: 0, skipped: 0, passed: 0},
 						resultBuffer = [];
 				context.executeStep(inputText, counts, resultBuffer);
 				return {
@@ -69,9 +69,6 @@
 		};
 	module.exports = {
 		Runner: Runner,
-		RegexUtil: RegexUtil,
-		ping: function () {
-			return 'pong';
-		}
+		RegexUtil: RegexUtil
 	};
 })();
