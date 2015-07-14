@@ -64,7 +64,7 @@ describe('hello from node jasmine', function () {
 		var runner = new DaSpec.Runner(stepDefinitions),
 			example = this.loadExample('line_marking'),
 			result = runner.example(example.input);
-		expect(result.counts).toEqual({executed: 14, failed: 7, skipped: 0, passed: 7, error: 0});
+		expect(result.counts).toEqual({executed: 18, failed: 10, skipped: 0, passed: 8, error: 0});
 		expect(result.output).toEqual(example.output);
 	});
 
