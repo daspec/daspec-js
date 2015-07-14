@@ -2,18 +2,35 @@
 
 (function () {
 	'use strict';
-	var AssertionError = function (expected, actual, outputIndex) {
-			this.expected = expected;
-			this.actual = actual;
-			this.outputIndex = outputIndex;
+	var Assertion = function (expected, actual, passed, outputIndex) {
+			var self = this,
+					calcValue = function () {
+						if (passed) { /* todo - deal with non index */
+							return '**' + actual + '**';
+						} else {
+							return '**~~' + expected + '~~ ['  + actual + ']**';
+						}
+					};
+			self.incrementCounts = function (counts) {
+				counts.executed += 1;
+				if (passed) {
+					counts.passed += 1;
+				} else {
+					counts.failed += 1;
+				}
+			};
+			self.value = calcValue();
+			self.index = outputIndex;
 		},
 		RegexUtil = function () {
-			this.replaceMatchGroup = function (string, regex, matchGroupIndex, value) {
+			this.replaceMatchGroup = function (string, regex, overrides) {
 				var match = string.match(regex),
 					literalReplacement = regex.source,
 					capturingGroup = /\([^)]*\)/,  /* todo: deal with non-capture groups */
 					values = match.slice(1);
-				values[matchGroupIndex] = value;
+				overrides.forEach(function (replacement) {
+					values[replacement.index] = replacement.value;
+				});
 				values.forEach(function (groupValue) {
 					literalReplacement = literalReplacement.replace(capturingGroup, groupValue);
 				});
@@ -23,34 +40,46 @@
 		Context = function () {
 			var self = this,
 				regexUtil = new RegexUtil(),
-				step;
+				steps = [],
+				currentAssertions;
 			self.defineStep = function (regexMatcher, processFunction) {
-				step = {
+				steps.push({
 					matcher: regexMatcher,
 					processor: processFunction
-				};
+				});
 			};
 			self.assertEquals = function (expected, actual, optionalOutputIndex) {
-				if (expected != actual) {
-					throw new AssertionError(expected, actual, optionalOutputIndex);
-				}
+				currentAssertions.push(new Assertion(expected, actual, expected == actual, optionalOutputIndex));
 			};
 			self.executeStep = function (stepText, counts, resultBuffer) {
-				var match = stepText.match(step.matcher);
-				if (match) {
-					try {
-						step.processor.apply(self, match.slice(1));
-						resultBuffer.push(stepText);
-					} catch (e) {
-						resultBuffer.push(regexUtil.replaceMatchGroup(stepText, step.matcher, e.outputIndex, '**~~' + e.expected + '~~ ['  + e.actual + ']**'));
-						counts.failed += 1;
-					}
-					counts.executed += 1;
-				} else {
+				var matchingSteps = steps.filter(function (step) {
+					return step.matcher.test(stepText);
+				}), match, resultText, step;
+				if (matchingSteps.length === 0) {
 					resultBuffer.push(stepText);
 					counts.skipped += 1;
+					return;
+				} else if (matchingSteps.length > 1) {
+					/* bork on multiple options possible */
+					throw new Error('multiple steps match line ' + stepText);
 				}
-
+				step = matchingSteps[0];
+				match = stepText.match(step.matcher);
+				currentAssertions = [];
+				try {
+					step.processor.apply(self, match.slice(1));
+					resultText = stepText;
+					currentAssertions.forEach(function (assertion) {
+						assertion.incrementCounts(counts);
+					});
+					resultText = regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions);
+					resultBuffer.push(resultText);
+				} catch (e) {
+					/* geniuine error, not assertion fail */
+					resultBuffer.push('~~' + resultText + '~~');
+					resultBuffer.push('\t' + e.stack);
+					counts.error += 1;
+				}
 			};
 		},
 		Runner = function (stepFunc) {
@@ -58,7 +87,7 @@
 					self = this;
 			stepFunc(context);
 			self.example = function (inputText) {
-				var counts = {executed: 0, failed: 0, skipped: 0, passed: 0},
+				var counts = {executed: 0, failed: 0, skipped: 0, passed: 0, error: 0},
 						resultBuffer = [];
 				context.executeStep(inputText, counts, resultBuffer);
 				return {

@@ -6,9 +6,15 @@ describe('regex util', function () {
 			expect(new DaSpec.RegexUtil().replaceMatchGroup(
 				'Simple arithmetic: 22 plus 222 is 2 and 43',
 				/Simple arithmetic: (\d*) plus (\d*) is (\d*) and (\d*)/,
-				2,
-				'XXX'
+				[{index:2, value:'XXX'}]
 				)).toEqual('Simple arithmetic: 22 plus 222 is XXX and 43');
+		});
+		it('replaces multiple substrings corresponding to match groups by index', function () {
+			expect(new DaSpec.RegexUtil().replaceMatchGroup(
+				'Simple arithmetic: 22 plus 222 is 2 and 43',
+				/Simple arithmetic: (\d*) plus (\d*) is (\d*) and (\d*)/,
+				[{index:2, value:'XXX'}, {index:3, value: 'YYY'}]
+				)).toEqual('Simple arithmetic: 22 plus 222 is XXX and YYY');
 		});
 	});
 });
