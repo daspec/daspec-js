@@ -21,6 +21,7 @@
 			};
 			self.value = calcValue();
 			self.index = outputIndex;
+			self.passed = passed;
 		},
 		RegexUtil = function () {
 			this.replaceMatchGroup = function (string, regex, overrides) {
@@ -52,7 +53,32 @@
 				currentAssertions.push(new Assertion(expected, actual, expected == actual, optionalOutputIndex));
 			};
 			self.executeStep = function (stepText, counts, resultBuffer) {
-				var matchingSteps = steps.filter(function (step) {
+				var markResult = function () {
+					var withoutIndex = function (assertion) {
+							return !assertion.index;
+						},
+						withIndex = function (assertion) {
+							return assertion.index;
+						},
+						failed = function (assertion) {
+							return !assertion.passed;
+						},
+						noIndexAssertions = currentAssertions.filter(withoutIndex);
+					if (noIndexAssertions.length === 0) {
+						return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions);
+					}
+					if (noIndexAssertions.some(failed)) {
+						return '**~~' + stepText + '~~**';
+					}
+					if (currentAssertions.some(failed)) {
+						return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions.filter(withIndex));
+					}
+					if (currentAssertions.length) {
+						return '**' + stepText + '**';
+					}
+					return stepText;
+				},
+				matchingSteps = steps.filter(function (step) {
 					return step.matcher.test(stepText);
 				}), match, resultText, step;
 				if (matchingSteps.length === 0) {
@@ -72,8 +98,7 @@
 					currentAssertions.forEach(function (assertion) {
 						assertion.incrementCounts(counts);
 					});
-					resultText = regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions);
-					resultBuffer.push(resultText);
+					resultBuffer.push(markResult());
 				} catch (e) {
 					/* geniuine error, not assertion fail */
 					resultBuffer.push('~~' + resultText + '~~');
@@ -89,7 +114,9 @@
 			self.example = function (inputText) {
 				var counts = {executed: 0, failed: 0, skipped: 0, passed: 0, error: 0},
 						resultBuffer = [];
-				context.executeStep(inputText, counts, resultBuffer);
+				inputText.split('\n').forEach(function (line) {
+					context.executeStep(line, counts, resultBuffer);
+				});
 				return {
 					output: resultBuffer.join('\n'),
 					counts: counts
