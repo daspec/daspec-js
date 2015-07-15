@@ -11,6 +11,8 @@ Simple arithmetic: 2 and 2 added is 5 and multiplied is 4
 Simple arithmetic: 2 and 2 added is 5 and multiplied is 5
 
 <!--OUTPUT
+> **In da spec:** executed: 18, passed: 8, failed: 10
+
 #marks assertion results when there is more than one assertion on a line
 
 **~~Multiple Assertions 1 is 1 and fails~~**
@@ -22,8 +24,4 @@ Multiple Assertions 1 is **~~2~~ [1]** and passes
 **~~Multiple Assertions line fails and fails~~**
 Simple arithmetic: 2 and 2 added is **~~5~~ [4]** and multiplied is **4**
 Simple arithmetic: 2 and 2 added is **~~5~~ [4]** and multiplied is **~~5~~ [4]**
--->
-
-<!--COUNTS
-{"executed": 18, "failed": 10, "skipped": 0, "passed": 8, "error": 0}
 -->

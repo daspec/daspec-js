@@ -147,18 +147,38 @@
 		},
 		Runner = function (stepFunc) {
 			var context = new Context(),
-					self = this;
+				self = this,
+				countDescription = function (counts) {
+					var labels = ['executed', 'passed', 'failed', 'error', 'skipped'],
+						description = '> **In da spec:** ',
+						comma = false;
+
+					labels.forEach(function (label) {
+						if (counts[label]) {
+							if (comma) {
+								description = description + ', ';
+							} else {
+								comma = true;
+							}
+							description = description + label + ': ' + counts[label];
+						}
+					});
+					if (!comma) {
+						description = description + 'Nada';
+					}
+					return description;
+				};
 			stepFunc(context);
+
 			self.example = function (inputText) {
 				var counts = new AssertionCounts(),
 					resultBuffer = [];
 				inputText.split('\n').forEach(function (line) {
 					context.executeStep(line, counts, resultBuffer);
 				});
-				return {
-					output: resultBuffer.join('\n'),
-					counts: counts.currentCounts()
-				};
+				resultBuffer.unshift('');
+				resultBuffer.unshift(countDescription(counts));
+				return resultBuffer.join('\n');
 			};
 		};
 	module.exports = {

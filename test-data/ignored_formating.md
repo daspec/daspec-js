@@ -47,6 +47,8 @@ Simple arithmetic: 2 plus 2 is 4
 
 
 <!--OUTPUT
+> **In da spec:** executed: 1, passed: 1
+
 #ignores blockquotes and headings
 
 ## Simple arithmetic: 2 plus 2 is 4
@@ -93,10 +95,4 @@ Simple arithmetic: 2 plus 2 is **4**
 ![Alt text](/path/to/img.jpg)
 
 ![Alt text](/path/to/img.jpg "Optional title")
-
-
--->
-
-<!--COUNTS
-{"executed": 1, "failed": 0, "skipped": 0, "passed": 1, "error": 0}
 -->

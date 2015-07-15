@@ -29,8 +29,7 @@ describe('markdown parsing', function () {
 		it(example.title, function () {
 			var runner = new DaSpec.Runner(stepDefinitions),
 				result = runner.example(example.input);
-			expect(result.output).toEqual(example.output);
-			expect(result.counts).toEqual(example.counts);
+			expect(result).toEqual(example.output);
 
 		});
 	});
