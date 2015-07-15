@@ -53,6 +53,32 @@
 				});
 				return string.replace(regex, literalReplacement);
 			};
+			this.isListItem = function (line) {
+				if (/^[\*\s-=]*$/.test(line)) {
+					return false;
+				}
+				if (!/^\s*[\*-]\s/.test(line)) {
+					return false;
+				}
+				if (/^\s*\*\s/.test(line) && line.replace(/[^*]/g, '').length % 2 === 0) {
+					return false;
+				}
+				return true;
+			};
+			this.assertionLine = function (stepText) {
+				if (stepText.length === 0 || stepText.trim().length === 0) {
+					return false;
+				}
+				var linestartignores = ['#', '\t', '>', '    ', '![', '[', '***', '* * *', '---', '- - -', '===', '= = ='],
+					result = true;
+				linestartignores.forEach(function (lineStart) {
+					if (stepText.substring(0, lineStart.length) === lineStart) {
+						result = false;
+					}
+				});
+				return result;
+			};
+
 		},
 		Context = function () {
 			var self = this,
@@ -67,6 +93,9 @@
 			};
 			self.assertEquals = function (expected, actual, optionalOutputIndex) {
 				currentAssertions.push(new Assertion(expected, actual, expected == actual, optionalOutputIndex));
+			};
+			self.assertArrayEquals = function (expected, actual) {
+				currentAssertions.push(new Assertion(expected, actual, true));
 			};
 			self.executeStep = function (stepText, counts, resultBuffer) {
 				var markResult = function () {
@@ -94,19 +123,6 @@
 						}
 						return stepText;
 					},
-					assertionLine = function () {
-						if (stepText.length === 0 || stepText.trim().length === 0) {
-							return false;
-						}
-						var linestartignores = ['#', '\t', '>', '    ', '![', '[', '***', '* * *', '---', '- - -', '===', '= = ='],
-							result = true;
-						linestartignores.forEach(function (lineStart) {
-							if (stepText.substring(0, lineStart.length) === lineStart) {
-								result = false;
-							}
-						});
-						return result;
-					},
 					matchingSteps = steps.filter(function (step) {
 						return step.matcher.test(stepText);
 					}),
@@ -114,7 +130,7 @@
 					resultText,
 					step;
 
-				if (!assertionLine()) {
+				if (!regexUtil.assertionLine(stepText)) {
 					resultBuffer.push(stepText);
 					return;
 				}
@@ -145,6 +161,63 @@
 				}
 			};
 		},
+		ExampleBlocks = function (inputText) {
+			var self = this;
+			self.getBlocks = function () {
+				var lines = inputText && inputText.split('\n').reverse(),
+					current = new ExampleBlock(),
+					blocks = [];
+				lines.forEach(function (line) {
+					current.addLine(line);
+					if (current.isComplete()) {
+						blocks.push(current);
+						current = new ExampleBlock();
+					}
+				});
+				if (current.getMatchText()) {
+					blocks.push(current);
+				}
+				return blocks.reverse();
+			};
+		},
+		ExampleBlock = function () {
+			var self = this,
+				regexUtil = new RegexUtil(),
+				lines = [];
+			self.addLine = function (lineText) {
+				lines.unshift(lineText);
+			};
+			self.isComplete = function () {
+				if (lines.length === 0) {
+					return false;
+				}
+				if (regexUtil.isListItem(lines[0])) {
+					return false;
+				}
+				return true;
+			};
+			self.getList = function () {
+				if (lines.length === 0) {
+					return false;
+				}
+				var topLine = lines[0];
+				if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
+					return lines.filter(regexUtil.isListItem);
+				}
+				return false;
+			};
+			self.getMatchText = function () {
+				if (lines.length === 0) {
+					return false;
+				}
+				var topLine = lines[0];
+				if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
+					return [topLine];
+				} else {
+					return lines;
+				}
+			};
+		},
 		Runner = function (stepFunc) {
 			var context = new Context(),
 				self = this,
@@ -172,9 +245,22 @@
 
 			self.example = function (inputText) {
 				var counts = new AssertionCounts(),
-					resultBuffer = [];
-				inputText.split('\n').forEach(function (line) {
-					context.executeStep(line, counts, resultBuffer);
+					resultBuffer = [],
+					blocks = new ExampleBlocks(inputText);
+				blocks.getBlocks().forEach(function (block) {
+					var blockLines = block.getMatchText(),
+						blockList = block.getList();
+					if (blockLines) {
+						//TODO: at the moment we are not foing anything with the list, just passing it to the result buffer, it should be passed to execute step and processed
+						blockLines.forEach(function (line) {
+							context.executeStep(line, counts, resultBuffer);
+						});
+						if (blockList) {
+							blockList.forEach(function (listLine) {
+								resultBuffer.push(listLine);
+							});
+						}
+					}
 				});
 				resultBuffer.unshift('');
 				resultBuffer.unshift(countDescription(counts));
@@ -183,6 +269,7 @@
 		};
 	module.exports = {
 		Runner: Runner,
-		RegexUtil: RegexUtil
+		RegexUtil: RegexUtil,
+		ExampleBlock: ExampleBlock
 	};
 })();

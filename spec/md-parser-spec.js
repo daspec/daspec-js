@@ -22,6 +22,13 @@ describe('markdown parsing', function () {
 				ctx.assertEquals(lineStatus1, 'passes');
 				ctx.assertEquals(lineStatus2, 'passes');
 			});
+			ctx.defineStep(/Star Wars has the following episodes:/, function (listOfEpisodes) {
+				var episodes = [
+					'A New Hope',
+					'The Empire Strikes Back',
+					'Return of the Jedi'];
+				ctx.assertArrayEquals(listOfEpisodes, episodes);
+			});
 		};
 	});
 	exampleFiles.forEach(function (exampleName) {
