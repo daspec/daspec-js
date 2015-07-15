@@ -94,7 +94,19 @@
 						}
 						return stepText;
 					},
-					ignoredLine = stepText.length === 0 || stepText[0] === '#',
+					assertionLine = function () {
+						if (stepText.length === 0 || stepText.trim().length === 0) {
+							return false;
+						}
+						var linestartignores = ['#', '\t', '>', '    ', '![', '[', '***', '* * *', '---', '- - -', '===', '= = ='],
+							result = true;
+						linestartignores.forEach(function (lineStart) {
+							if (stepText.substring(0, lineStart.length) === lineStart) {
+								result = false;
+							}
+						});
+						return result;
+					},
 					matchingSteps = steps.filter(function (step) {
 						return step.matcher.test(stepText);
 					}),
@@ -102,7 +114,7 @@
 					resultText,
 					step;
 
-				if (ignoredLine) {
+				if (!assertionLine()) {
 					resultBuffer.push(stepText);
 					return;
 				}
