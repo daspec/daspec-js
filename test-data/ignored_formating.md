@@ -23,7 +23,9 @@
 
 Simple arithmetic: 2 plus 2 is 4
 > This is to test that blockquotes are ignored without a new line
+
 > Simple arithmetic: 2 plus 2 is 4
+
 ### Simple arithmetic: 2 plus 2 is 4
 
 #code blocks
@@ -74,7 +76,9 @@ Simple arithmetic: 2 plus 2 is 4
 
 Simple arithmetic: 2 plus 2 is **4**
 > This is to test that blockquotes are ignored without a new line
+
 > Simple arithmetic: 2 plus 2 is 4
+
 ### Simple arithmetic: 2 plus 2 is 4
 
 #code blocks
