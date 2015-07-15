@@ -1,10 +1,12 @@
-/*global beforeAll, require, global */
-beforeAll(function () {
+/*global require, global */
+global.DaSpec = require('../../src/daspec');
+
+global.DaSpecHelper = function () {
 	'use strict';
 	var fs = require('fs');
-	global.DaSpec = require('../../src/daspec');
 
 	this.loadExample = function (fileName) {
+		fileName = fileName && fileName.replace(/.md$/, '');
 		var data = fs.readFileSync('test-data/' + fileName + '.md', 'utf-8'),
 				match = data.match(/([\s\S]*)<!--([\s\S]*)-->/),
 				input = match && match[1].trim(),
@@ -16,6 +18,10 @@ beforeAll(function () {
 			output: match[2].trim()
 		};
 	};
-});
+	this.getExamples = function (folderName) {
+		folderName = folderName || 'test-data/';
+		return fs.readdirSync('./' + folderName);
+	};
+};
 
 

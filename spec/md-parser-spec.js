@@ -1,8 +1,10 @@
-/*global describe, expect, it, DaSpec, beforeEach  */
+/*global describe, expect, it, DaSpec, beforeEach, DaSpecHelper  */
 
-describe('hello from node jasmine', function () {
+describe('markdown parsing', function () {
 	'use strict';
-	var stepDefinitions;
+	var stepDefinitions,
+		helper = new DaSpecHelper(),
+		exampleFiles = helper.getExamples();
 	beforeEach(function () {
 		stepDefinitions = function (ctx) {
 			ctx.defineStep(/Simple arithmetic: (\d*) plus (\d*) is (\d*)/, function (firstArg, secondArg, expectedResult) {
@@ -22,40 +24,12 @@ describe('hello from node jasmine', function () {
 			});
 		};
 	});
-	it('processes a simple file', function () {
-		var runner = new DaSpec.Runner(stepDefinitions),
-			example = this.loadExample('simple_arithmetic'),
-			result = runner.example(example.input);
-		expect(result.counts).toEqual({executed: 1, failed: 1, skipped: 0, passed: 0, error: 0});
-		expect(result.output).toEqual(example.output);
+	exampleFiles.forEach(function (exampleName) {
+		var example = helper.loadExample(exampleName);
+		it(example.title, function () {
+			var runner = new DaSpec.Runner(stepDefinitions),
+				result = runner.example(example.input);
+			expect(result.output).toEqual(example.output);
+		});
 	});
-	it('marks successful checks', function () {
-		var runner = new DaSpec.Runner(stepDefinitions),
-			example = this.loadExample('simple_arithmetic_success'),
-			result = runner.example(example.input);
-		expect(result.counts).toEqual({executed: 1, failed: 0, skipped: 0, passed: 1, error: 0});
-		expect(result.output).toEqual(example.output);
-	});
-	it('marks multiple assertions on the same line', function () {
-		var runner = new DaSpec.Runner(stepDefinitions),
-			example = this.loadExample('simple_arithmetic_multi_assertion'),
-			result = runner.example(example.input);
-		expect(result.counts).toEqual({executed: 2, failed: 0, skipped: 0, passed: 2, error: 0});
-		expect(result.output).toEqual(example.output);
-	});
-	it('works with multiple-line source files', function () {
-		var runner = new DaSpec.Runner(stepDefinitions),
-			example = this.loadExample('simple_arithmetic_multiline'),
-			result = runner.example(example.input);
-		expect(result.counts).toEqual({executed: 2, failed: 1, skipped: 0, passed: 1, error: 0});
-		expect(result.output).toEqual(example.output);
-	});
-	it('marks up lines with multiple/passes failures', function () {
-		var runner = new DaSpec.Runner(stepDefinitions),
-			example = this.loadExample('line_marking'),
-			result = runner.example(example.input);
-		expect(result.counts).toEqual({executed: 18, failed: 10, skipped: 0, passed: 8, error: 0});
-		expect(result.output).toEqual(example.output);
-	});
-
 });
