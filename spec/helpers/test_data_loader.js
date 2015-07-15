@@ -6,9 +6,13 @@ beforeAll(function () {
 
 	this.loadExample = function (fileName) {
 		var data = fs.readFileSync('test-data/' + fileName + '.md', 'utf-8'),
-				match = data.match(/([\s\S]*)<!--([\s\S]*)-->/);
+				match = data.match(/([\s\S]*)<!--([\s\S]*)-->/),
+				input = match && match[1].trim(),
+				inputLines = input && input.split('\n'),
+				title = (inputLines && inputLines.length > 0 && inputLines[0].substring(1)) || fileName;
 		return match && {
-			input: match[1].trim(),
+			title: title,
+			input: input,
 			output: match[2].trim()
 		};
 	};

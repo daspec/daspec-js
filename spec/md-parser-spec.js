@@ -22,16 +22,6 @@ describe('hello from node jasmine', function () {
 			});
 		};
 	});
-
-	it('links', function () {
-		expect('hello' + ' world').toEqual('hello world');
-	});
-	it('loads a file', function () {
-		var example = this.loadExample('simple_arithmetic');
-		expect(example.input).toEqual('Simple arithmetic: 2 plus 2 is 5');
-		expect(example.output).toEqual('Simple arithmetic: 2 plus 2 is **~~5~~ [4]**');
-	});
-	/***/
 	it('processes a simple file', function () {
 		var runner = new DaSpec.Runner(stepDefinitions),
 			example = this.loadExample('simple_arithmetic'),

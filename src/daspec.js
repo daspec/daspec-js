@@ -1,8 +1,32 @@
-/*global module*/
+/*global module, JSON*/
 
 (function () {
 	'use strict';
-	var Assertion = function (expected, actual, passed, outputIndex) {
+	var AssertionCounts = function () {
+			var self = this;
+			self.executed = 0;
+			self.passed = 0;
+			self.failed = 0;
+			self.error = 0;
+			self.skipped = 0;
+			self.increment = function (assertion) {
+				self.executed++;
+				if (assertion.passed) {
+					self.passed++;
+				} else {
+					self.failed++;
+				}
+			};
+			self.recordException = function (exception) {
+				if (exception) {
+					self.error++;
+				}
+			};
+			self.currentCounts = function () {
+				return JSON.parse(JSON.stringify(self));
+			};
+		},
+		Assertion = function (expected, actual, passed, outputIndex) {
 			var self = this,
 					calcValue = function () {
 						if (passed) { /* todo - deal with non index */
@@ -11,14 +35,6 @@
 							return '**~~' + expected + '~~ ['  + actual + ']**';
 						}
 					};
-			self.incrementCounts = function (counts) {
-				counts.executed += 1;
-				if (passed) {
-					counts.passed += 1;
-				} else {
-					counts.failed += 1;
-				}
-			};
 			self.value = calcValue();
 			self.index = outputIndex;
 			self.passed = passed;
@@ -54,36 +70,46 @@
 			};
 			self.executeStep = function (stepText, counts, resultBuffer) {
 				var markResult = function () {
-					var withoutIndex = function (assertion) {
-							return !assertion.index;
-						},
-						withIndex = function (assertion) {
-							return assertion.index;
-						},
-						failed = function (assertion) {
-							return !assertion.passed;
-						},
-						noIndexAssertions = currentAssertions.filter(withoutIndex);
-					if (noIndexAssertions.length === 0) {
-						return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions);
-					}
-					if (noIndexAssertions.some(failed)) {
-						return '**~~' + stepText + '~~**';
-					}
-					if (currentAssertions.some(failed)) {
-						return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions.filter(withIndex));
-					}
-					if (currentAssertions.length) {
-						return '**' + stepText + '**';
-					}
-					return stepText;
-				},
-				matchingSteps = steps.filter(function (step) {
-					return step.matcher.test(stepText);
-				}), match, resultText, step;
+						var withoutIndex = function (assertion) {
+								return !assertion.index;
+							},
+							withIndex = function (assertion) {
+								return assertion.index;
+							},
+							failed = function (assertion) {
+								return !assertion.passed;
+							},
+							noIndexAssertions = currentAssertions.filter(withoutIndex);
+						if (noIndexAssertions.length === 0) {
+							return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions);
+						}
+						if (noIndexAssertions.some(failed)) {
+							return '**~~' + stepText + '~~**';
+						}
+						if (currentAssertions.some(failed)) {
+							return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions.filter(withIndex));
+						}
+						if (currentAssertions.length) {
+							return '**' + stepText + '**';
+						}
+						return stepText;
+					},
+					ignoredLine = stepText.length === 0 || stepText[0] === '#',
+					matchingSteps = steps.filter(function (step) {
+						return step.matcher.test(stepText);
+					}),
+					match,
+					resultText,
+					step;
+
+				if (ignoredLine) {
+					resultBuffer.push(stepText);
+					return;
+				}
+
 				if (matchingSteps.length === 0) {
 					resultBuffer.push(stepText);
-					counts.skipped += 1;
+					counts.skipped++;
 					return;
 				} else if (matchingSteps.length > 1) {
 					/* bork on multiple options possible */
@@ -96,14 +122,14 @@
 					step.processor.apply(self, match.slice(1));
 					resultText = stepText;
 					currentAssertions.forEach(function (assertion) {
-						assertion.incrementCounts(counts);
+						counts.increment(assertion);
 					});
 					resultBuffer.push(markResult());
 				} catch (e) {
 					/* geniuine error, not assertion fail */
 					resultBuffer.push('~~' + resultText + '~~');
 					resultBuffer.push('\t' + e.stack);
-					counts.error += 1;
+					counts.recordException(e);
 				}
 			};
 		},
@@ -112,14 +138,14 @@
 					self = this;
 			stepFunc(context);
 			self.example = function (inputText) {
-				var counts = {executed: 0, failed: 0, skipped: 0, passed: 0, error: 0},
-						resultBuffer = [];
+				var counts = new AssertionCounts(),
+					resultBuffer = [];
 				inputText.split('\n').forEach(function (line) {
 					context.executeStep(line, counts, resultBuffer);
 				});
 				return {
 					output: resultBuffer.join('\n'),
-					counts: counts
+					counts: counts.currentCounts()
 				};
 			};
 		};
