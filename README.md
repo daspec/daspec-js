@@ -1,4 +1,16 @@
 # daspec-js
 
 "It's in da spec!"
-*dave test*
+
+
+##Running development tests
+
+Summary results
+
+    npm test
+
+Detailed results
+
+    npm test -- full
+
+(note the blank between -- and full)

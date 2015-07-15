@@ -1,10 +1,11 @@
 {
   "name": "daspec",
   "version": "0.0.1",
-	"scripts": {
-    "test": "jasmine"
+  "scripts": {
+    "test": "node spec/support/jasmine-runner.js"
   },
   "devDependencies": {
-    "jasmine": "^2.3.1"
+    "jasmine": "^2.3.1",
+    "jasmine-spec-reporter": "^2.4.0"
   }
 }
