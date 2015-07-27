@@ -2,7 +2,55 @@
 
 (function () {
 	'use strict';
-	var AssertionCounts = function () {
+	var MarkDownFormatter = function () {
+				var self = this,
+						dash = String.fromCharCode(8211),
+						tick = String.fromCharCode(10003);
+
+				self.formatPrimitiveResult = function (expected, actual, passed) {
+					if (passed) {
+						return '**' + expected + '**';
+					} else {
+						return '**~~' + expected + '~~ ['  + actual + ']**';
+					}
+				};
+				self.formatListResult = function (listResult) {
+					var tickEl = function (e) {
+						return '[' + tick + '] ' + e;
+					}, crossEl = function (e) {
+						return '**[' + dash + '] ~~' + e + '~~**';
+					}, plusEl = function (e) {
+						return '**[+] ' + e + '**';
+					},
+						matching = (listResult.matching || []).map(tickEl),
+						missing = (listResult.missing || []).map(crossEl),
+						additional = (listResult.additional || []).map(plusEl);
+					return matching.concat(missing, additional);
+				};
+			},
+			ListUtil = function () {
+				var self = this;
+				self.unorderedMatch = function (array1, array2) {
+					var matching = array1.filter(function (el) {
+							return array2.indexOf(el) >= 0;
+						}),
+						missing = array1.filter(function (el) {
+							return array2.indexOf(el) < 0;
+						}),
+						additional = array2.filter(function (el) {
+							return array1.indexOf(el) < 0;
+						});
+					return {
+						matches: missing.length === 0 && additional.length === 0,
+						missing: missing,
+						additional: additional,
+						matching: matching
+					};
+				};
+			},
+			markDownFormatter = new MarkDownFormatter(),
+			listUtil = new ListUtil(),
+			AssertionCounts = function () {
 			var self = this;
 			self.executed = 0;
 			self.passed = 0;
@@ -26,20 +74,15 @@
 				return JSON.parse(JSON.stringify(self));
 			};
 		},
-		Assertion = function (expected, actual, passed, outputIndex) {
-			var self = this,
-					calcValue = function () {
-						if (passed) { /* todo - deal with non index */
-							return '**' + actual + '**';
-						} else {
-							return '**~~' + expected + '~~ ['  + actual + ']**';
-						}
-					};
-			self.value = calcValue();
+		Assertion = function (expected, /*actual*/ value, passed, outputIndex) {
+			var self = this;
+			self.value = value;
 			self.index = outputIndex;
 			self.passed = passed;
+			self.expected = expected;
 		},
 		RegexUtil = function () {
+			var self = this;
 			this.replaceMatchGroup = function (string, regex, overrides) {
 				var match = string.match(regex),
 					literalReplacement = regex.source,
@@ -65,6 +108,12 @@
 				}
 				return true;
 			};
+			this.stripListSymbol = function (line) {
+				if (!self.isListItem(line)) {
+					return line;
+				}
+				return line.replace(/^\s*[^\s]+\s/, '');
+			};
 			this.assertionLine = function (stepText) {
 				if (stepText.length === 0 || stepText.trim().length === 0) {
 					return false;
@@ -78,7 +127,6 @@
 				});
 				return result;
 			};
-
 		},
 		Context = function () {
 			var self = this,
@@ -92,12 +140,17 @@
 				});
 			};
 			self.assertEquals = function (expected, actual, optionalOutputIndex) {
-				currentAssertions.push(new Assertion(expected, actual, expected == actual, optionalOutputIndex));
+				var	passed = expected == actual;
+				currentAssertions.push(new Assertion(expected, markDownFormatter.formatPrimitiveResult(expected, actual, passed), passed, optionalOutputIndex));
 			};
-			self.assertArrayEquals = function (expected, actual) {
-				currentAssertions.push(new Assertion(expected, actual, true));
+			self.assertSetEquals = function (expected, actual, optionalOutputIndex) {
+				var result = listUtil.unorderedMatch(expected, actual);
+				currentAssertions.push(new Assertion(expected, markDownFormatter.formatListResult(result), result.matches, optionalOutputIndex));
 			};
 			self.executeStep = function (stepText, counts, resultBuffer) {
+				self.executeListStep(stepText, undefined, counts, resultBuffer);
+			};
+			self.executeListStep = function (stepText, list, counts, resultBuffer) {
 				var markResult = function () {
 						var withoutIndex = function (assertion) {
 								return !assertion.index;
@@ -108,27 +161,47 @@
 							failed = function (assertion) {
 								return !assertion.passed;
 							},
-							noIndexAssertions = currentAssertions.filter(withoutIndex);
-						if (noIndexAssertions.length === 0) {
-							return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions);
-						}
-						if (noIndexAssertions.some(failed)) {
-							return '**~~' + stepText + '~~**';
-						}
-						if (currentAssertions.some(failed)) {
-							return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions.filter(withIndex));
-						}
-						if (currentAssertions.length) {
-							return '**' + stepText + '**';
-						}
-						return stepText;
+							failedForList = function (assertion) {
+								return assertion.expected === list.items && !assertion.passed;
+							},
+							noIndexAssertions = currentAssertions.filter(withoutIndex),
+							headingLine = function () {
+								if (noIndexAssertions.length === 0) {
+									return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions);
+								}
+								if (noIndexAssertions.some(failed)) {
+									return '**~~' + stepText + '~~**';
+								}
+								if (currentAssertions.some(failed)) {
+									return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions.filter(withIndex));
+								}
+								if (currentAssertions.length) {
+									return '**' + stepText + '**';
+								}
+								return stepText;
+							},
+							attachmentLines = function () {
+								if (!list) {
+									return '';
+								}
+								var listAssertions = currentAssertions.filter(failedForList),
+										values = list.items;
+								if (listAssertions && listAssertions.length > 0) {
+									values = listAssertions[0].value;
+								}
+								return values.map(function (e) {
+									return '\n* ' + e;
+								}).join(''); // TODO: deal with ordered lists
+							};
+						return headingLine() + attachmentLines();
 					},
 					matchingSteps = steps.filter(function (step) {
 						return step.matcher.test(stepText);
 					}),
 					match,
 					resultText,
-					step;
+					step,
+					stepArgs;
 
 				if (!regexUtil.assertionLine(stepText)) {
 					resultBuffer.push(stepText);
@@ -146,8 +219,12 @@
 				step = matchingSteps[0];
 				match = stepText.match(step.matcher);
 				currentAssertions = [];
+				stepArgs = match.slice(1);
+				if (list) { /* we know it's a list and the symbol */
+					stepArgs.push(list);
+				}
 				try {
-					step.processor.apply(self, match.slice(1));
+					step.processor.apply(self, stepArgs);
 					resultText = stepText;
 					currentAssertions.forEach(function (assertion) {
 						counts.increment(assertion);
@@ -202,7 +279,7 @@
 				}
 				var topLine = lines[0];
 				if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
-					return lines.filter(regexUtil.isListItem);
+					return {ordered: false, items: lines.filter(regexUtil.isListItem).map(regexUtil.stripListSymbol)};
 				}
 				return false;
 			};
@@ -251,13 +328,12 @@
 					var blockLines = block.getMatchText(),
 						blockList = block.getList();
 					if (blockLines) {
-						//TODO: at the moment we are not foing anything with the list, just passing it to the result buffer, it should be passed to execute step and processed
-						blockLines.forEach(function (line) {
-							context.executeStep(line, counts, resultBuffer);
-						});
+
 						if (blockList) {
-							blockList.forEach(function (listLine) {
-								resultBuffer.push(listLine);
+							context.executeListStep(blockLines[0], blockList, counts, resultBuffer);
+						} else {
+							blockLines.forEach(function (line) {
+								context.executeStep(line, counts, resultBuffer);
 							});
 						}
 					}
@@ -270,6 +346,8 @@
 	module.exports = {
 		Runner: Runner,
 		RegexUtil: RegexUtil,
-		ExampleBlock: ExampleBlock
+		ExampleBlock: ExampleBlock,
+		MarkDownFormatter: MarkDownFormatter,
+		ListUtil: ListUtil
 	};
 })();

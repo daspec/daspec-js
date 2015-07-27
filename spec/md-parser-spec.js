@@ -27,7 +27,7 @@ describe('markdown parsing', function () {
 					'A New Hope',
 					'The Empire Strikes Back',
 					'Return of the Jedi'];
-				ctx.assertArrayEquals(listOfEpisodes, episodes);
+				ctx.assertSetEquals(listOfEpisodes.items, episodes);
 			});
 		};
 	});

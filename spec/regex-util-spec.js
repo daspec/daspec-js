@@ -21,6 +21,17 @@ describe('regex util', function () {
 				)).toEqual('Simple arithmetic: 22 plus 222 is XXX and YYY');
 		});
 	});
+	describe('stripListSymbol', function () {
+		it('ignores lines that are not list items', function () {
+			expect(underTest.stripListSymbol('**SHOUT**')).toBe('**SHOUT**');
+		});
+		it('removes list symbols from items', function () {
+			expect(underTest.stripListSymbol('* **SHOUT**')).toBe('**SHOUT**');
+			expect(underTest.stripListSymbol(' * **SHOUT**')).toBe('**SHOUT**');
+			expect(underTest.stripListSymbol(' - **SHOUT**')).toBe('**SHOUT**');
+			expect(underTest.stripListSymbol('- **SHOUT**')).toBe('**SHOUT**');
+		});
+	});
 	describe('isListItem', function () {
 		it('ignores horizontal lines', function () {
 			expect(underTest.isListItem('****')).toBeFalsy();

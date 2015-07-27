@@ -62,7 +62,7 @@ describe('ExampleBlock', function () {
 			underTest.addLine('* another list item');
 			underTest.addLine('* a list item');
 			underTest.addLine('not a list item');
-			expect(underTest.getList()).toEqual(['* a list item', '* another list item']);
+			expect(underTest.getList()).toEqual({ordered: false, items:['a list item', 'another list item']});
 		});
 		it('returns false when the top line is ignored', function () {
 			underTest.addLine('* another list item');

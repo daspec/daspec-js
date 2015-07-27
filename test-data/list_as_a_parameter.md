@@ -13,7 +13,7 @@ Star Wars has the following episodes:
 * Revenge of the Sith
 
 <!--OUTPUT
-> **In da spec:** executed: 2, passed: 2
+> **In da spec:** executed: 2, passed: 1, failed: 1
 
 #Lists can be a parameter fo a step
 
@@ -24,8 +24,10 @@ Star Wars has the following episodes:
 
 > Example of failure
 
-**Star Wars has the following episodes:**
-* A New Hope
-* Return of the Jedi
-* Revenge of the Sith
+**~~Star Wars has the following episodes:~~**
+* [✓] A New Hope
+* [✓] Return of the Jedi
+* **[–] ~~Revenge of the Sith~~**
+* **[+] The Empire Strikes Back**
+
 -->
