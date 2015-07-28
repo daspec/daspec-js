@@ -23,4 +23,37 @@ module.exports = function (ctx) {
 			'Return of the Jedi'];
 		this.assertSetEquals(listOfEpisodes.items, episodes);
 	});
+	var films = {};
+	ctx.defineStep(/These are the ([A-Za-z ]*) Films/, function (seriesName, tableOfReleases) {
+/*
+		Table with title row
+		[
+			{Title:'A New Hope', Year:1979},
+			{Title:'The Empire Strikes Back', Year:1979},
+			{Title:'The Return of the Jedi', Year:1979}
+		],
+
+		Table with no Title Row
+		[
+			{0:'A New Hope', 1:1979},
+			{0:'The Empire Strikes Back', 1:1979},
+			{0:'The Return of the Jedi', 1:1979}
+		]
+*/
+		films[seriesName] = tableOfReleases;
+	});
+	ctx.defineStep(/In total there a (\d*) ([A-Za-z ]*) Films/, function (numberOfFilms, seriesName) {
+		var actual = films[seriesName] && films[seriesName].length;
+		this.assertEquals(parseFloat(numberOfFilms), actual, 0);
+	});
+
+	ctx.defineStep(/\|([A-Za-z ]*) episode \| Year of release \|/, function (seriesName, episode, yearOfRelease) {
+		var series = films[seriesName],
+			matching = series && series.filter(function (film) {
+				return film.Title === episode;
+			}),
+			actualYear = matching && matching.length > 0 && (matching[0].Year || matching[0][1]);
+
+		this.assertEquals(yearOfRelease, actualYear, 1);
+	});
 };
