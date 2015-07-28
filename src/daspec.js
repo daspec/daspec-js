@@ -3,17 +3,11 @@
 (function () {
 	'use strict';
 	var MarkDownFormatter = require('./markdown-formatter'),
-			ListUtil = require('./list-util'),
-			markDownFormatter = new MarkDownFormatter(),
-			listUtil = new ListUtil(),
-			AssertionCounts = require('./assertion-counts'),
-		Assertion = function (expected, /*actual*/ value, passed, outputIndex) {
-			var self = this;
-			self.value = value;
-			self.index = outputIndex;
-			self.passed = passed;
-			self.expected = expected;
-		},
+		ListUtil = require('./list-util'),
+		AssertionCounts = require('./assertion-counts'),
+		markDownFormatter = new MarkDownFormatter(),
+		listUtil = new ListUtil(),
+		Assertion = require('./assertion'),
 		RegexUtil = function () {
 			var self = this;
 			this.replaceMatchGroup = function (string, regex, overrides) {
