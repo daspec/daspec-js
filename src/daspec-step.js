@@ -19,16 +19,18 @@ module.exports = function (regexMatcher, processFunction) {
 			StepContext = function () {
 				var self = this,
 					ListUtil = require('./list-util'),
-					listUtil = new ListUtil(),
-					MarkDownFormatter = require('./markdown-formatter'),
-					markDownFormatter = new MarkDownFormatter();
+					listUtil = new ListUtil();
 				self.assertEquals = function (expected, actual, optionalOutputIndex) {
 					var	passed = expected == actual;
-					result.assertions.push(new Assertion(expected, markDownFormatter.formatPrimitiveResult(expected, actual, passed), passed, optionalOutputIndex));
+					result.assertions.push(new Assertion(expected,
+						actual,
+						passed, optionalOutputIndex));
 				};
 				self.assertSetEquals = function (expected, actual, optionalOutputIndex) {
 					var listResult = listUtil.unorderedMatch(expected, actual);
-					result.assertions.push(new Assertion(expected, markDownFormatter.formatListResult(listResult), listResult.matches, optionalOutputIndex));
+					result.assertions.push(new Assertion(expected,
+						listResult,
+						listResult.matches, optionalOutputIndex));
 				};
 			};
 

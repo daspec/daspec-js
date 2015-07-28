@@ -9,10 +9,10 @@ describe('MarkDownFormatter', function () {
 	});
 	describe('formatPrimitiveResult', function () {
 		it('bolds the expected result if passed', function () {
-			expect(underTest.formatPrimitiveResult(3, 6, true)).toEqual('**3**');
+			expect(underTest.formatPrimitiveResult({expected: 3, value: 6, passed:true, index: 5})).toEqual({index:5, value:'**3**'});
 		});
 		it('crosses out and bolds the expected and bolds actual result if failed', function () {
-			expect(underTest.formatPrimitiveResult(3, 6, false)).toEqual('**~~3~~ [6]**');
+			expect(underTest.formatPrimitiveResult({expected:3, value:6, passed:false, index: 1})).toEqual({index:1, value:'**~~3~~ [6]**'});
 		});
 	});
 	describe('formatListResult', function () {

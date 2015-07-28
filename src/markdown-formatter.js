@@ -7,12 +7,18 @@ module.exports = function () {
 			dash = String.fromCharCode(8211),
 			tick = String.fromCharCode(10003);
 
-	self.formatPrimitiveResult = function (expected, actual, passed) {
-		if (passed) {
-			return '**' + expected + '**';
-		} else {
-			return '**~~' + expected + '~~ ['  + actual + ']**';
-		}
+	self.formatPrimitiveResult = function (assertion) {
+		var formattedValue = function () {
+			if (assertion.passed) {
+				return '**' + assertion.expected + '**';
+			} else {
+				return '**~~' + assertion.expected + '~~ ['  + assertion.value + ']**';
+			}
+		};
+		return {
+			index: assertion.index,
+			value: formattedValue()
+		};
 	};
 	self.formatListResult = function (listResult) {
 		var tickEl = function (e) {
@@ -44,13 +50,13 @@ module.exports = function () {
 			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
 				if (noIndexAssertions.length === 0) {
-					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions);
+					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
 				if (noIndexAssertions.some(failed)) {
 					return '**~~' + stepResult.stepText + '~~**';
 				}
 				if (stepResult.assertions.some(failed)) {
-					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.filter(withIndex));
+					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.filter(withIndex).map(self.formatPrimitiveResult));
 				}
 				if (stepResult.assertions.length) {
 					return '**' + stepResult.stepText + '**';
@@ -64,7 +70,7 @@ module.exports = function () {
 				var listAssertions = stepResult.assertions.filter(failedForList),
 						values = stepResult.list.items;
 				if (listAssertions && listAssertions.length > 0) {
-					values = listAssertions[0].value;
+					values = self.formatListResult(listAssertions[0].value);
 				}
 				return values.map(function (e) {
 					return '\n* ' + e;
