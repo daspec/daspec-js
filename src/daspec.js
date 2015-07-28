@@ -1,4 +1,4 @@
-/*global module, JSON, require*/
+/*global module, require*/
 
 (function () {
 	'use strict';
@@ -6,30 +6,7 @@
 			ListUtil = require('./list-util'),
 			markDownFormatter = new MarkDownFormatter(),
 			listUtil = new ListUtil(),
-			AssertionCounts = function () {
-			var self = this;
-			self.executed = 0;
-			self.passed = 0;
-			self.failed = 0;
-			self.error = 0;
-			self.skipped = 0;
-			self.increment = function (assertion) {
-				self.executed++;
-				if (assertion.passed) {
-					self.passed++;
-				} else {
-					self.failed++;
-				}
-			};
-			self.recordException = function (exception) {
-				if (exception) {
-					self.error++;
-				}
-			};
-			self.currentCounts = function () {
-				return JSON.parse(JSON.stringify(self));
-			};
-		},
+			AssertionCounts = require('./assertion-counts'),
 		Assertion = function (expected, /*actual*/ value, passed, outputIndex) {
 			var self = this;
 			self.value = value;
