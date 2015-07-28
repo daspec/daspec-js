@@ -1,9 +1,11 @@
-/*global DaSpec, describe, it, expect, beforeEach */
+/*global describe, it, expect, beforeEach, require */
 describe('ExampleBlock', function () {
 	'use strict';
-	var underTest;
+	var underTest,
+		ExampleBlock = require('../src/example-block');
 	beforeEach(function () {
-		underTest = new DaSpec.ExampleBlock();
+
+		underTest = new ExampleBlock();
 	});
 	describe('isComplete', function () {
 		it('is false when the block is empty', function () {

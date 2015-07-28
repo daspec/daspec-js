@@ -1,8 +1,9 @@
-/*global describe, expect, it, DaSpec, beforeEach, DaSpecHelper  */
+/*global describe, expect, it, require, beforeEach, DaSpecHelper  */
 
 describe('markdown parsing', function () {
 	'use strict';
 	var stepDefinitions,
+		Runner = require('../src/daspec-runner'),
 		helper = new DaSpecHelper(),
 		exampleFiles = helper.getExamples();
 	beforeEach(function () {
@@ -34,7 +35,7 @@ describe('markdown parsing', function () {
 	exampleFiles.forEach(function (exampleName) {
 		var example = helper.loadExample(exampleName);
 		it(example.title, function () {
-			var runner = new DaSpec.Runner(stepDefinitions),
+			var runner = new Runner(stepDefinitions),
 				result = runner.example(example.input);
 			expect(result).toEqual(example.output);
 

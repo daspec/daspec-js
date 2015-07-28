@@ -1,9 +1,10 @@
-/*global DaSpec, describe, it, expect, beforeEach */
+/*global require, describe, it, expect, beforeEach */
 describe('regex util', function () {
 	'use strict';
-	var underTest;
+	var RegexUtil = require('../src/regex-util'),
+		underTest;
 	beforeEach(function () {
-		underTest = new DaSpec.RegexUtil();
+		underTest = new RegexUtil();
 	});
 	describe('replaceMatchGroup', function () {
 		it('replaces a substring corresponding to a match group by index', function () {

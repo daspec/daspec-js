@@ -1,10 +1,11 @@
-/*global describe, expect, it, beforeEach, DaSpec */
+/*global describe, expect, it, beforeEach, require */
 
 describe('ListUtil', function () {
 	'use strict';
-	var underTest;
+	var ListUtil = require('../src/list-util'),
+		underTest;
 	beforeEach(function () {
-		underTest = new DaSpec.ListUtil();
+		underTest = new ListUtil();
 	});
 	describe('unorderedMatch', function () {
 		it('returns matches=true and no additonal/missing if two sets are the same', function () {

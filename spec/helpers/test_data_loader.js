@@ -1,5 +1,4 @@
 /*global require, global */
-global.DaSpec = require('../../src/daspec');
 
 global.DaSpecHelper = function () {
 	'use strict';

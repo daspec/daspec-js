@@ -1,10 +1,11 @@
-/*global describe, expect, it, beforeEach, DaSpec */
+/*global describe, expect, it, beforeEach, require */
 
 describe('MarkDownFormatter', function () {
 	'use strict';
-	var underTest;
+	var MarkDownFormatter = require('../src/markdown-formatter'),
+		underTest;
 	beforeEach(function () {
-		underTest = new DaSpec.MarkDownFormatter();
+		underTest = new MarkDownFormatter();
 	});
 	describe('formatPrimitiveResult', function () {
 		it('bolds the expected result if passed', function () {
