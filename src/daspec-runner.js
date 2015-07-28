@@ -33,13 +33,9 @@ module.exports = function (stepFunc) {
 			resultBuffer = [],
 			blocks = new ExampleBlocks(inputText);
 		blocks.getBlocks().forEach(function (block) {
-			var blockLines = block.getMatchText(),
-				blockList = block.getList();
-			if (blockLines) {
-				blockLines.forEach(function (line) {
-					context.executeStep(line, blockList, counts, resultBuffer);
-				});
-			}
+			var executionResult = context.executeBlock(block);
+			counts.incrementCounts(executionResult.counts);
+			resultBuffer = resultBuffer.concat(executionResult.resultBuffer);
 		});
 		resultBuffer.unshift('');
 		resultBuffer.unshift(countDescription(counts));

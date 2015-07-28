@@ -5,6 +5,7 @@ module.exports = function () {
 		RegexUtil = require('./regex-util'),
 		regexUtil = new RegexUtil(),
 		Assertion = require('./assertion'),
+		AssertionCounts = require('./assertion-counts'),
 		MarkDownFormatter = require('./markdown-formatter'),
 		ListUtil = require('./list-util'),
 		listUtil = new ListUtil(),
@@ -24,6 +25,21 @@ module.exports = function () {
 	self.assertSetEquals = function (expected, actual, optionalOutputIndex) {
 		var result = listUtil.unorderedMatch(expected, actual);
 		currentAssertions.push(new Assertion(expected, markDownFormatter.formatListResult(result), result.matches, optionalOutputIndex));
+	};
+	self.executeBlock = function (block) {
+		var counts = new AssertionCounts(),
+			resultBuffer = [],
+			blockLines = block.getMatchText(),
+			blockList = block.getList();
+		if (blockLines) {
+			blockLines.forEach(function (line) {
+				self.executeStep(line, blockList, counts, resultBuffer);
+			});
+		}
+		return {
+			resultBuffer: resultBuffer,
+			counts: counts
+		};
 	};
 	self.executeStep = function (stepText, list, counts, resultBuffer) {
 		var matchingSteps = steps.filter(function (step) {

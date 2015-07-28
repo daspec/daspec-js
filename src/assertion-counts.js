@@ -7,6 +7,15 @@ module.exports = function () {
 	self.failed = 0;
 	self.error = 0;
 	self.skipped = 0;
+
+	self.incrementCounts = function (counts) {
+		self.executed += counts.executed;
+		self.passed += counts.passed;
+		self.failed += counts.failed;
+		self.error += counts.error;
+		self.skipped += counts.skipped;
+	};
+
 	self.increment = function (assertion) {
 		self.executed++;
 		if (assertion.passed) {
