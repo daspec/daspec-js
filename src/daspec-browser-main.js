@@ -1,5 +1,5 @@
 /*global require, global*/
 
-global.DaSpec = require('./daspec');
+global.DaSpecRunner = require('./daspec-runner');
 
-console.log(global.DaSpec);
+console.log(global.DaSpecRunner);
