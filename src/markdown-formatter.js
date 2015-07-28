@@ -28,7 +28,7 @@ module.exports = function () {
 		return matching.concat(missing, additional);
 	};
 
-	self.markResult = function (currentAssertions, stepText, step, list) {
+	self.markResult = function (stepResult) {
 		var withoutIndex = function (assertion) {
 				return !assertion.index;
 			},
@@ -39,30 +39,30 @@ module.exports = function () {
 				return !assertion.passed;
 			},
 			failedForList = function (assertion) {
-				return assertion.expected === list.items && !assertion.passed;
+				return assertion.expected === stepResult.list.items && !assertion.passed;
 			},
-			noIndexAssertions = currentAssertions.filter(withoutIndex),
+			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
 				if (noIndexAssertions.length === 0) {
-					return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions);
+					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions);
 				}
 				if (noIndexAssertions.some(failed)) {
-					return '**~~' + stepText + '~~**';
+					return '**~~' + stepResult.stepText + '~~**';
 				}
-				if (currentAssertions.some(failed)) {
-					return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions.filter(withIndex));
+				if (stepResult.assertions.some(failed)) {
+					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.filter(withIndex));
 				}
-				if (currentAssertions.length) {
-					return '**' + stepText + '**';
+				if (stepResult.assertions.length) {
+					return '**' + stepResult.stepText + '**';
 				}
-				return stepText;
+				return stepResult.stepText;
 			},
 			attachmentLines = function () {
-				if (!list) {
+				if (!stepResult.list) {
 					return '';
 				}
-				var listAssertions = currentAssertions.filter(failedForList),
-						values = list.items;
+				var listAssertions = stepResult.assertions.filter(failedForList),
+						values = stepResult.list.items;
 				if (listAssertions && listAssertions.length > 0) {
 					values = listAssertions[0].value;
 				}
@@ -70,6 +70,9 @@ module.exports = function () {
 					return '\n* ' + e;
 				}).join(''); // TODO: deal with ordered lists
 			};
+		if (stepResult.exception) {
+			return '~~' + stepResult.stepText + '~~\n' + '\t' + stepResult.exception.stack; //TODO: push list as well
+		}
 		return headingLine() + attachmentLines();
 
 	};

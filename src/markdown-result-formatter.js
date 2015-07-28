@@ -28,17 +28,11 @@ module.exports = function () {
 			return description;
 		};
 	self.stepResult = function (result) {
-		if (result.exception) {
-			//geniuine error, not assertion fail
-			resultBuffer.push('~~' + result.stepText + '~~'); //TODO: push list as well
-			resultBuffer.push('\t' + result.exception.stack);
-			counts.recordException(result.exception);
-		} else {
-			result.assertions.forEach(function (assertion) {
-				counts.increment(assertion);
-			});
-			resultBuffer.push(markDownFormatter.markResult(result.assertions, result.stepText, result, result.list));
-		}
+		counts.recordException(result.exception);
+		result.assertions.forEach(function (assertion) {
+			counts.increment(assertion);
+		});
+		resultBuffer.push(markDownFormatter.markResult(result));
 	};
 	self.nonAssertionLine = function (line) {
 		resultBuffer.push(line);
