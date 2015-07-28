@@ -21,7 +21,7 @@ global.DaSpecHelper = function () {
 	};
 	this.getExamples = function (folderName) {
 		folderName = folderName || 'test-data/';
-		return fs.readdirSync('./' + folderName);
+		return fs.readdirSync('./' + folderName).filter(function (item) { return /\.md$/.test(item);});
 	};
 };
 

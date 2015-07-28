@@ -1,7 +1,35 @@
 <html>
 	<body>
-		Hello World
+		<h2>Markdown here</h2>
+		<textarea id="markdownArea" style="width:80%; min-height:50px; border:1px dashed grey; margin-bottom:20px; padding:5px">
+Simple arithmetic: 2 plus 2 is 5
+		</textarea>
+		<br/>
+		<button id="runButton" style="margin:10px;">Run DaSpec</button>
+		<h2>Result:</h2>
+		<div id="outputArea" style="width:80%; min-height:50px; border:1px dashed grey; margin-top:20px; padding:5px">
+
+		</div>
+
 		<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript">
+	/*global document, DaSpec, localStorage*/
+var runButton = document.getElementById('runButton'),
+	markdownArea = document.getElementById('markdownArea'),
+	outputArea = document.getElementById('outputArea'),
+	initialMd = localStorage.getItem('daspec.md') || markdownArea.value;
+
+runButton.addEventListener('click', function () {
+	'use strict';
+	var md = markdownArea.value,
+		runner = new DaSpec.Runner(DaSpec.StepDefinitions),
+		result = runner.example(md);
+	outputArea.innerText = result;
+	localStorage.setItem('daspec.md', md);
+});
+
+markdownArea.value = initialMd;
+</script>
 	</body>
 
 </html>
