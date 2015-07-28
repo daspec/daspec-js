@@ -25,55 +25,8 @@ module.exports = function () {
 		var result = listUtil.unorderedMatch(expected, actual);
 		currentAssertions.push(new Assertion(expected, markDownFormatter.formatListResult(result), result.matches, optionalOutputIndex));
 	};
-	self.executeStep = function (stepText, counts, resultBuffer) {
-		self.executeListStep(stepText, undefined, counts, resultBuffer);
-	};
-	self.executeListStep = function (stepText, list, counts, resultBuffer) {
-		var markResult = function () {
-				var withoutIndex = function (assertion) {
-						return !assertion.index;
-					},
-					withIndex = function (assertion) {
-						return assertion.index;
-					},
-					failed = function (assertion) {
-						return !assertion.passed;
-					},
-					failedForList = function (assertion) {
-						return assertion.expected === list.items && !assertion.passed;
-					},
-					noIndexAssertions = currentAssertions.filter(withoutIndex),
-					headingLine = function () {
-						if (noIndexAssertions.length === 0) {
-							return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions);
-						}
-						if (noIndexAssertions.some(failed)) {
-							return '**~~' + stepText + '~~**';
-						}
-						if (currentAssertions.some(failed)) {
-							return regexUtil.replaceMatchGroup(stepText, step.matcher, currentAssertions.filter(withIndex));
-						}
-						if (currentAssertions.length) {
-							return '**' + stepText + '**';
-						}
-						return stepText;
-					},
-					attachmentLines = function () {
-						if (!list) {
-							return '';
-						}
-						var listAssertions = currentAssertions.filter(failedForList),
-								values = list.items;
-						if (listAssertions && listAssertions.length > 0) {
-							values = listAssertions[0].value;
-						}
-						return values.map(function (e) {
-							return '\n* ' + e;
-						}).join(''); // TODO: deal with ordered lists
-					};
-				return headingLine() + attachmentLines();
-			},
-			matchingSteps = steps.filter(function (step) {
+	self.executeStep = function (stepText, list, counts, resultBuffer) {
+		var matchingSteps = steps.filter(function (step) {
 				return step.matcher.test(stepText);
 			}),
 			match,
@@ -107,7 +60,7 @@ module.exports = function () {
 			currentAssertions.forEach(function (assertion) {
 				counts.increment(assertion);
 			});
-			resultBuffer.push(markResult());
+			resultBuffer.push(markDownFormatter.markResult(currentAssertions, stepText, step, list));
 		} catch (e) {
 			/* geniuine error, not assertion fail */
 			resultBuffer.push('~~' + resultText + '~~');

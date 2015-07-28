@@ -36,14 +36,9 @@ module.exports = function (stepFunc) {
 			var blockLines = block.getMatchText(),
 				blockList = block.getList();
 			if (blockLines) {
-
-				if (blockList) {
-					context.executeListStep(blockLines[0], blockList, counts, resultBuffer);
-				} else {
-					blockLines.forEach(function (line) {
-						context.executeStep(line, counts, resultBuffer);
-					});
-				}
+				blockLines.forEach(function (line) {
+					context.executeStep(line, blockList, counts, resultBuffer);
+				});
 			}
 		});
 		resultBuffer.unshift('');
