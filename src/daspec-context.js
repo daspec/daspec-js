@@ -29,72 +29,23 @@ move formating out of context
 module.exports = function () {
 	'use strict';
 	var self = this,
-		RegexUtil = require('./regex-util'),
 		StepExecutor =  require('./daspec-step'),
-		regexUtil = new RegexUtil(),
-		// Assertion = require('./assertion'),
-		AssertionCounts = require('./assertion-counts'),
-		MarkDownFormatter = require('./markdown-formatter'),
-		// ListUtil = require('./list-util'),
-		// listUtil = new ListUtil(),
-		markDownFormatter = new MarkDownFormatter(),
-		steps = [],
-		getStepForText = function (stepText) {
-			var matchingSteps = steps.filter(function (step) {
-					return step.match(stepText);
-				});
+		steps = [];
 
-			if (matchingSteps.length === 0) {
-				return false;
-			} else if (matchingSteps.length > 1) {
-				/* bork on multiple options possible */
-				throw new Error('multiple steps match line ' + stepText);
-			}
-			return matchingSteps[0];
-		};
 	self.defineStep = function (regexMatcher, processFunction) {
 		steps.push(new StepExecutor(regexMatcher, processFunction));
 	};
-	self.executeBlock = function (block) {
-		var counts = new AssertionCounts(),
-			resultBuffer = [],
-			blockLines = block.getMatchText(),
-			blockList = block.getList();
-		if (blockLines) {
-			blockLines.forEach(function (line) {
-				self.executeStep(line, blockList, counts, resultBuffer);
+	self.getStepForLine = function (stepText) {
+		var matchingSteps = steps.filter(function (step) {
+				return step.match(stepText);
 			});
-		}
-		return {
-			resultBuffer: resultBuffer,
-			counts: counts
-		};
-	};
-	self.executeStep = function (stepText, list, counts, resultBuffer) {
-		if (!regexUtil.assertionLine(stepText)) { //Move to block?
-			resultBuffer.push(stepText);
-			return;
-		}
 
-		var step = getStepForText(stepText),
-			result;
-
-		if (!step) {
-			resultBuffer.push(stepText); //+ list
-			counts.skipped++;
-			return;
+		if (matchingSteps.length === 0) {
+			return false;
+		} else if (matchingSteps.length > 1) {
+			/* bork on multiple options possible */
+			throw new Error('multiple steps match line ' + stepText);
 		}
-		result = step.execute(stepText, list);
-		if (result.exception) {
-			/* geniuine error, not assertion fail */
-			resultBuffer.push('~~' + stepText + '~~'); //TODO: push list as well
-			resultBuffer.push('\t' + result.exception.stack);
-			counts.recordException(result.exception);
-		} else {
-			result.assertions.forEach(function (assertion) {
-				counts.increment(assertion);
-			});
-			resultBuffer.push(markDownFormatter.markResult(result.assertions, stepText, result, list));
-		}
+		return matchingSteps[0];
 	};
 };
