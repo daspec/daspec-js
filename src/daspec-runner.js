@@ -16,7 +16,7 @@ module.exports = function (stepFunc) {
 
 		blocks.getBlocks().forEach(function (block) {
 			var blockLines = block.getMatchText(),
-				blockParam = block.getParam();
+				blockParam = block.getAttachment();
 			if (blockLines) {
 				blockLines.forEach(function (line) {
 					if (!regexUtil.assertionLine(line)) { //Move to block?

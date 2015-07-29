@@ -7,13 +7,13 @@ module.exports = function (regexMatcher, processFunction) {
 	self.match = function (stepText) {
 		return regexMatcher.test(stepText);
 	};
-	self.execute = function (stepText, list) {
+	self.execute = function (stepText, attachment) {
 		var match = stepText.match(regexMatcher),
 			stepArgs = match.slice(1),
 			result = {
 				matcher: regexMatcher,
 				stepText: stepText,
-				list: list,
+				attachment: attachment,
 				assertions: []
 			},
 			StepContext = function () {
@@ -34,8 +34,8 @@ module.exports = function (regexMatcher, processFunction) {
 				};
 			};
 
-		if (list) { /* we know it's a list and the symbol */
-			stepArgs.push(list);
+		if (attachment) { /* we know it's a list and the symbol */
+			stepArgs.push(attachment);
 		}
 
 		try {

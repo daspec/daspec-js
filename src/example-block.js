@@ -30,7 +30,7 @@ module.exports = function () {
 		}
 		return true;
 	};
-	self.getParam = function () {
+	self.getAttachment = function () {
 		return self.getList() || self.getTable();
 	};
 	self.getTable = function () {

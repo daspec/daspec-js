@@ -61,23 +61,23 @@ describe('ExampleBlock', function () {
 			expect(underTest.getMatchText()).toEqual(['* a list item', '* another list item']);
 		});
 	});
-	describe('getParam', function () {
+	describe('getAttachment', function () {
 		it('is false when no table or list', function () {
 			underTest.addLine('not a list item');
-			expect(underTest.getParam()).toBeFalsy();
+			expect(underTest.getAttachment()).toBeFalsy();
 		});
 		it('gets the list when a list is inside a block', function () {
 			underTest.addLine('* another list item');
 			underTest.addLine('* a list item');
 			underTest.addLine('not a list item');
-			expect(underTest.getParam()).toEqual({type: 'list', ordered: false, items:['a list item', 'another list item']});
+			expect(underTest.getAttachment()).toEqual({type: 'list', ordered: false, items:['a list item', 'another list item']});
 		});
 		it('gets the table when a table is inside a block', function () {
 			underTest.addLine('|another table item|');
 			underTest.addLine('|a table item|');
 			underTest.addLine('not a list item');
-			expect(underTest.getParam().type).toEqual('table');
-			expect(underTest.getParam().items).toEqual([['a table item'], ['another table item']]);
+			expect(underTest.getAttachment().type).toEqual('table');
+			expect(underTest.getAttachment().items).toEqual([['a table item'], ['another table item']]);
 		});
 	});
 	describe('getTable', function () {
@@ -93,8 +93,8 @@ describe('ExampleBlock', function () {
 			underTest.addLine('|another table item|');
 			underTest.addLine('|a table item|');
 			underTest.addLine('not a list item');
-			expect(underTest.getParam().type).toEqual('table');
-			expect(underTest.getParam().items).toEqual([['a table item'], ['another table item']]);
+			expect(underTest.getTable().type).toEqual('table');
+			expect(underTest.getTable().items).toEqual([['a table item'], ['another table item']]);
 		});
 	});
 	describe('getList', function () {

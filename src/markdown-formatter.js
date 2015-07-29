@@ -45,8 +45,8 @@ module.exports = function () {
 				return !assertion.passed;
 			},
 			failedForList = function (assertion) {
-				return stepResult.list && stepResult.list.items && stepResult.list.items.length > 0 &&
-					assertion.expected === stepResult.list.items && !assertion.passed;
+				return stepResult.attachment && stepResult.attachment.items && stepResult.attachment.items.length > 0 &&
+					assertion.expected === stepResult.attachment.items && !assertion.passed;
 			},
 			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
@@ -65,15 +65,15 @@ module.exports = function () {
 				return stepResult.stepText;
 			},
 			attachmentLines = function () {
-				if (!stepResult.list) {
+				if (!stepResult.attachment) {
 					return '';
 				}
 				var formatList = function () {
-						if (stepResult.list.type !== 'list') {
+						if (stepResult.attachment.type !== 'list') {
 							return false;
 						}
 						var failedListAssertions = stepResult.assertions.filter(failedForList),
-								values = stepResult.list.items;
+								values = stepResult.attachment.items;
 						if (failedListAssertions && failedListAssertions.length > 0) {
 							values = self.formatListResult(failedListAssertions[0].value);
 						}
@@ -82,10 +82,10 @@ module.exports = function () {
 						}).join(''); // TODO: deal with ordered lists
 					},
 					formatTable = function () {
-						if (stepResult.list.type !== 'table') {
+						if (stepResult.attachment.type !== 'table') {
 							return false;
 						}
-						return stepResult.list.items.map(function (item) {
+						return stepResult.attachment.items.map(function (item) {
 							return '\n| ' + item.join(' | ') + ' |';
 						}).join('');
 					};
