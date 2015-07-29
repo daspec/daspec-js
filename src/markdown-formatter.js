@@ -54,13 +54,21 @@ module.exports = function () {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
 				if (noIndexAssertions.some(failed)) {
-					return '**~~' + stepResult.stepText + '~~**';
+					if (regexUtil.isListItem(stepResult.stepText)) {
+						return regexUtil.getListSymbol(stepResult.stepText) + '**~~' + regexUtil.stripListSymbol(stepResult.stepText) + '~~**';
+					} else {
+						return '**~~' + stepResult.stepText + '~~**';
+					}
 				}
 				if (stepResult.assertions.some(failed)) {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.filter(withIndex).map(self.formatPrimitiveResult));
 				}
 				if (stepResult.assertions.length) {
-					return '**' + stepResult.stepText + '**';
+					if (regexUtil.isListItem(stepResult.stepText)) {
+						return regexUtil.getListSymbol(stepResult.stepText) + '**' + regexUtil.stripListSymbol(stepResult.stepText) + '**';
+					} else {
+						return '**' + stepResult.stepText + '**';
+					}
 				}
 				return stepResult.stepText;
 			},

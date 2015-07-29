@@ -19,7 +19,15 @@ describe('MarkDownFormatter', function () {
 		it('marks a single indexed assertion as failed within a string if there are no unindexed failures', function () {
 			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/, assertions: [{expected: 4, index: 0, passed: false, value: 3}]})).toEqual('The number is **~~4~~ [3]**');
 		});
-
+		it('marks a non-indexed list failure as a list item', function () {
+			expect(underTest.markResult({stepText: '* The number is 4', matcher: /.* (\d)/, assertions: [{passed: false}]})).toEqual('* **~~The number is 4~~**');
+		});
+		it('marks a non-indexed list success as a list item', function () {
+			expect(underTest.markResult({stepText: '* The number is 4', matcher: /.* (\d)/, assertions: [{passed: true}]})).toEqual('* **The number is 4**');
+		});
+		it('places the correct list symbol and indentation back', function () {
+			expect(underTest.markResult({stepText: '  - The number is 4', matcher: /.* (\d)/, assertions: [{passed: true}]})).toEqual('  - **The number is 4**');
+		});
 	});
 	describe('formatListResult', function () {
 		var dash = String.fromCharCode(8211),

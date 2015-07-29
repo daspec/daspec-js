@@ -1,7 +1,8 @@
 /*global module*/
 module.exports = function () {
 	'use strict';
-	var self = this;
+	var self = this,
+			listSymbolRegex = /^\s*[^\s]+\s+/;
 	this.replaceMatchGroup = function (string, regex, overrides) {
 		var everythingInMatchGroups = new RegExp('(' + regex.source.replace(/([^\\]?)[()]/g, '$1)(') + ')'),
 				allMatches = string.match(everythingInMatchGroups),
@@ -44,7 +45,13 @@ module.exports = function () {
 		if (!self.isListItem(line)) {
 			return line;
 		}
-		return line.replace(/^\s*[^\s]+\s/, '');
+		return line.replace(listSymbolRegex, '');
+	};
+	this.getListSymbol = function (line) {
+		if (!self.isListItem(line)) {
+			return '';
+		}
+		return line.match(listSymbolRegex)[0];
 	};
 	this.assertionLine = function (stepText) {
 		if (stepText.length === 0 || stepText.trim().length === 0) {

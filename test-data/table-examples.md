@@ -27,15 +27,15 @@ Good Star Wars Films are:
 | A new Hope              | 1976 |
 | The Return of the Jedi  | 1983 |
 
-> comparing whole tables
+> comparing whole tables takes titles into consideration - in this example reversed order
 
 Check Star Wars Films are:
 
-| Title                   | Year |
-|-------------------------|------|
-| Phantom Menace          | 1999 |
-| A new Hope              | 1976 |
-| The Return of the Jedi  | 1983 |
+| Year | Title                   |
+|------|-------------------------|
+| 1999 | Phantom Menace          |
+| 1976 | A new Hope              |
+| 1983 | The Return of the Jedi  |
 
 ># Table as a set of examples
 >
@@ -78,16 +78,16 @@ In total there a **3** Star Wars Films
 |–| **~~Phantom Menace~~** | **~~1999~~** |
 |+| **The Return of the Jedi** | **1983** |
 
-> comparing whole tables
+> comparing whole tables takes titles into consideration - in this example reversed order
 
 ~~Check Star Wars Films are:~~
 
-| | Title | Year |
-|-|-------|------|
-|✓| A new Hope | 1976 |
-|✓| The Return of the Jedi | 1983 |
-|–| **~~Phantom Menace~~** | **~~1999~~** |
-|+| **The Return of the Jedi** | **1983** |
+| | Year | Title |
+|-|------|-------|
+|✓| 1976 | A new Hope |
+|✓| 1983 | The Return of the Jedi |
+|–| **~~1999~~** | **~~Phantom Menace~~** |
+|+| **1983** | **The Return of the Jedi** |
 
 ># Table as a set of examples
 >

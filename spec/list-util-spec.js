@@ -30,5 +30,37 @@ describe('ListUtil', function () {
 				additional: [6, 7]
 			});
 		});
+		it('works on two-dimensional arrays', function () {
+			expect(underTest.unorderedMatch([[1, 2], [3, 4], [5, 6]], [[5, 6], [4, 2], [1, 2]])).toEqual({
+				matches: false,
+				missing: [[3, 4]],
+				additional: [[4, 2]],
+				matching: [[1, 2], [5, 6]]
+			});
+		});
+		it('works if first arg is undefined', function () {
+			expect(underTest.unorderedMatch(undefined, [[5, 6], [4, 2], [1, 2]])).toEqual({
+				matches: false,
+				missing: [],
+				additional: [[5, 6], [4, 2], [1, 2]],
+				matching: []
+			});
+		});
+		it('works if second arg is undefined', function () {
+			expect(underTest.unorderedMatch([[5, 6], [4, 2], [1, 2]], undefined)).toEqual({
+				matches: false,
+				missing: [[5, 6], [4, 2], [1, 2]],
+				additional: [],
+				matching: []
+			});
+		});
+		it('works if all arguments are undefined', function () {
+			expect(underTest.unorderedMatch()).toEqual({
+				matches: true,
+				missing: [],
+				additional: [],
+				matching: []
+			});
+		});
 	});
 });

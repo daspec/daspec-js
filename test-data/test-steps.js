@@ -57,7 +57,7 @@ module.exports = function (ctx) {
 		this.assertSetEquals(listOfEpisodes.items, actual);
 	});
 	ctx.defineStep(/Check ([A-Za-z ]*) Films/, function (seriesName, listOfEpisodes) {
-		this.assertTableEquals(listOfEpisodes, tables[seriesName]);
+		this.assertUnorderedTableEquals(listOfEpisodes, tables[seriesName]);
 	});
 	ctx.defineStep(/\|([A-Za-z ]*) episode \| Year of release \|/, function (seriesName, episode, yearOfRelease) {
 		var series = films[seriesName],

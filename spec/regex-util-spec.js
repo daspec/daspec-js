@@ -94,7 +94,18 @@ describe('regex util', function () {
 			expect(underTest.stripListSymbol('* **SHOUT**')).toBe('**SHOUT**');
 			expect(underTest.stripListSymbol(' * **SHOUT**')).toBe('**SHOUT**');
 			expect(underTest.stripListSymbol(' - **SHOUT**')).toBe('**SHOUT**');
-			expect(underTest.stripListSymbol('- **SHOUT**')).toBe('**SHOUT**');
+			expect(underTest.stripListSymbol('-  **SHOUT**')).toBe('**SHOUT**');
+		});
+	});
+	describe('getListSymbol', function () {
+		it('returns empty string for non list items', function () {
+			expect(underTest.getListSymbol('**SHOUT**')).toBe('');
+		});
+		it('returns everything before the actual content for list items', function () {
+			expect(underTest.getListSymbol('* **SHOUT**')).toBe('* ');
+			expect(underTest.getListSymbol(' * **SHOUT**')).toBe(' * ');
+			expect(underTest.getListSymbol(' - **SHOUT**')).toBe(' - ');
+			expect(underTest.getListSymbol('-  **SHOUT**')).toBe('-  ');
 		});
 	});
 	describe('isTableItem', function () {

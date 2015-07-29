@@ -38,6 +38,8 @@ module.exports = function () {
 		return self.getList() || self.getTable();
 	};
 	self.getTable = function () {
+		//TODO: complain if table has duplicated column titles or some columns have no titles
+		//TODO: table column title normalisation (eg Top Price === topprice === TOP price)
 		if (lines.length === 0) {
 			return false;
 		}

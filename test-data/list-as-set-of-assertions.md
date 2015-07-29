@@ -24,9 +24,10 @@
 * Multiple Assertions 1 is 1 and fails
 * Multiple Assertions 1 is 3 and fails
 * Multiple Assertions 1 is 1 and passes
+  - Multiple Assertions 1 is 1 and passes
 
 <!--OUTPUT
-> **In da spec:** executed: 16, passed: 10, failed: 6, skipped: 1
+> **In da spec:** executed: 18, passed: 12, failed: 6, skipped: 1
 
 #Lists can be a set of assertions
 
@@ -35,7 +36,7 @@
 * Simple arithmetic: 2 plus 3 is **5**
 * Simple arithmetic: 3 plus 3 is **~~5~~ [6]**
 * List can contain sub lists
-- Simple arithmetic: 2 plus 2 is **4**
+  - Simple arithmetic: 2 plus 2 is **4**
 
 > These prove I know arithmetic too
 
@@ -54,4 +55,5 @@
 * **~~Multiple Assertions 1 is 1 and fails~~**
 * **~~Multiple Assertions 1 is 3 and fails~~**
 * **Multiple Assertions 1 is 1 and passes**
+  - **Multiple Assertions 1 is 1 and passes**
 -->
