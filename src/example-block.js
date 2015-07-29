@@ -5,18 +5,22 @@ module.exports = function () {
 		RegexUtil = require('./regex-util'),
 		regexUtil = new RegexUtil(),
 		lines = [],
-		toItems = function (lines) {
-			return lines.map(function (line) {
-				return line.replace(/^\||\|$/g, '').split('|').map(function (s) {
-					return s.trim();
-				});
+		toLineItem = function (line) {
+			return line.replace(/^\||\|$/g, '').split('|').map(function (s) {
+				return s.trim();
 			});
 		},
+		toItems = function (lines) {
+			return lines.map(toLineItem);
+		},
 		toTable = function (lines) {
-			return {
-				type: 'table',
-				items: toItems(lines)
-			};
+			var tableItems = lines, result = {type: 'table'};
+			if (lines.length > 2 && regexUtil.isTableHeaderDivider(lines[1])) {
+				result.titles =  toLineItem(lines[0]);
+				tableItems = lines.slice(2);
+			}
+			result.items = toItems(tableItems);
+			return result;
 		};
 	self.addLine = function (lineText) {
 		lines.unshift(lineText);

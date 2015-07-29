@@ -25,6 +25,9 @@ module.exports = function () {
 	this.isTableItem = function (line) {
 		return !self.isCodeItem(line) && /^\s*\|/.test(line);
 	};
+	this.isTableHeaderDivider = function (line) {
+		return self.isTableItem(line) && /^[|= -]*$/.test(line);
+	};
 	this.isListItem = function (line) {
 		if (/^[\*\s-=]*$/.test(line)) {
 			return false;

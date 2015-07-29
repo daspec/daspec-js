@@ -92,9 +92,27 @@ describe('ExampleBlock', function () {
 		it('gets the table rows as an array, indexed by columns, when there is no heading row', function () {
 			underTest.addLine('|another table item|');
 			underTest.addLine('|a table item|');
-			underTest.addLine('not a list item');
+			underTest.addLine('not a table item');
 			expect(underTest.getTable().type).toEqual('table');
 			expect(underTest.getTable().items).toEqual([['a table item'], ['another table item']]);
+		});
+		it('trims cell values', function () {
+			underTest.addLine('|2.1 |      2.2 |');
+			underTest.addLine('|1.1\t \t|\t 1.2|');
+			underTest.addLine('not a table item');
+			expect(underTest.getTable().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
+
+		});
+		it('gets the table with a header row', function () {
+			underTest.addLine('|2.1|2.2|');
+			underTest.addLine('|1.1|1.2|');
+			underTest.addLine('|---|---|');
+			underTest.addLine('|H1|H2|');
+			underTest.addLine('not a table item');
+
+			expect(underTest.getTable().type).toEqual('table');
+			expect(underTest.getTable().titles).toEqual(['H1', 'H2']);
+			expect(underTest.getTable().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
 		});
 	});
 	describe('getList', function () {

@@ -81,13 +81,19 @@ module.exports = function () {
 							return '\n* ' + e;
 						}).join(''); // TODO: deal with ordered lists
 					},
+					formatTableItem = function (item) {
+						return '\n| ' + item.join(' | ') + ' |';
+					},
 					formatTable = function () {
+						var titles = '';
 						if (stepResult.attachment.type !== 'table') {
 							return false;
 						}
-						return stepResult.attachment.items.map(function (item) {
-							return '\n| ' + item.join(' | ') + ' |';
-						}).join('');
+						if (stepResult.attachment.titles) {
+							titles = formatTableItem(stepResult.attachment.titles);
+							titles = titles + titles.replace(/[^|\n]/g, '-');
+						}
+						return titles + stepResult.attachment.items.map(formatTableItem).join('');
 					};
 				return formatList() || formatTable();
 			};
