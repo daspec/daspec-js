@@ -26,6 +26,11 @@ module.exports = function (ctx) {
 	var films = {};
 	ctx.defineStep(/These are the ([A-Za-z ]*) Films/, function (seriesName, tableOfReleases) {
 /*
+{type:'table', titles: ['Title', 'Year'], items:[
+	['A new Hope', 1976],
+	['The Empire Strikes Back', 1979],
+	...
+]]}
 		Table with title row
 		[
 			{Title:'A New Hope', Year:1979},
@@ -40,10 +45,10 @@ module.exports = function (ctx) {
 			{0:'The Return of the Jedi', 1:1979}
 		]
 */
-		films[seriesName] = tableOfReleases;
+		films[seriesName] = tableOfReleases.items;
 	});
 	ctx.defineStep(/In total there a (\d*) ([A-Za-z ]*) Films/, function (numberOfFilms, seriesName) {
-		var actual = films[seriesName] && films[seriesName].length;
+		var actual = (films[seriesName] && films[seriesName].length) || 0;
 		this.assertEquals(parseFloat(numberOfFilms), actual, 0);
 	});
 

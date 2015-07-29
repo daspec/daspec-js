@@ -16,7 +16,7 @@ module.exports = function (stepFunc) {
 
 		blocks.getBlocks().forEach(function (block) {
 			var blockLines = block.getMatchText(),
-				blockList = block.getList();
+				blockParam = block.getParam();
 			if (blockLines) {
 				blockLines.forEach(function (line) {
 					if (!regexUtil.assertionLine(line)) { //Move to block?
@@ -29,7 +29,7 @@ module.exports = function (stepFunc) {
 						results.skippedLine(line);
 						return;
 					}
-					results.stepResult(step.execute(line, blockList));
+					results.stepResult(step.execute(line, blockParam));
 				});
 			}
 		});

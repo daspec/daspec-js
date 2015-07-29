@@ -16,6 +16,15 @@ module.exports = function () {
 		});
 		return initial + values.join('') + trailing;
 	};
+	this.isCodeItem = function (line) {
+		if (!line || line.trim().length === 0) {
+			return false;
+		}
+		return /^\s\s\s\s/.test(line) || /^\s*\t/.test(line);
+	};
+	this.isTableItem = function (line) {
+		return !self.isCodeItem(line) && /^\s*\|/.test(line);
+	};
 	this.isListItem = function (line) {
 		if (/^[\*\s-=]*$/.test(line)) {
 			return false;

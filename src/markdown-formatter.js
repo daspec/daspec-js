@@ -45,7 +45,8 @@ module.exports = function () {
 				return !assertion.passed;
 			},
 			failedForList = function (assertion) {
-				return assertion.expected === stepResult.list.items && !assertion.passed;
+				return stepResult.list && stepResult.list.items && stepResult.list.items.length > 0 &&
+					assertion.expected === stepResult.list.items && !assertion.passed;
 			},
 			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
@@ -67,14 +68,28 @@ module.exports = function () {
 				if (!stepResult.list) {
 					return '';
 				}
-				var listAssertions = stepResult.assertions.filter(failedForList),
-						values = stepResult.list.items;
-				if (listAssertions && listAssertions.length > 0) {
-					values = self.formatListResult(listAssertions[0].value);
-				}
-				return values.map(function (e) {
-					return '\n* ' + e;
-				}).join(''); // TODO: deal with ordered lists
+				var formatList = function () {
+						if (stepResult.list.type !== 'list') {
+							return false;
+						}
+						var failedListAssertions = stepResult.assertions.filter(failedForList),
+								values = stepResult.list.items;
+						if (failedListAssertions && failedListAssertions.length > 0) {
+							values = self.formatListResult(failedListAssertions[0].value);
+						}
+						return values.map(function (e) {
+							return '\n* ' + e;
+						}).join(''); // TODO: deal with ordered lists
+					},
+					formatTable = function () {
+						if (stepResult.list.type !== 'table') {
+							return false;
+						}
+						return stepResult.list.items.map(function (item) {
+							return '\n| ' + item.join(' | ') + ' |';
+						}).join('');
+					};
+				return formatList() || formatTable();
 			};
 		if (stepResult.exception) {
 			return '~~' + stepResult.stepText + '~~\n' + '\t' + stepResult.exception.stack; //TODO: push list as well

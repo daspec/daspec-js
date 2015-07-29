@@ -97,6 +97,49 @@ describe('regex util', function () {
 			expect(underTest.stripListSymbol('- **SHOUT**')).toBe('**SHOUT**');
 		});
 	});
+	describe('isTableItem', function () {
+		it('recognises lines that start with a |', function () {
+			expect(underTest.isTableItem('|one|')).toBeTruthy();
+		});
+		it('ignores lines that have a pipe in the middle but not at the start', function () {
+			expect(underTest.isTableItem('o|ne|')).toBeFalsy();
+			expect(underTest.isTableItem('>|ne|')).toBeFalsy();
+			expect(underTest.isTableItem('#|ne|')).toBeFalsy();
+
+		});
+		it('ignores lines that have code spacing at start', function () {
+			expect(underTest.isTableItem('    |ne|')).toBeFalsy();
+			expect(underTest.isTableItem('\t|ne|')).toBeFalsy();
+			expect(underTest.isTableItem(' \t|ne|')).toBeFalsy();
+			expect(underTest.isTableItem('\t |ne|')).toBeFalsy();
+			expect(underTest.isTableItem('       |ne|')).toBeFalsy();
+		});
+	});
+	describe('isCodeItem', function () {
+		it('recognises lines that have non-code spacing at start', function () {
+			expect(underTest.isCodeItem('   n')).toBeFalsy();
+			expect(underTest.isCodeItem('#   n')).toBeFalsy();
+			expect(underTest.isCodeItem('    n')).toBeTruthy();
+			expect(underTest.isCodeItem('\tn')).toBeTruthy();
+			expect(underTest.isCodeItem(' \tn')).toBeTruthy();
+			expect(underTest.isCodeItem('\t n')).toBeTruthy();
+			expect(underTest.isCodeItem('       n')).toBeTruthy();
+		});
+		it('ignores blank/space only lines', function () {
+			expect(underTest.isCodeItem('   ')).toBeFalsy();
+			expect(underTest.isCodeItem('')).toBeFalsy();
+			expect(underTest.isCodeItem('    ')).toBeFalsy();
+			expect(underTest.isCodeItem('\t')).toBeFalsy();
+			expect(underTest.isCodeItem(' \t')).toBeFalsy();
+			expect(underTest.isCodeItem('\t ')).toBeFalsy();
+			expect(underTest.isCodeItem('       ')).toBeFalsy();
+		});
+	});
+	describe('isCodeItem', function () {
+		it('recognises at least four starting spaces, or tabs, as code', function () {
+
+		});
+	});
 	describe('isListItem', function () {
 		it('ignores horizontal lines', function () {
 			expect(underTest.isListItem('****')).toBeFalsy();
