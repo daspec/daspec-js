@@ -3,17 +3,18 @@ module.exports = function () {
 	'use strict';
 	var self = this;
 	this.replaceMatchGroup = function (string, regex, overrides) {
-		var match = string.match(regex),
-			literalReplacement = regex.source,
-			capturingGroup = /\([^)]*\)/,  /* todo: deal with non-capture groups */
-			values = match.slice(1);
+		var everythingInMatchGroups = new RegExp('(' + regex.source.replace(/([^\\]?)[()]/g, '$1)(') + ')'),
+				allMatches = string.match(everythingInMatchGroups),
+				initial =  string.substring(0, allMatches.index),
+				trailing = string.substring(allMatches.index + allMatches[0].length),
+				values = allMatches.slice(1);
 		overrides.forEach(function (replacement) {
-			values[replacement.index] = replacement.value;
+			var findIndex = replacement.index * 2 + 1;
+			if (replacement.index >= 0 && findIndex < (values.length - 1)) {
+				values[findIndex] = replacement.value;
+			}
 		});
-		values.forEach(function (groupValue) {
-			literalReplacement = literalReplacement.replace(capturingGroup, groupValue);
-		});
-		return string.replace(regex, literalReplacement);
+		return initial + values.join('') + trailing;
 	};
 	this.isListItem = function (line) {
 		if (/^[\*\s-=]*$/.test(line)) {
