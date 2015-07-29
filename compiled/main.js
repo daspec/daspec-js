@@ -58,33 +58,6 @@ global.DaSpec = {
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../test-data/test-steps":13,"./daspec-runner":5}],4:[function(require,module,exports){
 /*global module, require*/
-
-/*
-move formating out of context
-
-
-- responsibilities
-
-	-> provide md source file/s
-		-> web loader
-		-> file loader
-		-> text area loader
-	-> convert between page md and blocks (parsing)						[ExampleBlocks]
-	-> convert between blocks and "steps"
-		-> allow users to define matchers for steps						[Context]
-		-> convert between blocks and "steps" (execution)				[Context]
-
-	-> execution/runner
-		-> control the flow on a single page (setup/steps/teardown/beforeeach/aftereach) [Runner]
-		-> control the flow on a whole suite (suite setup/pages/suite teardown/beforeall/afterall) [Runner]
-		-> execute "steps"												[Runner]
-		-> carry "step" execution info in a format-agnostic way			[Step]
-	-> format results													[Formatter]
-		-> format results as md
-		-> format results as counts (junit xml or tap)
-
-
-*/
 module.exports = function () {
 	'use strict';
 	var self = this,
@@ -92,6 +65,7 @@ module.exports = function () {
 		steps = [];
 
 	self.defineStep = function (regexMatcher, processFunction) {
+		/* TODO: bork if it has non capture groups */
 		steps.push(new StepExecutor(regexMatcher, processFunction));
 	};
 	self.getStepForLine = function (stepText) {
@@ -128,7 +102,7 @@ module.exports = function (stepFunc) {
 
 		blocks.getBlocks().forEach(function (block) {
 			var blockLines = block.getMatchText(),
-				blockList = block.getList();
+				blockParam = block.getAttachment();
 			if (blockLines) {
 				blockLines.forEach(function (line) {
 					if (!regexUtil.assertionLine(line)) { //Move to block?
@@ -141,7 +115,7 @@ module.exports = function (stepFunc) {
 						results.skippedLine(line);
 						return;
 					}
-					results.stepResult(step.execute(line, blockList));
+					results.stepResult(step.execute(line, blockParam));
 				});
 			}
 		});
@@ -159,13 +133,13 @@ module.exports = function (regexMatcher, processFunction) {
 	self.match = function (stepText) {
 		return regexMatcher.test(stepText);
 	};
-	self.execute = function (stepText, list) {
+	self.execute = function (stepText, attachment) {
 		var match = stepText.match(regexMatcher),
 			stepArgs = match.slice(1),
 			result = {
 				matcher: regexMatcher,
 				stepText: stepText,
-				list: list,
+				attachment: attachment,
 				assertions: []
 			},
 			StepContext = function () {
@@ -186,8 +160,8 @@ module.exports = function (regexMatcher, processFunction) {
 				};
 			};
 
-		if (list) { /* we know it's a list and the symbol */
-			stepArgs.push(list);
+		if (attachment) { /* we know it's a list and the symbol */
+			stepArgs.push(attachment);
 		}
 
 		try {
@@ -209,7 +183,24 @@ module.exports = function () {
 	var self = this,
 		RegexUtil = require('./regex-util'),
 		regexUtil = new RegexUtil(),
-		lines = [];
+		lines = [],
+		toLineItem = function (line) {
+			return line.replace(/^\||\|$/g, '').split('|').map(function (s) {
+				return s.trim();
+			});
+		},
+		toItems = function (lines) {
+			return lines.map(toLineItem);
+		},
+		toTable = function (lines) {
+			var tableItems = lines, result = {type: 'table'};
+			if (lines.length > 2 && regexUtil.isTableHeaderDivider(lines[1])) {
+				result.titles =  toLineItem(lines[0]);
+				tableItems = lines.slice(2);
+			}
+			result.items = toItems(tableItems);
+			return result;
+		};
 	self.addLine = function (lineText) {
 		lines.unshift(lineText);
 	};
@@ -217,18 +208,39 @@ module.exports = function () {
 		if (lines.length === 0) {
 			return false;
 		}
-		if (regexUtil.isListItem(lines[0])) {
+		if (regexUtil.isListItem(lines[0]) || regexUtil.isTableItem(lines[0]) || lines[0].trim().length === 0) {
 			return false;
 		}
 		return true;
+	};
+	self.getAttachment = function () {
+		return self.getList() || self.getTable();
+	};
+	self.getTable = function () {
+		if (lines.length === 0) {
+			return false;
+		}
+		var topLine = lines[0],
+				tableLines = lines.filter(regexUtil.isTableItem);
+		if (tableLines.length === 0) {
+			return false;
+		}
+		if (!regexUtil.isTableItem(topLine) && regexUtil.assertionLine(topLine)) {
+			return toTable(tableLines);
+		}
+		return false;
 	};
 	self.getList = function () {
 		if (lines.length === 0) {
 			return false;
 		}
-		var topLine = lines[0];
+		var topLine = lines[0],
+				listLines = lines.filter(regexUtil.isListItem);
+		if (listLines.length === 0) {
+			return false;
+		}
 		if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
-			return {ordered: false, items: lines.filter(regexUtil.isListItem).map(regexUtil.stripListSymbol)};
+			return {type: 'list', ordered: false, items: listLines.map(regexUtil.stripListSymbol)};
 		}
 		return false;
 	};
@@ -236,9 +248,12 @@ module.exports = function () {
 		if (lines.length === 0) {
 			return false;
 		}
-		var topLine = lines[0];
-		if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
-			return [topLine];
+		var nonAttachmentLine = function (line) {
+				return !regexUtil.isListItem(line) && !regexUtil.isListItem(line);
+			},
+			topLine = lines[0];
+		if (nonAttachmentLine(topLine) && regexUtil.assertionLine(topLine)) {
+			return lines.filter(nonAttachmentLine);
 		} else {
 			return lines;
 		}
@@ -333,7 +348,7 @@ module.exports = function () {
 
 	self.markResult = function (stepResult) {
 		var withoutIndex = function (assertion) {
-				return !assertion.index;
+				return !assertion.index && assertion.index !== 0;
 			},
 			withIndex = function (assertion) {
 				return assertion.index;
@@ -342,7 +357,8 @@ module.exports = function () {
 				return !assertion.passed;
 			},
 			failedForList = function (assertion) {
-				return assertion.expected === stepResult.list.items && !assertion.passed;
+				return stepResult.attachment && stepResult.attachment.items && stepResult.attachment.items.length > 0 &&
+					assertion.expected === stepResult.attachment.items && !assertion.passed;
 			},
 			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
@@ -361,17 +377,37 @@ module.exports = function () {
 				return stepResult.stepText;
 			},
 			attachmentLines = function () {
-				if (!stepResult.list) {
+				if (!stepResult.attachment) {
 					return '';
 				}
-				var listAssertions = stepResult.assertions.filter(failedForList),
-						values = stepResult.list.items;
-				if (listAssertions && listAssertions.length > 0) {
-					values = self.formatListResult(listAssertions[0].value);
-				}
-				return values.map(function (e) {
-					return '\n* ' + e;
-				}).join(''); // TODO: deal with ordered lists
+				var formatList = function () {
+						if (stepResult.attachment.type !== 'list') {
+							return false;
+						}
+						var failedListAssertions = stepResult.assertions.filter(failedForList),
+								values = stepResult.attachment.items;
+						if (failedListAssertions && failedListAssertions.length > 0) {
+							values = self.formatListResult(failedListAssertions[0].value);
+						}
+						return values.map(function (e) {
+							return '\n* ' + e;
+						}).join(''); // TODO: deal with ordered lists
+					},
+					formatTableItem = function (item) {
+						return '\n| ' + item.join(' | ') + ' |';
+					},
+					formatTable = function () {
+						var titles = '';
+						if (stepResult.attachment.type !== 'table') {
+							return false;
+						}
+						if (stepResult.attachment.titles) {
+							titles = formatTableItem(stepResult.attachment.titles);
+							titles = titles + titles.replace(/[^|\n]/g, '-');
+						}
+						return titles + stepResult.attachment.items.map(formatTableItem).join('');
+					};
+				return formatList() || formatTable();
 			};
 		if (stepResult.exception) {
 			return '~~' + stepResult.stepText + '~~\n' + '\t' + stepResult.exception.stack; //TODO: push list as well
@@ -440,17 +476,30 @@ module.exports = function () {
 	'use strict';
 	var self = this;
 	this.replaceMatchGroup = function (string, regex, overrides) {
-		var match = string.match(regex),
-			literalReplacement = regex.source,
-			capturingGroup = /\([^)]*\)/,  /* todo: deal with non-capture groups */
-			values = match.slice(1);
+		var everythingInMatchGroups = new RegExp('(' + regex.source.replace(/([^\\]?)[()]/g, '$1)(') + ')'),
+				allMatches = string.match(everythingInMatchGroups),
+				initial =  string.substring(0, allMatches.index),
+				trailing = string.substring(allMatches.index + allMatches[0].length),
+				values = allMatches.slice(1);
 		overrides.forEach(function (replacement) {
-			values[replacement.index] = replacement.value;
+			var findIndex = replacement.index * 2 + 1;
+			if (replacement.index >= 0 && findIndex < (values.length - 1)) {
+				values[findIndex] = replacement.value;
+			}
 		});
-		values.forEach(function (groupValue) {
-			literalReplacement = literalReplacement.replace(capturingGroup, groupValue);
-		});
-		return string.replace(regex, literalReplacement);
+		return initial + values.join('') + trailing;
+	};
+	this.isCodeItem = function (line) {
+		if (!line || line.trim().length === 0) {
+			return false;
+		}
+		return /^\s\s\s\s/.test(line) || /^\s*\t/.test(line);
+	};
+	this.isTableItem = function (line) {
+		return !self.isCodeItem(line) && /^\s*\|/.test(line);
+	};
+	this.isTableHeaderDivider = function (line) {
+		return self.isTableItem(line) && /^[|= -]*$/.test(line);
 	};
 	this.isListItem = function (line) {
 		if (/^[\*\s-=]*$/.test(line)) {
@@ -511,9 +560,14 @@ module.exports = function (ctx) {
 			'Return of the Jedi'];
 		this.assertSetEquals(listOfEpisodes.items, episodes);
 	});
-	var films = {};
+	var films = {}, tables = {};
 	ctx.defineStep(/These are the ([A-Za-z ]*) Films/, function (seriesName, tableOfReleases) {
 /*
+{type:'table', titles: ['Title', 'Year'], items:[
+	['A new Hope', 1976],
+	['The Empire Strikes Back', 1979],
+	...
+]]}
 		Table with title row
 		[
 			{Title:'A New Hope', Year:1979},
@@ -528,13 +582,20 @@ module.exports = function (ctx) {
 			{0:'The Return of the Jedi', 1:1979}
 		]
 */
-		films[seriesName] = tableOfReleases;
+		films[seriesName] = tableOfReleases.items;
+		tables[seriesName] = tableOfReleases;
 	});
 	ctx.defineStep(/In total there a (\d*) ([A-Za-z ]*) Films/, function (numberOfFilms, seriesName) {
-		var actual = films[seriesName] && films[seriesName].length;
+		var actual = (films[seriesName] && films[seriesName].length) || 0;
 		this.assertEquals(parseFloat(numberOfFilms), actual, 0);
 	});
-
+	ctx.defineStep(/Good ([A-Za-z ]*) Films are/, function (seriesName, listOfEpisodes) {
+		var actual = films[seriesName];
+		this.assertSetEquals(listOfEpisodes.items, actual);
+	});
+	ctx.defineStep(/Check ([A-Za-z ]*) Films/, function (seriesName, listOfEpisodes) {
+		this.assertTableEquals(listOfEpisodes, tables[seriesName]);
+	});
 	ctx.defineStep(/\|([A-Za-z ]*) episode \| Year of release \|/, function (seriesName, episode, yearOfRelease) {
 		var series = films[seriesName],
 			matching = series && series.filter(function (film) {

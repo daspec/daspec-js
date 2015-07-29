@@ -11,12 +11,31 @@ In total there a 4 Star Wars Films
 
 These are the Star Wars Films:
 | Title                  | Year |
-|-------|------|
+|------------------------|------|
 | A new Hope             | 1976 |
 |The Empire Strikes Back | 1979 |
 | The Return of the Jedi | 1983 |
 
 In total there a 3 Star Wars Films
+
+> comparing items as lists
+
+Good Star Wars Films are:
+| Title                   | Year |
+|-------------------------|------|
+| Phantom Menace          | 1999 |
+| A new Hope              | 1976 |
+| The Return of the Jedi  | 1983 |
+
+> comparing whole tables
+
+Check Star Wars Films are:
+
+| Title                   | Year |
+|-------------------------|------|
+| Phantom Menace          | 1999 |
+| A new Hope              | 1976 |
+| The Return of the Jedi  | 1983 |
 
 ># Table as a set of examples
 >
@@ -48,6 +67,27 @@ These are the Star Wars Films:
 | The Return of the Jedi | 1983 |
 
 In total there a **3** Star Wars Films
+
+> comparing items as lists
+
+~~Good Star Wars Films are:~~
+| | Title | Year |
+|-|-------|------|
+|✓| A new Hope | 1976 |
+|✓| The Return of the Jedi | 1983 |
+|–| **~~Phantom Menace~~** | **~~1999~~** |
+|+| **The Return of the Jedi** | **1983** |
+
+> comparing whole tables
+
+~~Check Star Wars Films are:~~
+
+| | Title | Year |
+|-|-------|------|
+|✓| A new Hope | 1976 |
+|✓| The Return of the Jedi | 1983 |
+|–| **~~Phantom Menace~~** | **~~1999~~** |
+|+| **The Return of the Jedi** | **1983** |
 
 ># Table as a set of examples
 >

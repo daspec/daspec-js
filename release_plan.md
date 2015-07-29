@@ -6,6 +6,7 @@ Release plan
 * support for tables
 * web browser runner
 * nodejs runner
+* go through TODO items
 
 # Enable JS developers to easily install and integrate daspec
 

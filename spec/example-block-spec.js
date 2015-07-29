@@ -29,6 +29,21 @@ describe('ExampleBlock', function () {
 			underTest.addLine('| table item |');
 			expect(underTest.isComplete()).toBeFalsy();
 		});
+		it('is false when the last line is blank', function () {
+			underTest.addLine('* a list item');
+			underTest.addLine('');
+			expect(underTest.isComplete()).toBeFalsy();
+		});
+		it('is false when the last line is space-only', function () {
+			underTest.addLine('* a list item');
+			underTest.addLine('  ');
+			expect(underTest.isComplete()).toBeFalsy();
+		});
+		it('is false when the last line is tab-only', function () {
+			underTest.addLine('* a list item');
+			underTest.addLine('\t');
+			expect(underTest.isComplete()).toBeFalsy();
+		});
 		/*TODO: complete a block if a list switches to a table or a table switches to a list */
 	});
 	describe('getMatchText', function () {
@@ -96,12 +111,19 @@ describe('ExampleBlock', function () {
 			expect(underTest.getTable().type).toEqual('table');
 			expect(underTest.getTable().items).toEqual([['a table item'], ['another table item']]);
 		});
+		it('ignores blank lines at the start when retrieving the table', function () {
+			underTest.addLine('|another table item|');
+			underTest.addLine('|a table item|');
+			underTest.addLine('');
+			underTest.addLine('not a table item');
+			expect(underTest.getTable().type).toEqual('table');
+			expect(underTest.getTable().items).toEqual([['a table item'], ['another table item']]);
+		});
 		it('trims cell values', function () {
 			underTest.addLine('|2.1 |      2.2 |');
 			underTest.addLine('|1.1\t \t|\t 1.2|');
 			underTest.addLine('not a table item');
 			expect(underTest.getTable().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
-
 		});
 		it('gets the table with a header row', function () {
 			underTest.addLine('|2.1|2.2|');

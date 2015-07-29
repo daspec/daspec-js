@@ -23,7 +23,7 @@ module.exports = function (ctx) {
 			'Return of the Jedi'];
 		this.assertSetEquals(listOfEpisodes.items, episodes);
 	});
-	var films = {};
+	var films = {}, tables = {};
 	ctx.defineStep(/These are the ([A-Za-z ]*) Films/, function (seriesName, tableOfReleases) {
 /*
 {type:'table', titles: ['Title', 'Year'], items:[
@@ -46,12 +46,19 @@ module.exports = function (ctx) {
 		]
 */
 		films[seriesName] = tableOfReleases.items;
+		tables[seriesName] = tableOfReleases;
 	});
 	ctx.defineStep(/In total there a (\d*) ([A-Za-z ]*) Films/, function (numberOfFilms, seriesName) {
 		var actual = (films[seriesName] && films[seriesName].length) || 0;
 		this.assertEquals(parseFloat(numberOfFilms), actual, 0);
 	});
-
+	ctx.defineStep(/Good ([A-Za-z ]*) Films are/, function (seriesName, listOfEpisodes) {
+		var actual = films[seriesName];
+		this.assertSetEquals(listOfEpisodes.items, actual);
+	});
+	ctx.defineStep(/Check ([A-Za-z ]*) Films/, function (seriesName, listOfEpisodes) {
+		this.assertTableEquals(listOfEpisodes, tables[seriesName]);
+	});
 	ctx.defineStep(/\|([A-Za-z ]*) episode \| Year of release \|/, function (seriesName, episode, yearOfRelease) {
 		var series = films[seriesName],
 			matching = series && series.filter(function (film) {

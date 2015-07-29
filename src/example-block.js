@@ -29,7 +29,7 @@ module.exports = function () {
 		if (lines.length === 0) {
 			return false;
 		}
-		if (regexUtil.isListItem(lines[0]) || regexUtil.isTableItem(lines[0])) {
+		if (regexUtil.isListItem(lines[0]) || regexUtil.isTableItem(lines[0]) || lines[0].trim().length === 0) {
 			return false;
 		}
 		return true;
@@ -69,9 +69,12 @@ module.exports = function () {
 		if (lines.length === 0) {
 			return false;
 		}
-		var topLine = lines[0];
-		if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
-			return [topLine];
+		var nonAttachmentLine = function (line) {
+				return !regexUtil.isListItem(line) && !regexUtil.isListItem(line);
+			},
+			topLine = lines[0];
+		if (nonAttachmentLine(topLine) && regexUtil.assertionLine(topLine)) {
+			return lines.filter(nonAttachmentLine);
 		} else {
 			return lines;
 		}

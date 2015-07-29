@@ -2,8 +2,7 @@
 module.exports = function (regexMatcher, processFunction) {
 	'use strict';
 	var self = this,
-		Assertion = require('./assertion');
-
+			StepContext = require('./step-context');
 	self.match = function (stepText) {
 		return regexMatcher.test(stepText);
 	};
@@ -16,30 +15,14 @@ module.exports = function (regexMatcher, processFunction) {
 				attachment: attachment,
 				assertions: []
 			},
-			StepContext = function () {
-				var self = this,
-					ListUtil = require('./list-util'),
-					listUtil = new ListUtil();
-				self.assertEquals = function (expected, actual, optionalOutputIndex) {
-					var	passed = expected == actual;
-					result.assertions.push(new Assertion(expected,
-						actual,
-						passed, optionalOutputIndex));
-				};
-				self.assertSetEquals = function (expected, actual, optionalOutputIndex) {
-					var listResult = listUtil.unorderedMatch(expected, actual);
-					result.assertions.push(new Assertion(expected,
-						listResult,
-						listResult.matches, optionalOutputIndex));
-				};
-			};
+			stepContext = new StepContext(result);
 
 		if (attachment) { /* we know it's a list and the symbol */
 			stepArgs.push(attachment);
 		}
 
 		try {
-			processFunction.apply(new StepContext(), stepArgs);
+			processFunction.apply(stepContext, stepArgs);
 		} catch (e) {
 			/* geniuine error, not assertion fail */
 			result.exception = e;
