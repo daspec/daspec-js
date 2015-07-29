@@ -15,6 +15,12 @@ describe('MarkDownFormatter', function () {
 			expect(underTest.formatPrimitiveResult({expected:3, value:6, passed:false, index: 1})).toEqual({index:1, value:'**~~3~~ [6]**'});
 		});
 	});
+	describe('markResult', function () {
+		it('marks a single indexed assertion as failed within a string if there are no unindexed failures', function () {
+			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/, assertions: [{expected: 4, index: 0, passed: false, value: 3}]})).toEqual('The number is **~~4~~ [3]**');
+		});
+
+	});
 	describe('formatListResult', function () {
 		var dash = String.fromCharCode(8211),
 				tick = String.fromCharCode(10003);

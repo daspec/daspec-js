@@ -36,7 +36,7 @@ module.exports = function () {
 
 	self.markResult = function (stepResult) {
 		var withoutIndex = function (assertion) {
-				return !assertion.index;
+				return !assertion.index && assertion.index !== 0;
 			},
 			withIndex = function (assertion) {
 				return assertion.index;
