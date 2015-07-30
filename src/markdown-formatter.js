@@ -99,6 +99,7 @@ module.exports = function () {
 				return stepResult.stepText;
 			},
 			attachmentLines = function () {
+				//TODO: investigate if we should force exactly one space between the step text and attachment
 				if (!stepResult.attachment) {
 					return '';
 				}
