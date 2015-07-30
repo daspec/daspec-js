@@ -98,12 +98,36 @@ module.exports = function (stepFunc) {
 	self.example = function (inputText) {
 		var MarkDownResultFormatter = require('./markdown-result-formatter'),
 			results = new MarkDownResultFormatter(),
-			blocks = new ExampleBlocks(inputText);
+			blocks = new ExampleBlocks(inputText),
+			processTableBlock = function (block) {
+				var blockLines = block.getMatchText(),
+					step,
+					headerLine;
+				blockLines.forEach(function (line) {
+					if (!regexUtil.isTableDataRow(line)) { //Move to block?
+						if (!regexUtil.isTableHeaderDivider(line)) {
+							step = false;
+						}
+						results.nonAssertionLine(line);
+						return;
+					}
 
-		blocks.getBlocks().forEach(function (block) {
-			var blockLines = block.getMatchText(),
-				blockParam = block.getAttachment();
-			if (blockLines) {
+					if (!step) {
+						step = context.getStepForLine(line);
+						headerLine = line;
+						if (!step) {
+							results.skippedLine(line);
+						} else {
+							results.nonAssertionLine(line);
+						}
+					} else {
+						results.stepResult(step.executeTableRow(line, headerLine));
+					}
+				});
+			},
+			processBlock = function (block) {
+				var blockLines = block.getMatchText(),
+					blockParam = block.getAttachment();
 				blockLines.forEach(function (line) {
 					if (!regexUtil.assertionLine(line)) { //Move to block?
 						results.nonAssertionLine(line);
@@ -117,6 +141,13 @@ module.exports = function (stepFunc) {
 					}
 					results.stepResult(step.execute(line, blockParam));
 				});
+			};
+
+		blocks.getBlocks().forEach(function (block) {
+			if (block.isTableBlock()) {
+				processTableBlock(block);
+			} else {
+				processBlock(block);
 			}
 		});
 		return results.formattedResults();
@@ -125,10 +156,12 @@ module.exports = function (stepFunc) {
 
 },{"./daspec-context":4,"./example-blocks":8,"./markdown-result-formatter":11,"./regex-util":12}],6:[function(require,module,exports){
 /*global module, require*/
-module.exports = function (regexMatcher, processFunction) {
+module.exports = function StepExecutor(regexMatcher, processFunction) {
 	'use strict';
 	var self = this,
-			StepContext = require('./step-context');
+		StepContext = require('./step-context'),
+		TableUtil = require('./table-util'),
+		RegExUtil = require('./regex-util');
 	self.match = function (stepText) {
 		return regexMatcher.test(stepText);
 	};
@@ -157,9 +190,32 @@ module.exports = function (regexMatcher, processFunction) {
 
 		return result;
 	};
+	self.executeTableRow = function (dataRow, titleRow) {
+		var tableUtil = new TableUtil(),
+			regexUtil = new RegExUtil(),
+			stepArgs = tableUtil.cellValuesForRow(dataRow),
+			matcher = regexUtil.regexForTableDataRow(stepArgs.length),
+			result = {
+				matcher: matcher,
+				stepText: dataRow,
+				assertions: []
+			},
+			stepContext = new StepContext(result),
+			titleMatch = titleRow && titleRow.match(regexMatcher),
+			titleArgs = titleMatch && titleMatch.length > 1 && titleMatch.slice(1).map(function (item) {
+				return item.trim();
+			});
+
+		if (titleArgs) {
+			stepArgs = stepArgs.concat(titleArgs);
+		}
+		processFunction.apply(stepContext, stepArgs);
+
+		return result;
+	};
 };
 
-},{"./step-context":13}],7:[function(require,module,exports){
+},{"./regex-util":12,"./step-context":13,"./table-util":14}],7:[function(require,module,exports){
 /*global module, require*/
 module.exports = function () {
 	'use strict';
@@ -215,6 +271,19 @@ module.exports = function () {
 		}
 		return false;
 	};
+	self.isTableBlock = function () {
+		var tableLines = lines.filter(regexUtil.isTableItem),
+			nonTableAssertionLine = function (line) {
+				return regexUtil.assertionLine(line) && !regexUtil.isTableItem(line);
+			};
+		if (tableLines.length === 0) {
+			return false;
+		}
+		if (lines.filter(nonTableAssertionLine).length > 0) {
+			return false;
+		}
+		return true;
+	};
 	self.getList = function () {
 		if (lines.length === 0) {
 			return false;
@@ -231,7 +300,7 @@ module.exports = function () {
 	};
 	self.getMatchText = function () {
 		if (lines.length === 0) {
-			return false;
+			return [];
 		}
 		var nonAttachmentLine = function (line) {
 				return !regexUtil.isListItem(line) && !regexUtil.isTableItem(line);
@@ -263,7 +332,7 @@ module.exports = function (inputText) {
 				current = new ExampleBlock();
 			}
 		});
-		if (current.getMatchText()) {
+		if (current.getMatchText().length > 0) {
 			blocks.push(current);
 		}
 		return blocks.reverse();
@@ -417,6 +486,7 @@ module.exports = function () {
 				return stepResult.stepText;
 			},
 			attachmentLines = function () {
+				//TODO: investigate if we should force exactly one space between the step text and attachment
 				if (!stepResult.attachment) {
 					return '';
 				}
@@ -549,6 +619,9 @@ module.exports = function () {
 	this.isTableItem = function (line) {
 		return !self.isCodeItem(line) && /^\s*\|/.test(line);
 	};
+	this.isTableDataRow = function (line) {
+		return self.isTableItem(line) && !self.isTableHeaderDivider(line);
+	};
 	this.isTableHeaderDivider = function (line) {
 		return self.isTableItem(line) && /^[|= -]*$/.test(line);
 	};
@@ -588,6 +661,18 @@ module.exports = function () {
 			}
 		});
 		return result;
+	};
+	this.regexForTableDataRow = function (cells) {
+		if (!cells || cells < 0) {
+			return false;
+		}
+		var regexTemplate = '\\|',
+			cellTemplate = '(.*)\\|',
+			i;
+		for (i = 0; i < cells; i++) {
+			regexTemplate = regexTemplate + cellTemplate;
+		}
+		return new RegExp(regexTemplate);
 	};
 };
 
@@ -645,6 +730,20 @@ module.exports = function TableUtil() {
 			result[self.normaliseTitle(key)] = object[key];
 		});
 		return result;
+	};
+	self.cellValuesForRow = function (dataRow) {
+		if (!dataRow || dataRow.trim() === '') {
+			return [];
+		}
+		var values = dataRow.split('|');
+		if (values.length < 3) {
+			return [];
+		}
+		values.pop();
+		values =  values.slice(1);
+		return values.map(function (v) {
+			return v.trim();
+		});
 	};
 	//TODO: validate table. eg multiple columns matching same normalised title so non-deterministic results
 	self.tableValuesForTitles = function (table, titles) {
@@ -739,13 +838,16 @@ module.exports = function (ctx) {
 	ctx.defineStep(/Check ([A-Za-z ]*) Films/, function (seriesName, listOfEpisodes) {
 		this.assertUnorderedTableEquals(listOfEpisodes, tables[seriesName]);
 	});
-	ctx.defineStep(/\|([A-Za-z ]*) episode \| Year of release \|/, function (seriesName, episode, yearOfRelease) {
+	ctx.defineStep(/\|([A-Za-z ]*) episode \| Year of release \|/, function (episode, yearOfRelease, seriesName) {
 		var series = films[seriesName],
 			matching = series && series.filter(function (film) {
-				return film.Title === episode;
+				return film[0] === episode;
 			}),
-			actualYear = matching && matching.length > 0 && (matching[0].Year || matching[0][1]);
-
+			actualYear = matching && matching.length > 0 && matching[0][1];
+		console.log('expected', episode, yearOfRelease, seriesName);
+		console.log('actual', actualYear, matching, series);
+		this.assertEquals(true, !!series);
+		this.assertEquals(true, !!matching);
 		this.assertEquals(yearOfRelease, actualYear, 1);
 	});
 };

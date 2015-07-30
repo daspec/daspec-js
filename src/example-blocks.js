@@ -14,7 +14,7 @@ module.exports = function (inputText) {
 				current = new ExampleBlock();
 			}
 		});
-		if (current.getMatchText()) {
+		if (current.getMatchText().length > 0) {
 			blocks.push(current);
 		}
 		return blocks.reverse();

@@ -46,9 +46,76 @@ describe('ExampleBlock', function () {
 		});
 		/*TODO: complete a block if a list switches to a table or a table switches to a list */
 	});
+	describe('isTableBlock', function () {
+		it('returns true when the block is just a table', function () {
+			underTest.addLine('|one|');
+			underTest.addLine('|---|');
+			underTest.addLine('|title|');
+			expect(underTest.isTableBlock()).toBeTruthy();
+		});
+		it('returns false when the block does not contain a table', function () {
+			underTest.addLine('* a list item');
+			expect(underTest.isTableBlock()).toBeFalsy();
+		});
+		it('returns true when the block contains separate tables', function () {
+			underTest.addLine('|one|');
+			underTest.addLine('|---|');
+			underTest.addLine('|title|');
+			underTest.addLine('');
+			underTest.addLine('|two|');
+			underTest.addLine('|---|');
+			underTest.addLine('|titleTwo|');
+			expect(underTest.isTableBlock()).toBeTruthy();
+		});
+		it('returns false when the block has an assertion line above a table', function () {
+			underTest.addLine('|one|');
+			underTest.addLine('|---|');
+			underTest.addLine('|title|');
+			underTest.addLine('the table is an attachment');
+			expect(underTest.isTableBlock()).toBeFalsy();
+		});
+		it('returns false when the block has an assertion line above a table with a separating line', function () {
+			underTest.addLine('|one|');
+			underTest.addLine('|---|');
+			underTest.addLine('|title|');
+			underTest.addLine('');
+			underTest.addLine('the table is an attachment');
+			expect(underTest.isTableBlock()).toBeFalsy();
+		});
+		it('returns true when the block has a non assertion line above a table', function () {
+			underTest.addLine('|one|');
+			underTest.addLine('|---|');
+			underTest.addLine('|title|');
+			underTest.addLine('>the table is not an attachment');
+			expect(underTest.isTableBlock()).toBeTruthy();
+		});
+		it('returns true when the block has a non assertion line above a table with a separating space', function () {
+			underTest.addLine('|one|');
+			underTest.addLine('|---|');
+			underTest.addLine('|title|');
+			underTest.addLine('');
+			underTest.addLine('>the table is not an attachment');
+			expect(underTest.isTableBlock()).toBeTruthy();
+		});
+		it('returns true when the block has a non assertion line below a table', function () {
+			underTest.addLine('>the table is not an attachment');
+			underTest.addLine('|one|');
+			underTest.addLine('|---|');
+			underTest.addLine('|title|');
+			expect(underTest.isTableBlock()).toBeTruthy();
+		});
+		it('returns true when the block has a non assertion line below a table with a separating space', function () {
+			underTest.addLine('>the table is not an attachment');
+			underTest.addLine('');
+			underTest.addLine('|one|');
+			underTest.addLine('|---|');
+			underTest.addLine('|title|');
+			expect(underTest.isTableBlock()).toBeTruthy();
+		});
+	});
 	describe('getMatchText', function () {
-		it('is false when the block is empty', function () {
-			expect(underTest.getMatchText()).toBeFalsy();
+		it('is an empty array when the block is empty', function () {
+			expect(underTest.getMatchText()).toEqual([]);
 		});
 		it('returns the top line when it is a non list item and not ignored', function () {
 			underTest.addLine('* another list item');

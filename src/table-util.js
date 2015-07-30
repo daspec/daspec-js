@@ -12,6 +12,20 @@ module.exports = function TableUtil() {
 		});
 		return result;
 	};
+	self.cellValuesForRow = function (dataRow) {
+		if (!dataRow || dataRow.trim() === '') {
+			return [];
+		}
+		var values = dataRow.split('|');
+		if (values.length < 3) {
+			return [];
+		}
+		values.pop();
+		values =  values.slice(1);
+		return values.map(function (v) {
+			return v.trim();
+		});
+	};
 	//TODO: validate table. eg multiple columns matching same normalised title so non-deterministic results
 	self.tableValuesForTitles = function (table, titles) {
 		if (!titles || titles.length === 0) {

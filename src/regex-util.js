@@ -26,6 +26,9 @@ module.exports = function () {
 	this.isTableItem = function (line) {
 		return !self.isCodeItem(line) && /^\s*\|/.test(line);
 	};
+	this.isTableDataRow = function (line) {
+		return self.isTableItem(line) && !self.isTableHeaderDivider(line);
+	};
 	this.isTableHeaderDivider = function (line) {
 		return self.isTableItem(line) && /^[|= -]*$/.test(line);
 	};
@@ -65,5 +68,17 @@ module.exports = function () {
 			}
 		});
 		return result;
+	};
+	this.regexForTableDataRow = function (cells) {
+		if (!cells || cells < 0) {
+			return false;
+		}
+		var regexTemplate = '\\|',
+			cellTemplate = '(.*)\\|',
+			i;
+		for (i = 0; i < cells; i++) {
+			regexTemplate = regexTemplate + cellTemplate;
+		}
+		return new RegExp(regexTemplate);
 	};
 };

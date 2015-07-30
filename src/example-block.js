@@ -53,6 +53,19 @@ module.exports = function () {
 		}
 		return false;
 	};
+	self.isTableBlock = function () {
+		var tableLines = lines.filter(regexUtil.isTableItem),
+			nonTableAssertionLine = function (line) {
+				return regexUtil.assertionLine(line) && !regexUtil.isTableItem(line);
+			};
+		if (tableLines.length === 0) {
+			return false;
+		}
+		if (lines.filter(nonTableAssertionLine).length > 0) {
+			return false;
+		}
+		return true;
+	};
 	self.getList = function () {
 		if (lines.length === 0) {
 			return false;
@@ -69,7 +82,7 @@ module.exports = function () {
 	};
 	self.getMatchText = function () {
 		if (lines.length === 0) {
-			return false;
+			return [];
 		}
 		var nonAttachmentLine = function (line) {
 				return !regexUtil.isListItem(line) && !regexUtil.isTableItem(line);

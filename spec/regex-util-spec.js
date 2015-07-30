@@ -126,6 +126,26 @@ describe('regex util', function () {
 			expect(underTest.isTableItem('       |ne|')).toBeFalsy();
 		});
 	});
+	describe('isTableDataRow', function () {
+		it('recognises a data row of table', function () {
+			expect(underTest.isTableDataRow('|one|')).toBeTruthy();
+		});
+		it('does not recognise table header divider', function () {
+			expect(underTest.isTableDataRow('|---|')).toBeFalsy();
+		});
+	});
+	describe('regexForTableDataRow', function () {
+		it('should create regex with matching groups for each column unstripped', function () {
+			var result = underTest.regexForTableDataRow(3),
+				match = ' | a | b | \tc   | '.match(result);
+			expect(match.slice(1)).toEqual([' a ', ' b ', ' \tc   ']);
+		});
+		it('should return false is 0 (or less) or undefined cell count supplied', function () {
+			expect(underTest.regexForTableDataRow(0)).toBeFalsy();
+			expect(underTest.regexForTableDataRow(-1)).toBeFalsy();
+			expect(underTest.regexForTableDataRow()).toBeFalsy();
+		});
+	});
 	describe('isTableHeaderDivider', function () {
 		it('recognises lines with pipes separated by dashes', function () {
 			expect(underTest.isTableHeaderDivider('|---|')).toBeTruthy();

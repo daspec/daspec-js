@@ -22,6 +22,22 @@ describe('TableUtil', function () {
 			);
 		});
 	});
+	describe('cellValuesForRow', function () {
+		it('should return the values as an array', function () {
+			expect(underTest.cellValuesForRow('|a|b|c|')).toEqual(['a', 'b', 'c']);
+		});
+		it('should trim the values', function () {
+			expect(underTest.cellValuesForRow('  | a |\tb  |\tc\t|  ')).toEqual(['a', 'b', 'c']);
+		});
+		it('should return an empty array if not a table row', function () {
+			expect(underTest.cellValuesForRow('   a \tb  \tc\t')).toEqual([]);
+		});
+		it('should return an empty array if empty string or undefined', function () {
+			expect(underTest.cellValuesForRow('')).toEqual([]);
+			expect(underTest.cellValuesForRow(' ')).toEqual([]);
+			expect(underTest.cellValuesForRow()).toEqual([]);
+		});
+	});
 	describe('tableValuesForTitles', function () {
 		var table;
 		beforeEach(function () {

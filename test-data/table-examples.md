@@ -36,14 +36,6 @@ Check Star Wars Films are:
 | 1976 | A new Hope              |
 | 1983 | The Return of the Jedi  |
 
-># Table as a set of examples
->
->| Star Wars episode | Year of release |
->|-------|------|
->| A new Hope             | 1976 |
->|The Empire Strikes Back | 1979 |
->| The Return of the Jedi | 1983 |
-
 <!--OUTPUT
 > **In da spec:** executed: 4, passed: 1, failed: 3
 
@@ -86,13 +78,5 @@ In total there a **3** Star Wars Films
 | ✓ | 1983 | The Return of the Jedi |
 | – | **~~1999~~** | **~~Phantom Menace~~** |
 | + | **1979** | **The Empire Strikes Back** |
-
-># Table as a set of examples
->
->| Star Wars episode | Year of release |
->|-------|------|
->| A new Hope             | 1976 |
->|The Empire Strikes Back | 1979 |
->| The Return of the Jedi | 1983 |
 
 -->
