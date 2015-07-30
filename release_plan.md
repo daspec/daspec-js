@@ -22,6 +22,8 @@ Release plan
 * flexible matcher library support (js hamcrest?)
 * getting started guide on the web
 * nice example project to copy/paste from
+* perhaps matching by example in addition to matching by regex
+  - eg 'SERIES cost BUDGET to make' would map 'Avengers cost 1000M to make'
 
 # Enable JS developers to easily contribute to daspec development
 

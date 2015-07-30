@@ -42,6 +42,7 @@ describe('StepContext', function () {
 				[{benefit:2, cost:4}, {benefit:2, cost:1, extra: 3}, { benefit: 4}]);
 			expect(result.assertions.length).toBe(1);
 			expect(result.assertions[0].passed).toBe(false);
+
 			expect(result.assertions[0].value).toEqual({matches: false, missing: [[3, 4]], additional: [[4, 2], [undefined, 4]], matching: [[1, 2]]});
 		});
 
