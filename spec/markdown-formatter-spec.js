@@ -28,6 +28,31 @@ describe('MarkDownFormatter', function () {
 		it('places the correct list symbol and indentation back', function () {
 			expect(underTest.markResult({stepText: '  - The number is 4', matcher: /.* (\d)/, assertions: [{passed: true}]})).toEqual('  - **The number is 4**');
 		});
+		describe('table formatting', function () {
+			it('copies a table if there are no failed table assertions', function () {
+				expect(underTest.markResult({
+					stepText: 'Before table',
+					attachment: {type: 'table', titles: ['A', 'B'], items: [[1, 2]]},
+					matcher: /.* (\d)/,
+					assertions: [{passed: true}]
+				})).toEqual(
+					'**Before table**\n' +
+					'| A | B |\n' +
+					'|---|---|\n' +
+					'| 1 | 2 |');
+			});
+			it('contains no table header if the origin table did not have a header', function () {
+				expect(underTest.markResult({
+					stepText: 'Before table',
+					attachment: {type: 'table', items: [[1, 2]]},
+					matcher: /.* (\d)/,
+					assertions: [{passed: true}]
+				})).toEqual(
+					'**Before table**\n' +
+					'| 1 | 2 |');
+
+			});
+		});
 	});
 	describe('formatListResult', function () {
 		var dash = String.fromCharCode(8211),
@@ -42,6 +67,19 @@ describe('MarkDownFormatter', function () {
 					'**[' + dash  + '] ~~e~~**',
 					'**[+] f**',
 					'**[+] g**'
+				]);
+		});
+	});
+	describe('getTableResult', function () {
+		var dash = String.fromCharCode(8211),
+				tick = String.fromCharCode(10003);
+		it('ticks all matching rows, then reports missing followed by additional rows', function () {
+			expect(underTest.getTableResult({matching: [['a', 'b'], ['c', 'd']], missing: [['d', 'e']], additional: [['f', 'g']]})).toEqual(
+				[
+					[tick, 'a', 'b'],
+					[tick, 'c', 'd'],
+					[dash, '**~~d~~**', '**~~e~~**'],
+					['+', '**f**', '**g**']
 				]);
 		});
 	});

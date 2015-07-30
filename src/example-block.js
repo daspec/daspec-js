@@ -72,7 +72,7 @@ module.exports = function () {
 			return false;
 		}
 		var nonAttachmentLine = function (line) {
-				return !regexUtil.isListItem(line) && !regexUtil.isListItem(line);
+				return !regexUtil.isListItem(line) && !regexUtil.isTableItem(line);
 			},
 			topLine = lines[0];
 		if (nonAttachmentLine(topLine) && regexUtil.assertionLine(topLine)) {

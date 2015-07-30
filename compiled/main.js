@@ -56,7 +56,7 @@ global.DaSpec = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../test-data/test-steps":13,"./daspec-runner":5}],4:[function(require,module,exports){
+},{"../test-data/test-steps":15,"./daspec-runner":5}],4:[function(require,module,exports){
 /*global module, require*/
 module.exports = function () {
 	'use strict';
@@ -128,8 +128,7 @@ module.exports = function (stepFunc) {
 module.exports = function (regexMatcher, processFunction) {
 	'use strict';
 	var self = this,
-		Assertion = require('./assertion');
-
+			StepContext = require('./step-context');
 	self.match = function (stepText) {
 		return regexMatcher.test(stepText);
 	};
@@ -142,30 +141,14 @@ module.exports = function (regexMatcher, processFunction) {
 				attachment: attachment,
 				assertions: []
 			},
-			StepContext = function () {
-				var self = this,
-					ListUtil = require('./list-util'),
-					listUtil = new ListUtil();
-				self.assertEquals = function (expected, actual, optionalOutputIndex) {
-					var	passed = expected == actual;
-					result.assertions.push(new Assertion(expected,
-						actual,
-						passed, optionalOutputIndex));
-				};
-				self.assertSetEquals = function (expected, actual, optionalOutputIndex) {
-					var listResult = listUtil.unorderedMatch(expected, actual);
-					result.assertions.push(new Assertion(expected,
-						listResult,
-						listResult.matches, optionalOutputIndex));
-				};
-			};
+			stepContext = new StepContext(result);
 
 		if (attachment) { /* we know it's a list and the symbol */
 			stepArgs.push(attachment);
 		}
 
 		try {
-			processFunction.apply(new StepContext(), stepArgs);
+			processFunction.apply(stepContext, stepArgs);
 		} catch (e) {
 			/* geniuine error, not assertion fail */
 			result.exception = e;
@@ -176,7 +159,7 @@ module.exports = function (regexMatcher, processFunction) {
 	};
 };
 
-},{"./assertion":2,"./list-util":9}],7:[function(require,module,exports){
+},{"./step-context":13}],7:[function(require,module,exports){
 /*global module, require*/
 module.exports = function () {
 	'use strict';
@@ -217,6 +200,8 @@ module.exports = function () {
 		return self.getList() || self.getTable();
 	};
 	self.getTable = function () {
+		//TODO: complain if table has duplicated column titles or some columns have no titles
+		//TODO: table column title normalisation (eg Top Price === topprice === TOP price)
 		if (lines.length === 0) {
 			return false;
 		}
@@ -249,7 +234,7 @@ module.exports = function () {
 			return false;
 		}
 		var nonAttachmentLine = function (line) {
-				return !regexUtil.isListItem(line) && !regexUtil.isListItem(line);
+				return !regexUtil.isListItem(line) && !regexUtil.isTableItem(line);
 			},
 			topLine = lines[0];
 		if (nonAttachmentLine(topLine) && regexUtil.assertionLine(topLine)) {
@@ -289,16 +274,37 @@ module.exports = function (inputText) {
 /*global module*/
 module.exports = function () {
 	'use strict';
-	var self = this;
+	var self = this,
+			arrayEquals = function (array1, array2) {
+				var i;
+				if (!Array.isArray(array1) || !Array.isArray(array2) || array1.length !== array2.length) {
+					return false;
+				}
+				for (i = 0; i < array1.length; i++) {
+					if (array2[i] != array1[i]) {
+						return false;
+					}
+				}
+				return true;
+			},
+			equals = function (item) {
+				if (Array.isArray(item)) {
+					return arrayEquals(item, this);
+				} else {
+					return item == this;
+				}
+			};
 	self.unorderedMatch = function (array1, array2) {
+		array1 = array1 || [];
+		array2 = array2 || [];
 		var matching = array1.filter(function (el) {
-				return array2.indexOf(el) >= 0;
+				return array2.some(equals, el);
 			}),
 			missing = array1.filter(function (el) {
-				return array2.indexOf(el) < 0;
+				return !array2.some(equals, el);
 			}),
 			additional = array2.filter(function (el) {
-				return array1.indexOf(el) < 0;
+				return !array1.some(equals, el);
 			});
 		return {
 			matches: missing.length === 0 && additional.length === 0,
@@ -317,14 +323,26 @@ module.exports = function () {
 			RegexUtil = require('./regex-util'),
 			regexUtil = new RegexUtil(),
 			dash = String.fromCharCode(8211),
-			tick = String.fromCharCode(10003);
-
+			tick = String.fromCharCode(10003),
+			crossValueAndExpected = function (expected, actual) {
+				var formatActual = '';
+				if (actual !== undefined) {
+					formatActual = ' ['  + actual + ']';
+				}
+				return '**~~' + expected + '~~'  + formatActual + '**';
+			},
+			crossValue = function (expected) {
+				return '**~~' + expected + '~~**';
+			},
+			boldValue = function (expected) {
+				return '**' + expected + '**';
+			};
 	self.formatPrimitiveResult = function (assertion) {
 		var formattedValue = function () {
 			if (assertion.passed) {
-				return '**' + assertion.expected + '**';
+				return boldValue(assertion.expected);
 			} else {
-				return '**~~' + assertion.expected + '~~ ['  + assertion.value + ']**';
+				return crossValueAndExpected(assertion.expected, assertion.value);
 			}
 		};
 		return {
@@ -345,7 +363,20 @@ module.exports = function () {
 			additional = (listResult.additional || []).map(plusEl);
 		return matching.concat(missing, additional);
 	};
+	self.getTableResult = function (tableResult) {
+		var tickRow = function (row) {
+			return [tick].concat(row);
+		}, crossRow = function (row) {
+			return [dash].concat(row.map(crossValue));
+		}, plusRow = function (row) {
+			return ['+'].concat(row.map(boldValue));
+		},
+			matching = (tableResult.matching || []).map(tickRow),
+			missing = (tableResult.missing || []).map(crossRow),
+			additional = (tableResult.additional || []).map(plusRow);
+		return matching.concat(missing, additional);
 
+	};
 	self.markResult = function (stepResult) {
 		var withoutIndex = function (assertion) {
 				return !assertion.index && assertion.index !== 0;
@@ -356,9 +387,10 @@ module.exports = function () {
 			failed = function (assertion) {
 				return !assertion.passed;
 			},
-			failedForList = function (assertion) {
+			failedForAttachment = function (assertion) {
 				return stepResult.attachment && stepResult.attachment.items && stepResult.attachment.items.length > 0 &&
-					assertion.expected === stepResult.attachment.items && !assertion.passed;
+					(assertion.expected === stepResult.attachment.items || assertion.expected == stepResult.attachment) &&
+					!assertion.passed;
 			},
 			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
@@ -366,13 +398,21 @@ module.exports = function () {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
 				if (noIndexAssertions.some(failed)) {
-					return '**~~' + stepResult.stepText + '~~**';
+					if (regexUtil.isListItem(stepResult.stepText)) {
+						return regexUtil.getListSymbol(stepResult.stepText) + '**~~' + regexUtil.stripListSymbol(stepResult.stepText) + '~~**';
+					} else {
+						return '**~~' + stepResult.stepText + '~~**';
+					}
 				}
 				if (stepResult.assertions.some(failed)) {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.filter(withIndex).map(self.formatPrimitiveResult));
 				}
 				if (stepResult.assertions.length) {
-					return '**' + stepResult.stepText + '**';
+					if (regexUtil.isListItem(stepResult.stepText)) {
+						return regexUtil.getListSymbol(stepResult.stepText) + '**' + regexUtil.stripListSymbol(stepResult.stepText) + '**';
+					} else {
+						return '**' + stepResult.stepText + '**';
+					}
 				}
 				return stepResult.stepText;
 			},
@@ -384,28 +424,38 @@ module.exports = function () {
 						if (stepResult.attachment.type !== 'list') {
 							return false;
 						}
-						var failedListAssertions = stepResult.assertions.filter(failedForList),
+						var failedListAssertions = stepResult.assertions.filter(failedForAttachment),
 								values = stepResult.attachment.items;
 						if (failedListAssertions && failedListAssertions.length > 0) {
 							values = self.formatListResult(failedListAssertions[0].value);
 						}
 						return values.map(function (e) {
-							return '\n* ' + e;
+							return '\n* ' + e; // TODO: reuse listutil add list item to support nested lists?
 						}).join(''); // TODO: deal with ordered lists
 					},
 					formatTableItem = function (item) {
 						return '\n| ' + item.join(' | ') + ' |';
 					},
 					formatTable = function () {
-						var titles = '';
 						if (stepResult.attachment.type !== 'table') {
 							return false;
 						}
-						if (stepResult.attachment.titles) {
-							titles = formatTableItem(stepResult.attachment.titles);
+						var titles = '',
+								resultTitles = stepResult.attachment.titles && stepResult.attachment.titles.slice(0),
+								failedTableAssertions = stepResult.assertions.filter(failedForAttachment),
+								values = stepResult.attachment.items;
+
+						if (failedTableAssertions && failedTableAssertions.length > 0) {
+							if (resultTitles) {
+								resultTitles.unshift(' ');
+							}
+							values = self.getTableResult(failedTableAssertions[0].value);
+						}
+						if (resultTitles) {
+							titles = formatTableItem(resultTitles);
 							titles = titles + titles.replace(/[^|\n]/g, '-');
 						}
-						return titles + stepResult.attachment.items.map(formatTableItem).join('');
+						return titles + values.map(formatTableItem).join('');
 					};
 				return formatList() || formatTable();
 			};
@@ -474,7 +524,8 @@ module.exports = function () {
 /*global module*/
 module.exports = function () {
 	'use strict';
-	var self = this;
+	var self = this,
+			listSymbolRegex = /^\s*[^\s]+\s+/;
 	this.replaceMatchGroup = function (string, regex, overrides) {
 		var everythingInMatchGroups = new RegExp('(' + regex.source.replace(/([^\\]?)[()]/g, '$1)(') + ')'),
 				allMatches = string.match(everythingInMatchGroups),
@@ -517,7 +568,13 @@ module.exports = function () {
 		if (!self.isListItem(line)) {
 			return line;
 		}
-		return line.replace(/^\s*[^\s]+\s/, '');
+		return line.replace(listSymbolRegex, '');
+	};
+	this.getListSymbol = function (line) {
+		if (!self.isListItem(line)) {
+			return '';
+		}
+		return line.match(listSymbolRegex)[0];
 	};
 	this.assertionLine = function (stepText) {
 		if (stepText.length === 0 || stepText.trim().length === 0) {
@@ -535,6 +592,92 @@ module.exports = function () {
 };
 
 },{}],13:[function(require,module,exports){
+/*global module, require*/
+module.exports = function StepContext(result) {
+	'use strict';
+	var self = this,
+			ListUtil = require('./list-util'),
+			TableUtil = require('./table-util'),
+			Assertion = require('./assertion'),
+			tableUtil = new TableUtil(),
+			listUtil = new ListUtil();
+	self.assertEquals = function (expected, actual, optionalOutputIndex) {
+		var	passed = expected == actual;
+		result.assertions.push(new Assertion(expected,
+					actual,
+					passed, optionalOutputIndex));
+	};
+	self.assertUnorderedTableEquals = function (expected, actual) {
+		var comparisonObject;
+		if (!expected.titles) {
+			comparisonObject = actual;
+			if (actual.type === 'table' && Array.isArray(actual.items)) {
+				comparisonObject = actual.items;
+			}
+		} else {
+			if (actual.type === 'table' && Array.isArray(actual.items)) {
+				comparisonObject = tableUtil.tableValuesForTitles(actual, expected.titles);
+			}	else {
+				comparisonObject = tableUtil.objectArrayValuesForTitles(actual, expected.titles);
+			}
+		}
+		return self.assertSetEquals(expected.items, comparisonObject);
+	};
+	self.assertSetEquals = function (expected, actual) {
+		var listResult = listUtil.unorderedMatch(expected, actual);
+		result.assertions.push(new Assertion(expected,
+					listResult,
+					listResult.matches));
+	};
+};
+
+},{"./assertion":2,"./list-util":9,"./table-util":14}],14:[function(require,module,exports){
+/*global module*/
+module.exports = function TableUtil() {
+	'use strict';
+	var self = this;
+	self.normaliseTitle = function (string) {
+		return string.toLocaleLowerCase().replace(/\s/g, '');
+	};
+	self.normaliseObject = function (object) {
+		var result = {};
+		Object.keys(object).forEach(function (key) {
+			result[self.normaliseTitle(key)] = object[key];
+		});
+		return result;
+	};
+	//TODO: validate table. eg multiple columns matching same normalised title so non-deterministic results
+	self.tableValuesForTitles = function (table, titles) {
+		if (!titles || titles.length === 0) {
+			return false;
+		}
+		var pickItems = function (tableRow) {
+					return columnIndexes.map(function (val) {
+						return tableRow[val];
+					});
+				},
+				normalisedTitles = titles.map(self.normaliseTitle),
+				normalisedTableTitles = table.titles.map(self.normaliseTitle),
+				columnIndexes = normalisedTitles.map(function (title) {
+					return normalisedTableTitles.indexOf(title);
+				});
+		return table.items.map(pickItems);
+	};
+	self.objectArrayValuesForTitles = function (list, titles) {
+		if (!titles || titles.length === 0) {
+			return false;
+		}
+		var normalisedTitles = titles.map(self.normaliseTitle),
+				pickItems = function (item) {
+					return normalisedTitles.map(function (title) {
+						return item[title];
+					});
+				};
+		return list.map(self.normaliseObject).map(pickItems);
+	};
+};
+
+},{}],15:[function(require,module,exports){
 /*global module*/
 module.exports = function (ctx) {
 	'use strict';
@@ -594,7 +737,7 @@ module.exports = function (ctx) {
 		this.assertSetEquals(listOfEpisodes.items, actual);
 	});
 	ctx.defineStep(/Check ([A-Za-z ]*) Films/, function (seriesName, listOfEpisodes) {
-		this.assertTableEquals(listOfEpisodes, tables[seriesName]);
+		this.assertUnorderedTableEquals(listOfEpisodes, tables[seriesName]);
 	});
 	ctx.defineStep(/\|([A-Za-z ]*) episode \| Year of release \|/, function (seriesName, episode, yearOfRelease) {
 		var series = films[seriesName],

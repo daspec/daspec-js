@@ -56,6 +56,13 @@ describe('ExampleBlock', function () {
 			underTest.addLine('not a list item');
 			expect(underTest.getMatchText()).toEqual(['not a list item']);
 		});
+		it('returns the top line when it is a non-table item, followed by a table, and it is not ignored', function () {
+			underTest.addLine('|2.1 |      2.2 |');
+			underTest.addLine('|1.1\t \t|\t 1.2|');
+			underTest.addLine('not a table item');
+			expect(underTest.getMatchText()).toEqual(['not a table item']);
+		});
+
 		it('returns the top line when it is the only line and is not ignored', function () {
 			underTest.addLine('not a list item');
 			expect(underTest.getMatchText()).toEqual(['not a list item']);
