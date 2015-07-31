@@ -2,7 +2,7 @@
 module.exports = function Context() {
 	'use strict';
 	var self = this,
-		StepExecutor =  require('./daspec-step'),
+		StepExecutor =  require('./step-executor'),
 		steps = [],
 		matchingSteps = function (stepText) {
 			return steps.filter(function (step) {

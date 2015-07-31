@@ -2,7 +2,7 @@
 
 describe('StepExecutor', function () {
 	'use strict';
-	var StepExecutor = require('../src/daspec-step'),
+	var StepExecutor = require('../src/step-executor'),
 		underTest,
 		regexMatcher,
 		processFunction;

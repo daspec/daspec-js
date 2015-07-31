@@ -1,9 +1,9 @@
 /*global describe, expect, it, require, DaSpecHelper  */
 
-describe('markdown parsing', function () {
+describe('Key Examples from test-data', function () {
 	'use strict';
 	var stepDefinitions = require('../test-data/test-steps'),
-		Runner = require('../src/daspec-runner'),
+		Runner = require('../src/runner'),
 		helper = new DaSpecHelper(),
 		exampleFiles = helper.getExamples();
 	exampleFiles.forEach(function (exampleName) {
