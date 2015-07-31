@@ -21,6 +21,36 @@ module.exports = function ExampleBlock() {
 			}
 			result.items = toItems(tableItems);
 			return result;
+		},
+		getAttachmentTable = function () {
+			//TODO: complain if table has duplicated column titles or some columns have no titles
+			//TODO: table column title normalisation (eg Top Price === topprice === TOP price)
+			if (lines.length === 0) {
+				return false;
+			}
+			var topLine = lines[0],
+				tableLines = lines.filter(regexUtil.isTableItem);
+			if (tableLines.length === 0) {
+				return false;
+			}
+			if (!regexUtil.isTableItem(topLine) && regexUtil.assertionLine(topLine)) {
+				return toTable(tableLines);
+			}
+			return false;
+		},
+		getAttachmentList = function () {
+			if (lines.length === 0) {
+				return false;
+			}
+			var topLine = lines[0],
+				listLines = lines.filter(regexUtil.isListItem);
+			if (listLines.length === 0) {
+				return false;
+			}
+			if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
+				return {type: 'list', ordered: false, items: listLines.map(regexUtil.stripListSymbol)};
+			}
+			return false;
 		};
 	self.addLine = function (lineText) {
 		lines.unshift(lineText);
@@ -35,24 +65,9 @@ module.exports = function ExampleBlock() {
 		return true;
 	};
 	self.getAttachment = function () {
-		return self.getList() || self.getTable();
+		return getAttachmentList() || getAttachmentTable();
 	};
-	self.getTable = function () {
-		//TODO: complain if table has duplicated column titles or some columns have no titles
-		//TODO: table column title normalisation (eg Top Price === topprice === TOP price)
-		if (lines.length === 0) {
-			return false;
-		}
-		var topLine = lines[0],
-				tableLines = lines.filter(regexUtil.isTableItem);
-		if (tableLines.length === 0) {
-			return false;
-		}
-		if (!regexUtil.isTableItem(topLine) && regexUtil.assertionLine(topLine)) {
-			return toTable(tableLines);
-		}
-		return false;
-	};
+
 	self.isTableBlock = function () {
 		var tableLines = lines.filter(regexUtil.isTableItem),
 			nonTableAssertionLine = function (line) {
@@ -66,20 +81,7 @@ module.exports = function ExampleBlock() {
 		}
 		return true;
 	};
-	self.getList = function () {
-		if (lines.length === 0) {
-			return false;
-		}
-		var topLine = lines[0],
-				listLines = lines.filter(regexUtil.isListItem);
-		if (listLines.length === 0) {
-			return false;
-		}
-		if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
-			return {type: 'list', ordered: false, items: listLines.map(regexUtil.stripListSymbol)};
-		}
-		return false;
-	};
+
 	self.getMatchText = function () {
 		if (lines.length === 0) {
 			return [];
@@ -94,5 +96,4 @@ module.exports = function ExampleBlock() {
 			return lines;
 		}
 	};
-
 };

@@ -151,6 +151,9 @@ describe('ExampleBlock', function () {
 		});
 	});
 	describe('getAttachment', function () {
+		it('is false when the block is empty', function () {
+			expect(underTest.getAttachment()).toBeFalsy();
+		});
 		it('is false when no table or list', function () {
 			underTest.addLine('not a list item');
 			expect(underTest.getAttachment()).toBeFalsy();
@@ -168,73 +171,65 @@ describe('ExampleBlock', function () {
 			expect(underTest.getAttachment().type).toEqual('table');
 			expect(underTest.getAttachment().items).toEqual([['a table item'], ['another table item']]);
 		});
-	});
-	describe('getTable', function () {
-		it('is false when the block is empty', function () {
-			expect(underTest.getTable()).toBeFalsy();
-		});
-		it('is false when the block does not contain a table', function () {
-			underTest.addLine('not a table item');
-			expect(underTest.getTable()).toBeFalsy();
-		});
+		describe('table attachments', function () {
+			it('gets the table rows as an array, indexed by columns, when there is no heading row', function () {
+				underTest.addLine('|another table item|');
+				underTest.addLine('|a table item|');
+				underTest.addLine('not a table item');
+				expect(underTest.getAttachment().type).toEqual('table');
+				expect(underTest.getAttachment().items).toEqual([['a table item'], ['another table item']]);
+			});
+			it('ignores blank lines at the start when retrieving the table', function () {
+				underTest.addLine('|another table item|');
+				underTest.addLine('|a table item|');
+				underTest.addLine('');
+				underTest.addLine('not a table item');
+				expect(underTest.getAttachment().type).toEqual('table');
+				expect(underTest.getAttachment().items).toEqual([['a table item'], ['another table item']]);
+			});
+			it('trims cell values', function () {
+				underTest.addLine('|2.1 |      2.2 |');
+				underTest.addLine('|1.1\t \t|\t 1.2|');
+				underTest.addLine('not a table item');
+				expect(underTest.getAttachment().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
+			});
+			it('gets the table with a header row', function () {
+				underTest.addLine('|2.1|2.2|');
+				underTest.addLine('|1.1|1.2|');
+				underTest.addLine('|---|---|');
+				underTest.addLine('|H1|H2|');
+				underTest.addLine('not a table item');
 
-		it('gets the table rows as an array, indexed by columns, when there is no heading row', function () {
-			underTest.addLine('|another table item|');
-			underTest.addLine('|a table item|');
-			underTest.addLine('not a table item');
-			expect(underTest.getTable().type).toEqual('table');
-			expect(underTest.getTable().items).toEqual([['a table item'], ['another table item']]);
+				expect(underTest.getAttachment().type).toEqual('table');
+				expect(underTest.getAttachment().titles).toEqual(['H1', 'H2']);
+				expect(underTest.getAttachment().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
+			});
 		});
-		it('ignores blank lines at the start when retrieving the table', function () {
-			underTest.addLine('|another table item|');
-			underTest.addLine('|a table item|');
-			underTest.addLine('');
-			underTest.addLine('not a table item');
-			expect(underTest.getTable().type).toEqual('table');
-			expect(underTest.getTable().items).toEqual([['a table item'], ['another table item']]);
-		});
-		it('trims cell values', function () {
-			underTest.addLine('|2.1 |      2.2 |');
-			underTest.addLine('|1.1\t \t|\t 1.2|');
-			underTest.addLine('not a table item');
-			expect(underTest.getTable().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
-		});
-		it('gets the table with a header row', function () {
-			underTest.addLine('|2.1|2.2|');
-			underTest.addLine('|1.1|1.2|');
-			underTest.addLine('|---|---|');
-			underTest.addLine('|H1|H2|');
-			underTest.addLine('not a table item');
-
-			expect(underTest.getTable().type).toEqual('table');
-			expect(underTest.getTable().titles).toEqual(['H1', 'H2']);
-			expect(underTest.getTable().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
-		});
-	});
-	describe('getList', function () {
-		it('is false when the block is empty', function () {
-			expect(underTest.getList()).toBeFalsy();
-		});
-		it('is false when the block does not contain a list', function () {
-			underTest.addLine('not a list item');
-			expect(underTest.getList()).toBeFalsy();
-		});
-		it('returns an array of list items when the top line  is a non list item and not ignored ', function () {
-			underTest.addLine('* another list item');
-			underTest.addLine('* a list item');
-			underTest.addLine('not a list item');
-			expect(underTest.getList()).toEqual({type: 'list', ordered: false, items:['a list item', 'another list item']});
-		});
-		it('returns false when the top line is ignored', function () {
-			underTest.addLine('* another list item');
-			underTest.addLine('* a list item');
-			underTest.addLine('#not a list item');
-			expect(underTest.getList()).toBeFalsy();
-		});
-		it('returns false when the top line is a list item', function () {
-			underTest.addLine('* another list item');
-			underTest.addLine('* a list item');
-			expect(underTest.getList()).toBeFalsy();
+		describe('list attachments', function () {
+			it('returns an array of list items when the top line  is a non list item and not ignored ', function () {
+				underTest.addLine('* another list item');
+				underTest.addLine('* a list item');
+				underTest.addLine('not a list item');
+				expect(underTest.getAttachment()).toEqual({type: 'list', ordered: false, items:['a list item', 'another list item']});
+			});
+			it('works even when there are spaces between the list and the top item', function () {
+				underTest.addLine('* another list item');
+				underTest.addLine('* a list item');
+				underTest.addLine('');
+				underTest.addLine('not a list item');
+				expect(underTest.getAttachment()).toEqual({type: 'list', ordered: false, items:['a list item', 'another list item']});
+			});
+			it('returns false when the top line is ignored', function () {
+				underTest.addLine('* another list item');
+				underTest.addLine('* a list item');
+				underTest.addLine('#not a list item');
+				expect(underTest.getAttachment()).toBeFalsy();
+			});
+			it('returns false when the top line is a list item', function () {
+				underTest.addLine('* another list item');
+				underTest.addLine('* a list item');
+				expect(underTest.getAttachment()).toBeFalsy();
+			});
 		});
 	});
 });
