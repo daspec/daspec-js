@@ -482,6 +482,8 @@ module.exports = function () {
 				if (noIndexAssertions.some(failed)) {
 					if (regexUtil.isListItem(stepResult.stepText)) {
 						return regexUtil.getListSymbol(stepResult.stepText) + '**~~' + regexUtil.stripListSymbol(stepResult.stepText) + '~~**';
+					} else if (regexUtil.isTableItem(stepResult.stepText)) {
+						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(crossValue).join(' | ') + ' |';
 					} else {
 						return '**~~' + stepResult.stepText + '~~**';
 					}
@@ -519,17 +521,16 @@ module.exports = function () {
 						}).join(''); // TODO: deal with ordered lists
 					},
 					formatTableItem = function (item) {
-						return '\n| ' + item.join(' | ') + ' |';
+						return '|' + item.join('|') + '|';
 					},
 					formatTable = function () {
 						if (stepResult.attachment.type !== 'table') {
 							return false;
 						}
-						var titles = '',
-								resultTitles = stepResult.attachment.titles && stepResult.attachment.titles.slice(0),
+						var resultTitles = stepResult.attachment.titles && stepResult.attachment.titles.slice(0),
 								failedTableAssertions = stepResult.assertions.filter(failedForAttachment),
-								values = stepResult.attachment.items;
-
+								values = stepResult.attachment.items,
+								resultRows = [];
 						if (failedTableAssertions && failedTableAssertions.length > 0) {
 							if (resultTitles) {
 								resultTitles.unshift(' ');
@@ -537,10 +538,13 @@ module.exports = function () {
 							values = self.getTableResult(failedTableAssertions[0].value);
 						}
 						if (resultTitles) {
-							titles = formatTableItem(resultTitles);
-							titles = titles + titles.replace(/[^|\n]/g, '-');
+							resultRows.push(formatTableItem(resultTitles));
+							resultRows.push(resultTitles.map(function () {
+								return '|-';
+							}).join('') + '|');
 						}
-						return titles + values.map(formatTableItem).join('');
+						resultRows = resultRows.concat(values.map(formatTableItem));
+						return '\n' + tableUtil.justifyTable(resultRows).join('\n');
 					};
 				return formatList() || formatTable();
 			};
@@ -585,7 +589,9 @@ module.exports = function MarkdownResultFormatter() {
 		TableResultBlock = function () {
 			var self = this,
 				tableCounts = new AssertionCounts(),
-				tableRows = [];
+				tableRows = [],
+				TableUtil = require('./table-util'),
+				tableUtil = new TableUtil();
 			self.counts = tableCounts;
 			self.nonAssertionLine = function (line) {
 				tableRows.push(line);
@@ -598,7 +604,7 @@ module.exports = function MarkdownResultFormatter() {
 				tableRows.push(markDownFormatter.markResult(result));
 			};
 			self.formattedResults = function () {
-				return tableRows;
+				return tableUtil.justifyTable(tableRows);
 			};
 		};
 	self.stepResult = function (result) {
@@ -631,7 +637,7 @@ module.exports = function MarkdownResultFormatter() {
 	};
 };
 
-},{"./assertion-counts":1,"./markdown-formatter":10}],12:[function(require,module,exports){
+},{"./assertion-counts":1,"./markdown-formatter":10,"./table-util":14}],12:[function(require,module,exports){
 /*global module*/
 module.exports = function () {
 	'use strict';
@@ -758,10 +764,12 @@ module.exports = function StepContext(result) {
 };
 
 },{"./assertion":2,"./list-util":9,"./table-util":14}],14:[function(require,module,exports){
-/*global module*/
+/*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
-	var self = this;
+	var self = this,
+		RegexUtil = require ('./regex-util'),
+		regexUtil = new RegexUtil();
 	self.normaliseTitle = function (string) {
 		return string.toLocaleLowerCase().replace(/\s/g, '');
 	};
@@ -815,9 +823,45 @@ module.exports = function TableUtil() {
 				};
 		return list.map(self.normaliseObject).map(pickItems);
 	};
+	self.justifyTable = function (stringArray) {
+		var maxCellLengths = function (maxSoFar, tableRow, index) {
+				if (dividerRows[index]) {
+					return maxSoFar;
+				}
+				var currentLengths = tableRow.map(function (s) {
+					return s.length;
+				});
+				if (!maxSoFar) {
+					return currentLengths;
+				} else {
+					return currentLengths.map(function (v, i) {
+						return Math.max(v, (maxSoFar[i] || 0));
+					});
+				}
+			},
+			cellValues = stringArray.map(self.cellValuesForRow),
+			dividerRows = stringArray.map(regexUtil.isTableHeaderDivider),
+			columnLengths = cellValues.reduce(maxCellLengths, []),
+			padding = function (howMuch, padChar) {
+				return new Array(howMuch + 1).join(padChar);
+			},
+			padCells = function (cells, rowIndex) {
+				return cells.map(function (cellVal, index) {
+					if (dividerRows[rowIndex]) {
+						return padding(2 + columnLengths[index], '-');
+					} else {
+						return ' '  + cellVal + padding(1 + columnLengths[index] - cellVal.length, ' ');
+					}
+				});
+			},
+			joinCells = function (cells) {
+				return '|' + cells.join('|')	+ '|';
+			};
+		return cellValues.map(padCells).map(joinCells);
+	};
 };
 
-},{}],15:[function(require,module,exports){
+},{"./regex-util":12}],15:[function(require,module,exports){
 /*global module*/
 module.exports = function (ctx) {
 	'use strict';
@@ -845,26 +889,6 @@ module.exports = function (ctx) {
 	});
 	var films = {}, tables = {};
 	ctx.defineStep(/These are the ([A-Za-z ]*) Films/, function (seriesName, tableOfReleases) {
-/*
-{type:'table', titles: ['Title', 'Year'], items:[
-	['A new Hope', 1976],
-	['The Empire Strikes Back', 1979],
-	...
-]]}
-		Table with title row
-		[
-			{Title:'A New Hope', Year:1979},
-			{Title:'The Empire Strikes Back', Year:1979},
-			{Title:'The Return of the Jedi', Year:1979}
-		],
-
-		Table with no Title Row
-		[
-			{0:'A New Hope', 1:1979},
-			{0:'The Empire Strikes Back', 1:1979},
-			{0:'The Return of the Jedi', 1:1979}
-		]
-*/
 		films[seriesName] = tableOfReleases.items;
 		tables[seriesName] = tableOfReleases;
 	});
@@ -885,12 +909,20 @@ module.exports = function (ctx) {
 				return film[0] === episode;
 			}),
 			actualYear = matching && matching.length > 0 && matching[0][1];
-		console.log('expected', episode, yearOfRelease, seriesName);
-		console.log('actual', actualYear, matching, series);
 		this.assertEquals(true, !!series);
-		this.assertEquals(true, !!matching);
+		this.assertEquals(true, !!matching && matching.length);
 		this.assertEquals(yearOfRelease, actualYear, 1);
 	});
+
+	ctx.defineStep(/\| Positional Check episodes of ([A-Za-z ]*) \| Year of release \|/, function (episode, yearOfRelease, seriesName) {
+		var series = films[seriesName],
+			matching = series && series.filter(function (film) {
+				return film[0] === episode;
+			}),
+			actualYear = matching && matching.length > 0 && matching[0][1];
+		this.assertEquals(yearOfRelease, actualYear, 1);
+	});
+
 };
 
 },{}]},{},[3]);

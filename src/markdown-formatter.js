@@ -124,17 +124,16 @@ module.exports = function () {
 						}).join(''); // TODO: deal with ordered lists
 					},
 					formatTableItem = function (item) {
-						return '\n| ' + item.join(' | ') + ' |';
+						return '|' + item.join('|') + '|';
 					},
 					formatTable = function () {
 						if (stepResult.attachment.type !== 'table') {
 							return false;
 						}
-						var titles = '',
-								resultTitles = stepResult.attachment.titles && stepResult.attachment.titles.slice(0),
+						var resultTitles = stepResult.attachment.titles && stepResult.attachment.titles.slice(0),
 								failedTableAssertions = stepResult.assertions.filter(failedForAttachment),
-								values = stepResult.attachment.items;
-
+								values = stepResult.attachment.items,
+								resultRows = [];
 						if (failedTableAssertions && failedTableAssertions.length > 0) {
 							if (resultTitles) {
 								resultTitles.unshift(' ');
@@ -142,10 +141,13 @@ module.exports = function () {
 							values = self.getTableResult(failedTableAssertions[0].value);
 						}
 						if (resultTitles) {
-							titles = formatTableItem(resultTitles);
-							titles = titles + titles.replace(/[^|\n]/g, '-');
+							resultRows.push(formatTableItem(resultTitles));
+							resultRows.push(resultTitles.map(function () {
+								return '|-';
+							}).join('') + '|');
 						}
-						return titles + values.map(formatTableItem).join('');
+						resultRows = resultRows.concat(values.map(formatTableItem));
+						return '\n' + tableUtil.justifyTable(resultRows).join('\n');
 					};
 				return formatList() || formatTable();
 			};

@@ -52,11 +52,11 @@ These are the Star Wars Films:
 #Tables as a set of assertions
 
 These are the Star Wars Films:
-| Title | Year |
-|-------|------|
-| A New Hope | 1976 |
+| Title                   | Year |
+|-------------------------|------|
+| A New Hope              | 1976 |
 | The Empire Strikes Back | 1979 |
-| The Return of the Jedi | 1983 |
+| The Return of the Jedi  | 1983 |
 
 > When a positional assertion is made, the column is marked as failed, passes affect the whole row
 
