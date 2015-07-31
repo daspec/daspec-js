@@ -83,20 +83,13 @@ describe('MarkdownResultFormatter', function () {
 			});
 			describe('table column width formatting', function () {
 				it('should size the columns to fit the longest data in all the data rows', function () {
-
-				});
-				it('should size the columns to fit the header if it is longer htan any data', function () {
-
-				});
-				it('should size the table header divider to match the colun widths required for the data and headers', function () {
-
-				});
-				it('should handle blank column headers', function () {
-
-				});
-
-				it('should handle multiple table dividers', function () {
-
+					tableResultBlock.nonAssertionLine('| aaaaaaaaaaaaaa| b |');
+					tableResultBlock.nonAssertionLine('| c |**d**|');
+					var results = tableResultBlock.formattedResults();
+					expect(results).toEqual([
+						'| aaaaaaaaaaaaaa | b     |',
+						'| c              | **d** |'
+					]);
 				});
 			});
 		});

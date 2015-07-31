@@ -30,7 +30,9 @@ module.exports = function MarkdownResultFormatter() {
 		TableResultBlock = function () {
 			var self = this,
 				tableCounts = new AssertionCounts(),
-				tableRows = [];
+				tableRows = [],
+				TableUtil = require('./table-util'),
+				tableUtil = new TableUtil();
 			self.counts = tableCounts;
 			self.nonAssertionLine = function (line) {
 				tableRows.push(line);
@@ -43,7 +45,7 @@ module.exports = function MarkdownResultFormatter() {
 				tableRows.push(markDownFormatter.markResult(result));
 			};
 			self.formattedResults = function () {
-				return tableRows;
+				return tableUtil.justifyTable(tableRows);
 			};
 		};
 	self.stepResult = function (result) {

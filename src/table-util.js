@@ -1,7 +1,9 @@
-/*global module*/
+/*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
-	var self = this;
+	var self = this,
+		RegexUtil = require ('./regex-util'),
+		regexUtil = new RegexUtil();
 	self.normaliseTitle = function (string) {
 		return string.toLocaleLowerCase().replace(/\s/g, '');
 	};
@@ -54,5 +56,41 @@ module.exports = function TableUtil() {
 					});
 				};
 		return list.map(self.normaliseObject).map(pickItems);
+	};
+	self.justifyTable = function (stringArray) {
+		var maxCellLengths = function (maxSoFar, tableRow, index) {
+				if (dividerRows[index]) {
+					return maxSoFar;
+				}
+				var currentLengths = tableRow.map(function (s) {
+					return s.length;
+				});
+				if (!maxSoFar) {
+					return currentLengths;
+				} else {
+					return currentLengths.map(function (v, i) {
+						return Math.max(v, (maxSoFar[i] || 0));
+					});
+				}
+			},
+			cellValues = stringArray.map(self.cellValuesForRow),
+			dividerRows = stringArray.map(regexUtil.isTableHeaderDivider),
+			columnLengths = cellValues.reduce(maxCellLengths, []),
+			padding = function (howMuch, padChar) {
+				return new Array(howMuch + 1).join(padChar);
+			},
+			padCells = function (cells, rowIndex) {
+				return cells.map(function (cellVal, index) {
+					if (dividerRows[rowIndex]) {
+						return padding(2 + columnLengths[index], '-');
+					} else {
+						return ' '  + cellVal + padding(1 + columnLengths[index] - cellVal.length, ' ');
+					}
+				});
+			},
+			joinCells = function (cells) {
+				return '|' + cells.join('|')	+ '|';
+			};
+		return cellValues.map(padCells).map(joinCells);
 	};
 };

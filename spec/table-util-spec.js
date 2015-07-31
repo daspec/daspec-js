@@ -22,6 +22,56 @@ describe('TableUtil', function () {
 			);
 		});
 	});
+
+	describe('justifyTable', function () {
+		it('padds cells to fit max length values in each column with spaces around', function () {
+
+			expect(underTest.justifyTable([
+				'| short| loooooooooooong|',
+				'|loooooong | short |',
+				'|loooooong ||',
+				'|short|short|'
+			])).toEqual([
+				'| short     | loooooooooooong |',
+				'| loooooong | short           |',
+				'| loooooong |                 |',
+				'| short     | short           |'
+			]);
+		});
+		it('expands row dividers without spaces', function () {
+			expect(underTest.justifyTable([
+				'| short| loooooooooooong|',
+				'|-|-|',
+				'|loooooong | short |',
+				'|--|---|'
+			])).toEqual([
+				'| short     | loooooooooooong |',
+				'|-----------|-----------------|',
+				'| loooooong | short           |',
+				'|-----------|-----------------|'
+			]);
+		});
+		it('ignores manual spacing and dividers', function () {
+			expect(underTest.justifyTable([
+				'| short                             | loooooooooooong|',
+				'|-|-------------------------------------------------------------|',
+				'|loooooong | short |'
+			])).toEqual([
+				'| short     | loooooooooooong |',
+				'|-----------|-----------------|',
+				'| loooooong | short           |'
+			]);
+		});
+		it('removes spacing before the first pipe', function () {
+			expect(underTest.justifyTable([
+				' | short | loooooooooooong|',
+				'|loooooong | short |'
+			])).toEqual([
+				'| short     | loooooooooooong |',
+				'| loooooong | short           |'
+			]);
+		});
+	});
 	describe('cellValuesForRow', function () {
 		it('should return the values as an array', function () {
 			expect(underTest.cellValuesForRow('|a|b|c|')).toEqual(['a', 'b', 'c']);
