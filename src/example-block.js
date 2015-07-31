@@ -1,5 +1,5 @@
 /*global module, require*/
-module.exports = function () {
+module.exports = function ExampleBlock() {
 	'use strict';
 	var self = this,
 		RegexUtil = require('./regex-util'),

@@ -1,5 +1,5 @@
 /*global module*/
-module.exports = function () {
+module.exports = function ListUtil() {
 	'use strict';
 	var self = this,
 			arrayEquals = function (array1, array2) {

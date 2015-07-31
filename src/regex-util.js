@@ -1,5 +1,5 @@
 /*global module*/
-module.exports = function () {
+module.exports = function RegexUtil() {
 	'use strict';
 	var self = this,
 			listSymbolRegex = /^\s*[^\s]+\s+/;

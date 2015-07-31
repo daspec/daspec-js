@@ -1,5 +1,5 @@
 /*global module*/
-module.exports = function (expected, actual, passed, outputIndex) {
+module.exports = function Assertion(expected, actual, passed, outputIndex) {
 	'use strict';
 	var self = this;
 	self.value = actual;

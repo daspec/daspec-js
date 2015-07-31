@@ -1,5 +1,5 @@
 /*global module, require*/
-module.exports = function (inputText) {
+module.exports = function ExampleBlocks(inputText) {
 	'use strict';
 	var self = this,
 		ExampleBlock = require('./example-block');

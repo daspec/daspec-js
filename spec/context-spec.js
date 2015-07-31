@@ -2,7 +2,7 @@
 
 describe('Context', function () {
 	'use strict';
-	var Context = require('../src/daspec-context'),
+	var Context = require('../src/context'),
 		underTest,
 		processor,
 		processorTwo;

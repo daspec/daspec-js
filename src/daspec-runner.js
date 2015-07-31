@@ -1,7 +1,7 @@
 /*global module, require*/
-module.exports = function (stepFunc) {
+module.exports = function Runner(stepFunc) {
 	'use strict';
-	var Context = require('./daspec-context'),
+	var Context = require('./context'),
 		RegexUtil = require('./regex-util'),
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),

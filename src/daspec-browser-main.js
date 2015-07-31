@@ -1,6 +1,6 @@
 /*global require, global*/
 
 global.DaSpec = {
-	Runner: require('./daspec-runner'),
+	Runner: require('./runner'),
 	StepDefinitions: require('../test-data/test-steps')
 };

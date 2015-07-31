@@ -1,5 +1,5 @@
 /*global module, require*/
-module.exports = function () {
+module.exports = function MarkDownFormatter() {
 	'use strict';
 	var self = this,
 			RegexUtil = require('./regex-util'),

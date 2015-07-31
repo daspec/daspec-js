@@ -1,5 +1,5 @@
 /*global module*/
-module.exports = function () {
+module.exports = function AssertionCounts() {
 	'use strict';
 	var self = this;
 	self.executed = 0;
