@@ -162,7 +162,7 @@ describe('ExampleBlock', function () {
 			underTest.addLine('* another list item');
 			underTest.addLine('* a list item');
 			underTest.addLine('not a list item');
-			expect(underTest.getAttachment()).toEqual({type: 'list', ordered: false, items:['a list item', 'another list item']});
+			expect(underTest.getAttachment()).toEqual({type: 'list', symbol: '* ', ordered: false, items:['a list item', 'another list item']});
 		});
 		it('gets the table when a table is inside a block', function () {
 			underTest.addLine('|another table item|');
@@ -250,14 +250,20 @@ describe('ExampleBlock', function () {
 				underTest.addLine('* another list item');
 				underTest.addLine('* a list item');
 				underTest.addLine('not a list item');
-				expect(underTest.getAttachment()).toEqual({type: 'list', ordered: false, items:['a list item', 'another list item']});
+				expect(underTest.getAttachment()).toEqual({type: 'list', symbol: '* ', ordered: false, items:['a list item', 'another list item']});
 			});
 			it('works even when there are spaces between the list and the top item', function () {
 				underTest.addLine('* another list item');
 				underTest.addLine('* a list item');
 				underTest.addLine('');
 				underTest.addLine('not a list item');
-				expect(underTest.getAttachment()).toEqual({type: 'list', ordered: false, items:['a list item', 'another list item']});
+				expect(underTest.getAttachment()).toEqual({type: 'list', symbol: '* ', ordered: false, items:['a list item', 'another list item']});
+			});
+			it('returns an ordered list when the first item is a number', function () {
+				underTest.addLine('2. another list item');
+				underTest.addLine('1. a list item');
+				underTest.addLine('not a list item');
+				expect(underTest.getAttachment()).toEqual({type: 'list', symbol: '1. ', ordered: true, items:['a list item', 'another list item']});
 			});
 			it('returns false when the top line is ignored', function () {
 				underTest.addLine('* another list item');

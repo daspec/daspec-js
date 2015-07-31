@@ -42,16 +42,23 @@ module.exports = function ExampleBlock() {
 			return false;
 		},
 		getAttachmentList = function () {
+			//TODO: support nested lists
 			if (lines.length === 0) {
 				return false;
 			}
 			var topLine = lines[0],
-				listLines = lines.filter(regexUtil.isListItem);
+				listLines = lines.filter(regexUtil.isListItem),
+				listSymbol;
 			if (listLines.length === 0) {
 				return false;
 			}
+			listSymbol = regexUtil.getListSymbol(listLines[0]);
 			if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
-				return {type: 'list', ordered: false, items: listLines.map(regexUtil.stripListSymbol)};
+				return {type: 'list',
+					ordered: !isNaN(parseFloat(listSymbol)),
+					items: listLines.map(regexUtil.stripListSymbol),
+					symbol: listSymbol
+				};
 			}
 			return false;
 		};

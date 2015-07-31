@@ -36,6 +36,9 @@ module.exports = function RegexUtil() {
 		return /^\s*$/.test(line);
 	};
 	this.isListItem = function (line) {
+		if (/^\s*\d+.\s/.test(line)) {
+			return true;
+		}
 		if (/^[\*\s-=]*$/.test(line)) {
 			return false;
 		}

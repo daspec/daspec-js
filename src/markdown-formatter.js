@@ -106,7 +106,6 @@ module.exports = function MarkDownFormatter() {
 				return stepResult.stepText;
 			},
 			attachmentLines = function () {
-				//TODO: investigate if we should force exactly one space between the step text and attachment
 				if (!stepResult.attachment) {
 					return '';
 				}
@@ -115,13 +114,12 @@ module.exports = function MarkDownFormatter() {
 							return false;
 						}
 						var failedListAssertions = stepResult.assertions.filter(failedForAttachment),
-								values = stepResult.attachment.items;
+							values = stepResult.attachment.items,
+							symbol = stepResult.attachment.symbol || '* ';
 						if (failedListAssertions && failedListAssertions.length > 0) {
 							values = self.formatListResult(failedListAssertions[0].value);
 						}
-						return values.map(function (e) {
-							return '\n* ' + e; // TODO: reuse listutil add list item to support nested lists?
-						}).join(''); // TODO: deal with ordered lists
+						return '\n' + symbol + values.join('\n' + symbol);
 					},
 					formatTableItem = function (item) {
 						return '|' + item.join('|') + '|';

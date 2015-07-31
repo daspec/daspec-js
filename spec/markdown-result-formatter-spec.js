@@ -9,13 +9,13 @@ describe('MarkdownResultFormatter', function () {
 		underTest = new MarkdownResultFormatter();
 	});
 	describe('stepResult', function () {
-
+		//TODO
 	});
 	describe('nonAssertionLine', function () {
-
+		//TODO
 	});
 	describe('skippedLine', function () {
-
+		//TODO
 	});
 	describe('tableResultBlock', function () {
 		it('should return a new formatter for tableResultBlocks', function () {

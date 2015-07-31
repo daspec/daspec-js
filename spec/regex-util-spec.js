@@ -106,6 +106,8 @@ describe('regex util', function () {
 			expect(underTest.getListSymbol(' * **SHOUT**')).toBe(' * ');
 			expect(underTest.getListSymbol(' - **SHOUT**')).toBe(' - ');
 			expect(underTest.getListSymbol('-  **SHOUT**')).toBe('-  ');
+			expect(underTest.getListSymbol('121. number')).toBe('121. ');
+			expect(underTest.getListSymbol(' 121.\t\tnumber')).toBe(' 121.\t\t');
 		});
 	});
 	describe('isTableItem', function () {
@@ -218,11 +220,20 @@ describe('regex util', function () {
 			expect(underTest.isListItem('** SHOUT **')).toBeFalsy();
 			expect(underTest.isListItem('* SHOUT *')).toBeFalsy();
 		});
-		it('recognises lists', function () {
+		it('recognises lines starting with dashes and stars as lists', function () {
 			expect(underTest.isListItem('* **SHOUT**')).toBeTruthy();
+			expect(underTest.isListItem('*\t**SHOUT**')).toBeTruthy();
 			expect(underTest.isListItem(' * **SHOUT**')).toBeTruthy();
 			expect(underTest.isListItem(' - **SHOUT**')).toBeTruthy();
 			expect(underTest.isListItem('- **SHOUT**')).toBeTruthy();
+			expect(underTest.isListItem('-\t**SHOUT**')).toBeTruthy();
+
+		});
+		it('recognises lines starting with numbers followed by a space as lists', function () {
+			expect(underTest.isListItem('1. something')).toBeTruthy();
+			expect(underTest.isListItem('  22222. something else')).toBeTruthy();
+			expect(underTest.isListItem('2.\tsomething else')).toBeTruthy();
+			expect(underTest.isListItem('2.something else')).toBeFalsy();
 		});
 	});
 	describe('isEmpty', function () {
