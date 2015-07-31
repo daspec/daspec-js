@@ -3,7 +3,7 @@ Release plan
 
 # Enable JS developers to write markdown executable specs
 
-* support for tables
+* ~~support for tables~~
 * web browser runner
 * nodejs runner
 * go through TODO items
@@ -20,10 +20,9 @@ Release plan
 # Enable JS developers to easily get started
 
 * flexible matcher library support (js hamcrest?)
+  * try to discover positions from expected values
 * getting started guide on the web
 * nice example project to copy/paste from
-* perhaps matching by example in addition to matching by regex
-  - eg 'SERIES cost BUDGET to make' would map 'Avengers cost 1000M to make'
 
 # Enable JS developers to easily contribute to daspec development
 
