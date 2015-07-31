@@ -143,7 +143,6 @@ describe('MarkDownFormatter', function () {
 			});
 			describe('tables', function () {
 				describe('table formatting', function () {
-					//TODO tests for formatting
 					it('copies a table if there are no failed attachment assertions', function () {
 						expect(underTest.markResult({
 							stepText: 'Before table',
@@ -155,6 +154,20 @@ describe('MarkDownFormatter', function () {
 							'| A | B |\n' +
 							'|---|---|\n' +
 							'| 1 | 2 |');
+					});
+					it('formats the results if there are failed attachment assertions', function () {
+						var attachment = {type: 'table', titles: ['A', 'B'], items: [[1, 2]]};
+						expect(underTest.markResult({
+							stepText: 'Before table',
+							attachment: attachment,
+							matcher: /.* (\d)/,
+							assertions: [{passed: false, expected: attachment, value: {additional: [['f', 'g']]}}]
+						})).toEqual(
+							'**~~Before table~~**\n' +
+							'|   | A     | B     |\n' +
+							'|---|-------|-------|\n' +
+							'| + | **f** | **g** |'
+						);
 					});
 					it('contains no table header if the origin table did not have a header', function () {
 						expect(underTest.markResult({

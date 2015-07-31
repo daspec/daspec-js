@@ -29,7 +29,6 @@ describe('StepContext', function () {
 			expect(result.assertions[0].passed).toBe(false);
 			expect(result.assertions[0].value).toEqual({matches: false, missing: [[3, 4]], additional: [[4, 2]], matching: [[1, 2]]});
 		});
-		//TODO: normalised title comparison
 		it('uses table column titles to match rows, if titles are provided', function () {
 			underTest.assertUnorderedTableEquals({type: 'table', titles: ['cost', 'benefit'], items: [[1, 2], [3, 4]]},
 				{type: 'table', titles: ['benefit', 'Cost'], items: [[2, 4], [2, 1]]});
