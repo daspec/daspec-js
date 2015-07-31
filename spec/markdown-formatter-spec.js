@@ -25,6 +25,19 @@ describe('MarkDownFormatter', function () {
 		it('marks a non-indexed list success as a list item', function () {
 			expect(underTest.markResult({stepText: '* The number is 4', matcher: /.* (\d)/, assertions: [{passed: true}]})).toEqual('* **The number is 4**');
 		});
+		it('marks a non-indexed table success as a table row', function () {
+			expect(underTest.markResult({
+				stepText: '|a|b|',
+				assertions: [{passed: true}]
+			})).toEqual('| **a** | **b** |');
+		});
+		it('marks a non-indexed table failure as a table item', function () {
+			expect(underTest.markResult({
+				stepText: '|a|b|',
+				assertions: [{passed: false}]
+			})).toEqual('| **~~a~~** | **~~b~~** |');
+		});
+
 		it('places the correct list symbol and indentation back', function () {
 			expect(underTest.markResult({stepText: '  - The number is 4', matcher: /.* (\d)/, assertions: [{passed: true}]})).toEqual('  - **The number is 4**');
 		});

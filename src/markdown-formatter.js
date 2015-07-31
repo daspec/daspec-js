@@ -3,7 +3,9 @@ module.exports = function () {
 	'use strict';
 	var self = this,
 			RegexUtil = require('./regex-util'),
+			TableUtil = require('./table-util'),
 			regexUtil = new RegexUtil(),
+			tableUtil = new TableUtil(),
 			dash = String.fromCharCode(8211),
 			tick = String.fromCharCode(10003),
 			crossValueAndExpected = function (expected, actual) {
@@ -76,12 +78,15 @@ module.exports = function () {
 			},
 			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
+
 				if (noIndexAssertions.length === 0) {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
 				if (noIndexAssertions.some(failed)) {
 					if (regexUtil.isListItem(stepResult.stepText)) {
 						return regexUtil.getListSymbol(stepResult.stepText) + '**~~' + regexUtil.stripListSymbol(stepResult.stepText) + '~~**';
+					} else if (regexUtil.isTableItem(stepResult.stepText)) {
+						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(crossValue).join(' | ') + ' |';
 					} else {
 						return '**~~' + stepResult.stepText + '~~**';
 					}
@@ -92,6 +97,8 @@ module.exports = function () {
 				if (stepResult.assertions.length) {
 					if (regexUtil.isListItem(stepResult.stepText)) {
 						return regexUtil.getListSymbol(stepResult.stepText) + '**' + regexUtil.stripListSymbol(stepResult.stepText) + '**';
+					} else if (regexUtil.isTableItem(stepResult.stepText)) {
+						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(boldValue).join(' | ') + ' |';
 					} else {
 						return '**' + stepResult.stepText + '**';
 					}

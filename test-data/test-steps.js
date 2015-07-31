@@ -25,26 +25,6 @@ module.exports = function (ctx) {
 	});
 	var films = {}, tables = {};
 	ctx.defineStep(/These are the ([A-Za-z ]*) Films/, function (seriesName, tableOfReleases) {
-/*
-{type:'table', titles: ['Title', 'Year'], items:[
-	['A new Hope', 1976],
-	['The Empire Strikes Back', 1979],
-	...
-]]}
-		Table with title row
-		[
-			{Title:'A New Hope', Year:1979},
-			{Title:'The Empire Strikes Back', Year:1979},
-			{Title:'The Return of the Jedi', Year:1979}
-		],
-
-		Table with no Title Row
-		[
-			{0:'A New Hope', 1:1979},
-			{0:'The Empire Strikes Back', 1:1979},
-			{0:'The Return of the Jedi', 1:1979}
-		]
-*/
 		films[seriesName] = tableOfReleases.items;
 		tables[seriesName] = tableOfReleases;
 	});
@@ -65,10 +45,18 @@ module.exports = function (ctx) {
 				return film[0] === episode;
 			}),
 			actualYear = matching && matching.length > 0 && matching[0][1];
-		console.log('expected', episode, yearOfRelease, seriesName);
-		console.log('actual', actualYear, matching, series);
 		this.assertEquals(true, !!series);
-		this.assertEquals(true, !!matching);
+		this.assertEquals(true, !!matching && matching.length);
 		this.assertEquals(yearOfRelease, actualYear, 1);
 	});
+
+	ctx.defineStep(/\| Positional Check episodes of ([A-Za-z ]*) \| Year of release \|/, function (episode, yearOfRelease, seriesName) {
+		var series = films[seriesName],
+			matching = series && series.filter(function (film) {
+				return film[0] === episode;
+			}),
+			actualYear = matching && matching.length > 0 && matching[0][1];
+		this.assertEquals(yearOfRelease, actualYear, 1);
+	});
+
 };

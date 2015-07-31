@@ -102,28 +102,38 @@ module.exports = function (stepFunc) {
 			processTableBlock = function (block) {
 				var blockLines = block.getMatchText(),
 					step,
-					headerLine;
-				blockLines.forEach(function (line) {
-					if (!regexUtil.isTableDataRow(line)) { //Move to block?
-						if (!regexUtil.isTableHeaderDivider(line)) {
-							step = false;
-						}
-						results.nonAssertionLine(line);
-						return;
-					}
-
-					if (!step) {
+					headerLine,
+					tableResultBlock,
+					startNewTable = function (line) {
 						step = context.getStepForLine(line);
-						headerLine = line;
 						if (!step) {
 							results.skippedLine(line);
 						} else {
-							results.nonAssertionLine(line);
+							headerLine = line;
+							tableResultBlock = results.tableResultBlock();
+							tableResultBlock.nonAssertionLine(line);
 						}
+					},
+					endCurrentTable = function () {
+						step = false;
+						if (tableResultBlock) {
+							results.appendResultBlock(tableResultBlock);
+							tableResultBlock = false;
+						}
+					};
+				blockLines.forEach(function (line) {
+					if (!regexUtil.isTableItem(line)) {
+						endCurrentTable();
+						results.nonAssertionLine(line);
+					} else if (!tableResultBlock) {
+						startNewTable(line);
+					} else if (regexUtil.isTableDataRow(line)) {
+						tableResultBlock.stepResult(step.executeTableRow(line, headerLine));
 					} else {
-						results.stepResult(step.executeTableRow(line, headerLine));
+						tableResultBlock.nonAssertionLine(line);
 					}
 				});
+				endCurrentTable();
 			},
 			processBlock = function (block) {
 				var blockLines = block.getMatchText(),
@@ -390,7 +400,9 @@ module.exports = function () {
 	'use strict';
 	var self = this,
 			RegexUtil = require('./regex-util'),
+			TableUtil = require('./table-util'),
 			regexUtil = new RegexUtil(),
+			tableUtil = new TableUtil(),
 			dash = String.fromCharCode(8211),
 			tick = String.fromCharCode(10003),
 			crossValueAndExpected = function (expected, actual) {
@@ -463,6 +475,7 @@ module.exports = function () {
 			},
 			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
+
 				if (noIndexAssertions.length === 0) {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
@@ -479,6 +492,8 @@ module.exports = function () {
 				if (stepResult.assertions.length) {
 					if (regexUtil.isListItem(stepResult.stepText)) {
 						return regexUtil.getListSymbol(stepResult.stepText) + '**' + regexUtil.stripListSymbol(stepResult.stepText) + '**';
+					} else if (regexUtil.isTableItem(stepResult.stepText)) {
+						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(boldValue).join(' | ') + ' |';
 					} else {
 						return '**' + stepResult.stepText + '**';
 					}
@@ -537,9 +552,9 @@ module.exports = function () {
 	};
 };
 
-},{"./regex-util":12}],11:[function(require,module,exports){
+},{"./regex-util":12,"./table-util":14}],11:[function(require,module,exports){
 /*global module, require*/
-module.exports = function () {
+module.exports = function MarkdownResultFormatter() {
 	'use strict';
 	var self = this,
 		MarkDownFormatter = require('./markdown-formatter'),
@@ -566,6 +581,25 @@ module.exports = function () {
 				description = description + 'Nada';
 			}
 			return description;
+		},
+		TableResultBlock = function () {
+			var self = this,
+				tableCounts = new AssertionCounts(),
+				tableRows = [];
+			self.counts = tableCounts;
+			self.nonAssertionLine = function (line) {
+				tableRows.push(line);
+			};
+			self.stepResult = function (result) {
+				tableCounts.recordException(result.exception);
+				result.assertions.forEach(function (assertion) {
+					tableCounts.increment(assertion);
+				});
+				tableRows.push(markDownFormatter.markResult(result));
+			};
+			self.formattedResults = function () {
+				return tableRows;
+			};
 		};
 	self.stepResult = function (result) {
 		counts.recordException(result.exception);
@@ -587,6 +621,13 @@ module.exports = function () {
 		out.unshift('');
 		out.unshift(countDescription(counts));
 		return out.join('\n');
+	};
+	self.appendResultBlock = function (formatter) {
+		counts.incrementCounts(formatter.counts);
+		resultBuffer = resultBuffer.concat(formatter.formattedResults());
+	};
+	self.tableResultBlock = function () {
+		return new TableResultBlock();
 	};
 };
 

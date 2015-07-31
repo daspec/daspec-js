@@ -1,5 +1,5 @@
 /*global module, require*/
-module.exports = function () {
+module.exports = function MarkdownResultFormatter() {
 	'use strict';
 	var self = this,
 		MarkDownFormatter = require('./markdown-formatter'),
@@ -26,6 +26,25 @@ module.exports = function () {
 				description = description + 'Nada';
 			}
 			return description;
+		},
+		TableResultBlock = function () {
+			var self = this,
+				tableCounts = new AssertionCounts(),
+				tableRows = [];
+			self.counts = tableCounts;
+			self.nonAssertionLine = function (line) {
+				tableRows.push(line);
+			};
+			self.stepResult = function (result) {
+				tableCounts.recordException(result.exception);
+				result.assertions.forEach(function (assertion) {
+					tableCounts.increment(assertion);
+				});
+				tableRows.push(markDownFormatter.markResult(result));
+			};
+			self.formattedResults = function () {
+				return tableRows;
+			};
 		};
 	self.stepResult = function (result) {
 		counts.recordException(result.exception);
@@ -47,5 +66,12 @@ module.exports = function () {
 		out.unshift('');
 		out.unshift(countDescription(counts));
 		return out.join('\n');
+	};
+	self.appendResultBlock = function (formatter) {
+		counts.incrementCounts(formatter.counts);
+		resultBuffer = resultBuffer.concat(formatter.formattedResults());
+	};
+	self.tableResultBlock = function () {
+		return new TableResultBlock();
 	};
 };

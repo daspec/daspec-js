@@ -16,28 +16,38 @@ module.exports = function (stepFunc) {
 			processTableBlock = function (block) {
 				var blockLines = block.getMatchText(),
 					step,
-					headerLine;
-				blockLines.forEach(function (line) {
-					if (!regexUtil.isTableDataRow(line)) { //Move to block?
-						if (!regexUtil.isTableHeaderDivider(line)) {
-							step = false;
-						}
-						results.nonAssertionLine(line);
-						return;
-					}
-
-					if (!step) {
+					headerLine,
+					tableResultBlock,
+					startNewTable = function (line) {
 						step = context.getStepForLine(line);
-						headerLine = line;
 						if (!step) {
 							results.skippedLine(line);
 						} else {
-							results.nonAssertionLine(line);
+							headerLine = line;
+							tableResultBlock = results.tableResultBlock();
+							tableResultBlock.nonAssertionLine(line);
 						}
+					},
+					endCurrentTable = function () {
+						step = false;
+						if (tableResultBlock) {
+							results.appendResultBlock(tableResultBlock);
+							tableResultBlock = false;
+						}
+					};
+				blockLines.forEach(function (line) {
+					if (!regexUtil.isTableItem(line)) {
+						endCurrentTable();
+						results.nonAssertionLine(line);
+					} else if (!tableResultBlock) {
+						startNewTable(line);
+					} else if (regexUtil.isTableDataRow(line)) {
+						tableResultBlock.stepResult(step.executeTableRow(line, headerLine));
 					} else {
-						results.stepResult(step.executeTableRow(line, headerLine));
+						tableResultBlock.nonAssertionLine(line);
 					}
 				});
+				endCurrentTable();
 			},
 			processBlock = function (block) {
 				var blockLines = block.getMatchText(),
