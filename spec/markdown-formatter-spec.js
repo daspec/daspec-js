@@ -21,6 +21,31 @@ describe('MarkDownFormatter', function () {
 		it('marks a single indexed assertion as failed within a string if there are no unindexed failures', function () {
 			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/, assertions: [{expected: 4, index: 0, passed: false, value: 3}]})).toEqual('The number is **~~4~~ [3]**');
 		});
+		it('marks a single indexed success as bold within a string if there are no unindexed failures', function () {
+			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/,
+				assertions: [{expected: 4, index: 0, passed: true, value: 3}]})).toEqual('The number is **4**');
+		});
+		it('does not mark indexed successes if there is a non-indexed failure', function () {
+			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/,
+				assertions: [
+					{expected: 4, index: 0, passed: true, value: 3},
+					{passed: false}
+				]})).toEqual('**~~The number is 4~~**');
+		});
+		it('does not mark indexed failures if there is a non-indexed failure', function () {
+			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/,
+				assertions: [
+					{expected: 4, index: 0, passed: false, value: 3},
+					{passed: false}
+				]})).toEqual('**~~The number is 4~~**');
+		});
+		it('does not mark indexed successes if there is a non-indexed success', function () {
+			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/,
+				assertions: [
+					{expected: 4, index: 0, passed: true, value: 3},
+					{passed: true}
+				]})).toEqual('**The number is 4**');
+		});
 		it('marks a non-indexed list failure as a list item', function () {
 			expect(underTest.markResult({stepText: '* The number is 4', matcher: /.* (\d)/, assertions: [{passed: false}]})).toEqual('* **~~The number is 4~~**');
 		});
@@ -43,7 +68,37 @@ describe('MarkDownFormatter', function () {
 		it('places the correct list symbol and indentation back', function () {
 			expect(underTest.markResult({stepText: '  - The number is 4', matcher: /.* (\d)/, assertions: [{passed: true}]})).toEqual('  - **The number is 4**');
 		});
-
+		describe('exception reporting', function () {
+			it('adds the exception as a comment after the result', function () {
+				expect(underTest.markResult({
+					stepText: 'The number is 4', matcher: /.* (\d)/,
+					exception: 'Problem!'
+				})).toEqual('**~~The number is 4~~**\n<!--\nProblem!\n-->');
+			});
+			it('does not mark indexed successes if there is an exception', function () {
+				expect(underTest.markResult({
+					stepText: 'The number is 4', matcher: /.* (\d)/,
+					exception: 'Problem!',
+					assertions: [
+						{expected: 4, index: 0, passed: true, value: 3}
+					]})).toEqual('**~~The number is 4~~**\n<!--\nProblem!\n-->');
+			});
+			it('does not mark indexed failures if there is an exception', function () {
+				expect(underTest.markResult({
+					stepText: 'The number is 4', matcher: /.* (\d)/,
+					exception: 'Problem!',
+					assertions: [
+						{expected: 4, index: 0, passed: false, value: 3}
+					]})).toEqual('**~~The number is 4~~**\n<!--\nProblem!\n-->');
+			});
+			it('does not mark non-indexed successes if there is an exception', function () {
+				expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/,
+					exception: 'Problem!',
+					assertions: [
+						{passed: true}
+					]})).toEqual('**~~The number is 4~~**\n<!--\nProblem!\n-->');
+			});
+		});
 		describe('attachment formatting', function () {
 			describe('lists', function () {
 				it('copies a list if there are no failed attachment assertions', function () {

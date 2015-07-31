@@ -76,9 +76,11 @@ module.exports = function MarkDownFormatter() {
 					(assertion.expected === stepResult.attachment.items || assertion.expected == stepResult.attachment) &&
 					!assertion.passed;
 			},
-			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
-
+				if (stepResult.exception) {
+					return crossValue(stepResult.stepText);
+				}
+				var noIndexAssertions = stepResult.assertions.filter(withoutIndex);
 				if (noIndexAssertions.length === 0) {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
@@ -88,7 +90,7 @@ module.exports = function MarkDownFormatter() {
 					} else if (regexUtil.isTableItem(stepResult.stepText)) {
 						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(crossValue).join(' | ') + ' |';
 					} else {
-						return '**~~' + stepResult.stepText + '~~**';
+						return crossValue(stepResult.stepText);
 					}
 				}
 				if (stepResult.assertions.some(failed)) {
@@ -100,7 +102,7 @@ module.exports = function MarkDownFormatter() {
 					} else if (regexUtil.isTableItem(stepResult.stepText)) {
 						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(boldValue).join(' | ') + ' |';
 					} else {
-						return '**' + stepResult.stepText + '**';
+						return boldValue(stepResult.stepText);
 					}
 				}
 				return stepResult.stepText;
@@ -148,11 +150,13 @@ module.exports = function MarkDownFormatter() {
 						return '\n' + tableUtil.justifyTable(resultRows).join('\n');
 					};
 				return formatList() || formatTable();
+			},
+			exceptionReport = function () {
+				if (!stepResult.exception) {
+					return '';
+				}
+				return '\n<!--\n' + stepResult.exception + '\n-->';
 			};
-		if (stepResult.exception) {
-			return '~~' + stepResult.stepText + '~~\n' + '\t' + stepResult.exception.stack; //TODO: push list as well
-		}
-		return headingLine() + attachmentLines();
-
+		return headingLine() + attachmentLines() + exceptionReport();
 	};
 };
