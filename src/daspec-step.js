@@ -6,6 +6,9 @@ module.exports = function StepExecutor(regexMatcher, processFunction) {
 		TableUtil = require('./table-util'),
 		RegExUtil = require('./regex-util');
 	self.match = function (stepText) {
+		if (stepText instanceof RegExp) {
+			return regexMatcher.source === stepText.source;
+		}
 		return regexMatcher.test(stepText);
 	};
 	self.execute = function (stepText, attachment) {
