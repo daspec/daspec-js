@@ -32,6 +32,9 @@ module.exports = function RegexUtil() {
 	this.isTableHeaderDivider = function (line) {
 		return self.isTableItem(line) && /^[|= -]*$/.test(line);
 	};
+	this.isEmpty = function (line) {
+		return /^\s*$/.test(line);
+	};
 	this.isListItem = function (line) {
 		if (/^[\*\s-=]*$/.test(line)) {
 			return false;

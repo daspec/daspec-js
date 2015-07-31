@@ -225,4 +225,18 @@ describe('regex util', function () {
 			expect(underTest.isListItem('- **SHOUT**')).toBeTruthy();
 		});
 	});
+	describe('isEmpty', function () {
+		it('returns false if a string is empty or can be trimmed to empty', function () {
+			expect(underTest.isEmpty('')).toBeTruthy();
+			expect(underTest.isEmpty('\t\t')).toBeTruthy();
+			expect(underTest.isEmpty(' \t')).toBeTruthy();
+			expect(underTest.isEmpty('     ')).toBeTruthy();
+		});
+		it('returns false if a string contains at least one non space character', function () {
+			expect(underTest.isEmpty('X')).toBeFalsy();
+			expect(underTest.isEmpty('\tX\t')).toBeFalsy();
+			expect(underTest.isEmpty(' \tX')).toBeFalsy();
+			expect(underTest.isEmpty('     X')).toBeFalsy();
+		});
+	});
 });

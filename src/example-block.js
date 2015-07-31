@@ -4,27 +4,30 @@ module.exports = function ExampleBlock() {
 	var self = this,
 		RegexUtil = require('./regex-util'),
 		regexUtil = new RegexUtil(),
+		TableUtil = require('./table-util'),
+		tableUtil = new TableUtil(),
+		Normaliser = require('./normaliser'),
+		normaliser = new Normaliser(),
 		lines = [],
-		toLineItem = function (line) {
-			return line.replace(/^\||\|$/g, '').split('|').map(function (s) {
-				return s.trim();
-			});
-		},
 		toItems = function (lines) {
-			return lines.map(toLineItem);
+			return lines.map(tableUtil.cellValuesForRow);
 		},
 		toTable = function (lines) {
 			var tableItems = lines, result = {type: 'table'};
 			if (lines.length > 2 && regexUtil.isTableHeaderDivider(lines[1])) {
-				result.titles =  toLineItem(lines[0]);
+				result.titles =  tableUtil.cellValuesForRow(lines[0]);
+				if (normaliser.containsDuplicates(result.titles)) {
+					throw new SyntaxError('Attachment table has multiple equivalent column names');
+				}
+				if (result.titles.some(regexUtil.isEmpty)) {
+					throw new SyntaxError('Attachment table has a column without a name');
+				}
 				tableItems = lines.slice(2);
 			}
 			result.items = toItems(tableItems);
 			return result;
 		},
 		getAttachmentTable = function () {
-			//TODO: complain if table has duplicated column titles or some columns have no titles
-			//TODO: table column title normalisation (eg Top Price === topprice === TOP price)
 			if (lines.length === 0) {
 				return false;
 			}

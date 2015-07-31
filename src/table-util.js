@@ -3,17 +3,10 @@ module.exports = function TableUtil() {
 	'use strict';
 	var self = this,
 		RegexUtil = require ('./regex-util'),
-		regexUtil = new RegexUtil();
-	self.normaliseTitle = function (string) {
-		return string.toLocaleLowerCase().replace(/\s/g, '');
-	};
-	self.normaliseObject = function (object) {
-		var result = {};
-		Object.keys(object).forEach(function (key) {
-			result[self.normaliseTitle(key)] = object[key];
-		});
-		return result;
-	};
+		regexUtil = new RegexUtil(),
+		Normaliser = require ('./normaliser'),
+		normaliser = new Normaliser();
+
 	self.cellValuesForRow = function (dataRow) {
 		if (!dataRow || dataRow.trim() === '') {
 			return [];
@@ -28,34 +21,33 @@ module.exports = function TableUtil() {
 			return v.trim();
 		});
 	};
-	//TODO: validate table. eg multiple columns matching same normalised title so non-deterministic results
 	self.tableValuesForTitles = function (table, titles) {
 		if (!titles || titles.length === 0) {
 			return false;
 		}
 		var pickItems = function (tableRow) {
-					return columnIndexes.map(function (val) {
-						return tableRow[val];
-					});
-				},
-				normalisedTitles = titles.map(self.normaliseTitle),
-				normalisedTableTitles = table.titles.map(self.normaliseTitle),
-				columnIndexes = normalisedTitles.map(function (title) {
-					return normalisedTableTitles.indexOf(title);
+				return columnIndexes.map(function (val) {
+					return tableRow[val];
 				});
+			},
+			normalisedTitles = titles.map(normaliser.normaliseString),
+			normalisedTableTitles = table.titles.map(normaliser.normaliseString),
+			columnIndexes = normalisedTitles.map(function (title) {
+				return normalisedTableTitles.indexOf(title);
+			});
 		return table.items.map(pickItems);
 	};
 	self.objectArrayValuesForTitles = function (list, titles) {
 		if (!titles || titles.length === 0) {
 			return false;
 		}
-		var normalisedTitles = titles.map(self.normaliseTitle),
-				pickItems = function (item) {
-					return normalisedTitles.map(function (title) {
-						return item[title];
-					});
-				};
-		return list.map(self.normaliseObject).map(pickItems);
+		var normalisedTitles = titles.map(normaliser.normaliseString),
+			pickItems = function (item) {
+				return normalisedTitles.map(function (title) {
+					return item[title];
+				});
+			};
+		return list.map(normaliser.normaliseObject).map(pickItems);
 	};
 	self.justifyTable = function (stringArray) {
 		var maxCellLengths = function (maxSoFar, tableRow, index) {

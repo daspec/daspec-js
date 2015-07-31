@@ -204,6 +204,46 @@ describe('ExampleBlock', function () {
 				expect(underTest.getAttachment().titles).toEqual(['H1', 'H2']);
 				expect(underTest.getAttachment().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
 			});
+			describe('preventing non-deterministic results', function () {
+				it('reports an error when a table has a heading and multiple columns with the same normalised name', function () {
+					underTest.addLine('|2.1|2.2|');
+					underTest.addLine('|1.1|1.2|');
+					underTest.addLine('|---|---|');
+					underTest.addLine('|H1|h1|');
+					underTest.addLine('not a table item');
+					expect(function () {
+						underTest.getAttachment();
+					}).toThrowError(SyntaxError, 'Attachment table has multiple equivalent column names');
+				});
+				it('does not complain about tables without a heading row even if they have the same values in the top row', function () {
+					underTest.addLine('|2.1|2.2|');
+					underTest.addLine('|1.1|1.2|');
+					underTest.addLine('|H1|h1|');
+					underTest.addLine('not a table item');
+					expect(function () {
+						underTest.getAttachment();
+					}).not.toThrow();
+				});
+				it('reports an error when a table has a heading and multiple columns with the same normalised name', function () {
+					underTest.addLine('|2.1|2.2|');
+					underTest.addLine('|1.1|1.2|');
+					underTest.addLine('|---|---|');
+					underTest.addLine('|H1| |');
+					underTest.addLine('not a table item');
+					expect(function () {
+						underTest.getAttachment();
+					}).toThrowError(SyntaxError, 'Attachment table has a column without a name');
+				});
+				it('does not complain about empty cell values in the top row of tables without a heading row', function () {
+					underTest.addLine('|2.1|2.2|');
+					underTest.addLine('|1.1|1.2|');
+					underTest.addLine('|H1| |');
+					underTest.addLine('not a table item');
+					expect(function () {
+						underTest.getAttachment();
+					}).not.toThrow();
+				});
+			});
 		});
 		describe('list attachments', function () {
 			it('returns an array of list items when the top line  is a non list item and not ignored ', function () {

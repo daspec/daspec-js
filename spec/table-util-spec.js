@@ -7,22 +7,6 @@ describe('TableUtil', function () {
 	beforeEach(function () {
 		underTest = new TableUtil();
 	});
-	describe('normaliseTitle', function () {
-		it('lowercases the title', function () {
-			expect(underTest.normaliseTitle('Cost')).toEqual('cost');
-		});
-		it('removes spaces', function () {
-			expect(underTest.normaliseTitle('cost of delay')).toEqual('costofdelay');
-		});
-	});
-	describe('normaliseObject', function () {
-		it('returns a shallow-copy of the object with normalised keys', function () {
-			expect(underTest.normaliseObject({'Cost of Action': 1, 'PROFIT': 2, costOfInaction: 'XXX'})).toEqual(
-				{costofaction: 1, profit: 2, costofinaction: 'XXX'}
-			);
-		});
-	});
-
 	describe('justifyTable', function () {
 		it('padds cells to fit max length values in each column with spaces around', function () {
 
