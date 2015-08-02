@@ -23,7 +23,22 @@ describe('Context', function () {
 			underTest.defineStep(/Who is (.*)/, processor);
 			expect(function () {
 				underTest.defineStep(/Who is (.*)/, processorTwo);
-			}).toThrowError(Error, 'the matching step is already defined');
+			}).toThrowError(Error, 'The matching step is already defined');
+		});
+		it('throws an error when non-capture groups are used', function () {
+			expect(function () {
+				underTest.defineStep(/Who is (?:.*)/, processorTwo);
+			}).toThrowError(Error, 'Non-capturing regex groups are not supported');
+		});
+		it('throws an error when regex is not defined', function () {
+			expect(function () {
+				underTest.defineStep(undefined, processorTwo);
+			}).toThrowError(Error, 'Empty matchers are not supported');
+		});
+		it('throws an error when the matcher is a regex', function () {
+			expect(function () {
+				underTest.defineStep('abc', processorTwo);
+			}).toThrowError(Error, 'Matcher must be a regex');
 		});
 	});
 	describe('getStepForLine', function () {

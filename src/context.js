@@ -10,9 +10,18 @@ module.exports = function Context() {
 			});
 		};
 	self.defineStep = function (regexMatcher, processFunction) {
+		if (!regexMatcher) {
+			throw new Error('Empty matchers are not supported');
+		}
+		if (!(regexMatcher instanceof RegExp)) {
+			throw new Error('Matcher must be a regex');
+		}
+		if (regexMatcher.source.indexOf('(?:') >= 0) {
+			throw new Error('Non-capturing regex groups are not supported');
+		}
 		var matching = matchingSteps(regexMatcher);
 		if (matching.length > 0) {
-			throw new Error('the matching step is already defined');
+			throw new Error('The matching step is already defined');
 		}
 		steps.push(new StepExecutor(regexMatcher, processFunction));
 	};
