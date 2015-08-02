@@ -7,6 +7,8 @@ Release plan
 * web browser runner
 * nodejs runner
 * go through TODO items
+* file/line number reporting on failed assertions
+* file/line number reporting on exceptions in parsing
 
 # Enable JS developers to easily install and integrate daspec
 
@@ -16,6 +18,7 @@ Release plan
 * tap output
 * grunt integration
 * gulp integration
+* clean syntax for step definitions and assertions
 
 # Enable JS developers to easily get started
 
