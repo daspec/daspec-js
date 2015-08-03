@@ -9,10 +9,16 @@ Release plan
 * go through TODO items
 * file/line number reporting on failed assertions
 * file/line number reporting on exceptions in parsing
+* report successful assertion on tables/lists with ticks
+* format whitespace on column headings in the initial report column
+* optimistically convert to numbers whatever possible
+* increment numerical lists in output
+* whitespace before step and attachment
 
 # Enable JS developers to easily install and integrate daspec
 
 * npm package/install
+* bower install
 * integrated into npm test
 * junit XML output
 * tap output
@@ -20,12 +26,14 @@ Release plan
 * gulp integration
 * clean syntax for step definitions and assertions
 
+
 # Enable JS developers to easily get started
 
 * flexible matcher library support (js hamcrest?)
   * try to discover positions from expected values
 * getting started guide on the web
 * nice example project to copy/paste from
+* generate proposal steps
 
 # Enable JS developers to easily contribute to daspec development
 
