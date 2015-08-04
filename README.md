@@ -18,7 +18,7 @@ Detailed results
 
 ##Compiling a browser version of DasSpec
 
-> npm run compile
+    npm run compile
 
 this will save a file to [compiled/main.js](compiled/main.js)
 
