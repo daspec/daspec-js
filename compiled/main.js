@@ -1,6 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /*global module*/
-module.exports = function () {
+module.exports = function AssertionCounts() {
 	'use strict';
 	var self = this;
 	self.executed = 0;
@@ -37,7 +37,7 @@ module.exports = function () {
 
 },{}],2:[function(require,module,exports){
 /*global module*/
-module.exports = function (expected, actual, passed, outputIndex) {
+module.exports = function Assertion(expected, actual, passed, outputIndex) {
 	'use strict';
 	var self = this;
 	self.value = actual;
@@ -47,21 +47,11 @@ module.exports = function (expected, actual, passed, outputIndex) {
 };
 
 },{}],3:[function(require,module,exports){
-(function (global){
-/*global require, global*/
-
-global.DaSpec = {
-	Runner: require('./daspec-runner'),
-	StepDefinitions: require('../test-data/test-steps')
-};
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../test-data/test-steps":15,"./daspec-runner":5}],4:[function(require,module,exports){
 /*global module, require*/
 module.exports = function Context() {
 	'use strict';
 	var self = this,
-		StepExecutor =  require('./daspec-step'),
+		StepExecutor =  require('./step-executor'),
 		steps = [],
 		matchingSteps = function (stepText) {
 			return steps.filter(function (step) {
@@ -69,9 +59,18 @@ module.exports = function Context() {
 			});
 		};
 	self.defineStep = function (regexMatcher, processFunction) {
+		if (!regexMatcher) {
+			throw new Error('Empty matchers are not supported');
+		}
+		if (!(regexMatcher instanceof RegExp)) {
+			throw new Error('Matcher must be a regex');
+		}
+		if (regexMatcher.source.indexOf('(?:') >= 0) {
+			throw new Error('Non-capturing regex groups are not supported');
+		}
 		var matching = matchingSteps(regexMatcher);
 		if (matching.length > 0) {
-			throw new Error('the matching step is already defined');
+			throw new Error('The matching step is already defined');
 		}
 		steps.push(new StepExecutor(regexMatcher, processFunction));
 	};
@@ -80,182 +79,86 @@ module.exports = function Context() {
 		if (matching.length === 0) {
 			return false;
 		} else if (matching.length > 1) {
-			/* bork on multiple options possible */
 			throw new Error('multiple steps match line ' + stepText);
 		}
 		return matching[0];
 	};
 };
 
-},{"./daspec-step":6}],5:[function(require,module,exports){
-/*global module, require*/
-module.exports = function (stepFunc) {
-	'use strict';
-	var Context = require('./daspec-context'),
-		RegexUtil = require('./regex-util'),
-		regexUtil = new RegexUtil(),
-		ExampleBlocks = require('./example-blocks'),
-		context = new Context(),
-		self = this;
-	stepFunc(context);
+},{"./step-executor":14}],4:[function(require,module,exports){
+(function (global){
+/*global require, global*/
 
-	self.example = function (inputText) {
-		var MarkDownResultFormatter = require('./markdown-result-formatter'),
-			results = new MarkDownResultFormatter(),
-			blocks = new ExampleBlocks(inputText),
-			processTableBlock = function (block) {
-				var blockLines = block.getMatchText(),
-					step,
-					headerLine,
-					tableResultBlock,
-					startNewTable = function (line) {
-						step = context.getStepForLine(line);
-						if (!step) {
-							results.skippedLine(line);
-						} else {
-							headerLine = line;
-							tableResultBlock = results.tableResultBlock();
-							tableResultBlock.nonAssertionLine(line);
-						}
-					},
-					endCurrentTable = function () {
-						step = false;
-						if (tableResultBlock) {
-							results.appendResultBlock(tableResultBlock);
-							tableResultBlock = false;
-						}
-					};
-				blockLines.forEach(function (line) {
-					if (!regexUtil.isTableItem(line)) {
-						endCurrentTable();
-						results.nonAssertionLine(line);
-					} else if (!tableResultBlock) {
-						startNewTable(line);
-					} else if (regexUtil.isTableDataRow(line)) {
-						tableResultBlock.stepResult(step.executeTableRow(line, headerLine));
-					} else {
-						tableResultBlock.nonAssertionLine(line);
-					}
-				});
-				endCurrentTable();
-			},
-			processBlock = function (block) {
-				var blockLines = block.getMatchText(),
-					blockParam = block.getAttachment();
-				blockLines.forEach(function (line) {
-					if (!regexUtil.assertionLine(line)) { //Move to block?
-						results.nonAssertionLine(line);
-						return;
-					}
-
-					var step = context.getStepForLine(line);
-					if (!step) {
-						results.skippedLine(line);
-						return;
-					}
-					results.stepResult(step.execute(line, blockParam));
-				});
-			};
-
-		blocks.getBlocks().forEach(function (block) {
-			if (block.isTableBlock()) {
-				processTableBlock(block);
-			} else {
-				processBlock(block);
-			}
-		});
-		return results.formattedResults();
-	};
+global.DaSpec = {
+	Runner: require('./runner'),
+	StepDefinitions: require('../test-data/test-steps')
 };
 
-},{"./daspec-context":4,"./example-blocks":8,"./markdown-result-formatter":11,"./regex-util":12}],6:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"../test-data/test-steps":16,"./runner":12}],5:[function(require,module,exports){
 /*global module, require*/
-module.exports = function StepExecutor(regexMatcher, processFunction) {
+module.exports = function ExampleBlock() {
 	'use strict';
 	var self = this,
-		StepContext = require('./step-context'),
+		RegexUtil = require('./regex-util'),
+		regexUtil = new RegexUtil(),
 		TableUtil = require('./table-util'),
-		RegExUtil = require('./regex-util');
-	self.match = function (stepText) {
-		if (stepText instanceof RegExp) {
-			return regexMatcher.source === stepText.source;
-		}
-		return regexMatcher.test(stepText);
-	};
-	self.execute = function (stepText, attachment) {
-		var match = stepText.match(regexMatcher),
-			stepArgs = match.slice(1),
-			result = {
-				matcher: regexMatcher,
-				stepText: stepText,
-				attachment: attachment,
-				assertions: []
-			},
-			stepContext = new StepContext(result);
-
-		if (attachment) { /* we know it's a list and the symbol */
-			stepArgs.push(attachment);
-		}
-
-		try {
-			processFunction.apply(stepContext, stepArgs);
-		} catch (e) {
-			/* geniuine error, not assertion fail */
-			result.exception = e;
-		}
-
-
-		return result;
-	};
-	self.executeTableRow = function (dataRow, titleRow) {
-		var tableUtil = new TableUtil(),
-			regexUtil = new RegExUtil(),
-			stepArgs = tableUtil.cellValuesForRow(dataRow),
-			matcher = regexUtil.regexForTableDataRow(stepArgs.length),
-			result = {
-				matcher: matcher,
-				stepText: dataRow,
-				assertions: []
-			},
-			stepContext = new StepContext(result),
-			titleMatch = titleRow && titleRow.match(regexMatcher),
-			titleArgs = titleMatch && titleMatch.length > 1 && titleMatch.slice(1).map(function (item) {
-				return item.trim();
-			});
-
-		if (titleArgs) {
-			stepArgs = stepArgs.concat(titleArgs);
-		}
-		processFunction.apply(stepContext, stepArgs);
-
-		return result;
-	};
-};
-
-},{"./regex-util":12,"./step-context":13,"./table-util":14}],7:[function(require,module,exports){
-/*global module, require*/
-module.exports = function () {
-	'use strict';
-	var self = this,
-		RegexUtil = require('./regex-util'),
-		regexUtil = new RegexUtil(),
+		tableUtil = new TableUtil(),
+		Normaliser = require('./normaliser'),
+		normaliser = new Normaliser(),
 		lines = [],
-		toLineItem = function (line) {
-			return line.replace(/^\||\|$/g, '').split('|').map(function (s) {
-				return s.trim();
-			});
-		},
 		toItems = function (lines) {
-			return lines.map(toLineItem);
+			return lines.map(tableUtil.cellValuesForRow);
 		},
 		toTable = function (lines) {
 			var tableItems = lines, result = {type: 'table'};
 			if (lines.length > 2 && regexUtil.isTableHeaderDivider(lines[1])) {
-				result.titles =  toLineItem(lines[0]);
+				result.titles =  tableUtil.cellValuesForRow(lines[0]);
+				if (normaliser.containsDuplicates(result.titles)) {
+					throw new SyntaxError('Attachment table has multiple equivalent column names');
+				}
+				if (result.titles.some(regexUtil.isEmpty)) {
+					throw new SyntaxError('Attachment table has a column without a name');
+				}
 				tableItems = lines.slice(2);
 			}
 			result.items = toItems(tableItems);
 			return result;
+		},
+		getAttachmentTable = function () {
+			if (lines.length === 0) {
+				return false;
+			}
+			var topLine = lines[0],
+				tableLines = lines.filter(regexUtil.isTableItem);
+			if (tableLines.length === 0) {
+				return false;
+			}
+			if (!regexUtil.isTableItem(topLine) && regexUtil.assertionLine(topLine)) {
+				return toTable(tableLines);
+			}
+			return false;
+		},
+		getAttachmentList = function () {
+			//TODO: support nested lists
+			if (lines.length === 0) {
+				return false;
+			}
+			var topLine = lines[0],
+				listLines = lines.filter(regexUtil.isListItem),
+				listSymbol;
+			if (listLines.length === 0) {
+				return false;
+			}
+			listSymbol = regexUtil.getListSymbol(listLines[0]);
+			if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
+				return {type: 'list',
+					ordered: !isNaN(parseFloat(listSymbol)),
+					items: listLines.map(regexUtil.stripListSymbol),
+					symbol: listSymbol
+				};
+			}
+			return false;
 		};
 	self.addLine = function (lineText) {
 		lines.unshift(lineText);
@@ -270,24 +173,9 @@ module.exports = function () {
 		return true;
 	};
 	self.getAttachment = function () {
-		return self.getList() || self.getTable();
+		return getAttachmentList() || getAttachmentTable();
 	};
-	self.getTable = function () {
-		//TODO: complain if table has duplicated column titles or some columns have no titles
-		//TODO: table column title normalisation (eg Top Price === topprice === TOP price)
-		if (lines.length === 0) {
-			return false;
-		}
-		var topLine = lines[0],
-				tableLines = lines.filter(regexUtil.isTableItem);
-		if (tableLines.length === 0) {
-			return false;
-		}
-		if (!regexUtil.isTableItem(topLine) && regexUtil.assertionLine(topLine)) {
-			return toTable(tableLines);
-		}
-		return false;
-	};
+
 	self.isTableBlock = function () {
 		var tableLines = lines.filter(regexUtil.isTableItem),
 			nonTableAssertionLine = function (line) {
@@ -301,20 +189,7 @@ module.exports = function () {
 		}
 		return true;
 	};
-	self.getList = function () {
-		if (lines.length === 0) {
-			return false;
-		}
-		var topLine = lines[0],
-				listLines = lines.filter(regexUtil.isListItem);
-		if (listLines.length === 0) {
-			return false;
-		}
-		if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
-			return {type: 'list', ordered: false, items: listLines.map(regexUtil.stripListSymbol)};
-		}
-		return false;
-	};
+
 	self.getMatchText = function () {
 		if (lines.length === 0) {
 			return [];
@@ -329,12 +204,11 @@ module.exports = function () {
 			return lines;
 		}
 	};
-
 };
 
-},{"./regex-util":12}],8:[function(require,module,exports){
+},{"./normaliser":10,"./regex-util":11,"./table-util":15}],6:[function(require,module,exports){
 /*global module, require*/
-module.exports = function (inputText) {
+module.exports = function ExampleBlocks(inputText) {
 	'use strict';
 	var self = this,
 		ExampleBlock = require('./example-block');
@@ -356,9 +230,9 @@ module.exports = function (inputText) {
 	};
 };
 
-},{"./example-block":7}],9:[function(require,module,exports){
+},{"./example-block":5}],7:[function(require,module,exports){
 /*global module*/
-module.exports = function () {
+module.exports = function ListUtil() {
 	'use strict';
 	var self = this,
 			arrayEquals = function (array1, array2) {
@@ -401,9 +275,9 @@ module.exports = function () {
 	};
 };
 
-},{}],10:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /*global module, require*/
-module.exports = function () {
+module.exports = function MarkDownFormatter() {
 	'use strict';
 	var self = this,
 			RegexUtil = require('./regex-util'),
@@ -480,9 +354,11 @@ module.exports = function () {
 					(assertion.expected === stepResult.attachment.items || assertion.expected == stepResult.attachment) &&
 					!assertion.passed;
 			},
-			noIndexAssertions = stepResult.assertions.filter(withoutIndex),
 			headingLine = function () {
-
+				if (stepResult.exception) {
+					return crossValue(stepResult.stepText);
+				}
+				var noIndexAssertions = stepResult.assertions.filter(withoutIndex);
 				if (noIndexAssertions.length === 0) {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
@@ -492,7 +368,7 @@ module.exports = function () {
 					} else if (regexUtil.isTableItem(stepResult.stepText)) {
 						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(crossValue).join(' | ') + ' |';
 					} else {
-						return '**~~' + stepResult.stepText + '~~**';
+						return crossValue(stepResult.stepText);
 					}
 				}
 				if (stepResult.assertions.some(failed)) {
@@ -504,13 +380,12 @@ module.exports = function () {
 					} else if (regexUtil.isTableItem(stepResult.stepText)) {
 						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(boldValue).join(' | ') + ' |';
 					} else {
-						return '**' + stepResult.stepText + '**';
+						return boldValue(stepResult.stepText);
 					}
 				}
 				return stepResult.stepText;
 			},
 			attachmentLines = function () {
-				//TODO: investigate if we should force exactly one space between the step text and attachment
 				if (!stepResult.attachment) {
 					return '';
 				}
@@ -519,13 +394,12 @@ module.exports = function () {
 							return false;
 						}
 						var failedListAssertions = stepResult.assertions.filter(failedForAttachment),
-								values = stepResult.attachment.items;
+							values = stepResult.attachment.items,
+							symbol = stepResult.attachment.symbol || '* ';
 						if (failedListAssertions && failedListAssertions.length > 0) {
 							values = self.formatListResult(failedListAssertions[0].value);
 						}
-						return values.map(function (e) {
-							return '\n* ' + e; // TODO: reuse listutil add list item to support nested lists?
-						}).join(''); // TODO: deal with ordered lists
+						return '\n' + symbol + values.join('\n' + symbol);
 					},
 					formatTableItem = function (item) {
 						return '|' + item.join('|') + '|';
@@ -554,16 +428,18 @@ module.exports = function () {
 						return '\n' + tableUtil.justifyTable(resultRows).join('\n');
 					};
 				return formatList() || formatTable();
+			},
+			exceptionReport = function () {
+				if (!stepResult.exception) {
+					return '';
+				}
+				return '\n<!--\n' + stepResult.exception + '\n-->';
 			};
-		if (stepResult.exception) {
-			return '~~' + stepResult.stepText + '~~\n' + '\t' + stepResult.exception.stack; //TODO: push list as well
-		}
-		return headingLine() + attachmentLines();
-
+		return headingLine() + attachmentLines() + exceptionReport();
 	};
 };
 
-},{"./regex-util":12,"./table-util":14}],11:[function(require,module,exports){
+},{"./regex-util":11,"./table-util":15}],9:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkdownResultFormatter() {
 	'use strict';
@@ -644,9 +520,41 @@ module.exports = function MarkdownResultFormatter() {
 	};
 };
 
-},{"./assertion-counts":1,"./markdown-formatter":10,"./table-util":14}],12:[function(require,module,exports){
+},{"./assertion-counts":1,"./markdown-formatter":8,"./table-util":15}],10:[function(require,module,exports){
 /*global module*/
-module.exports = function () {
+module.exports = function Normaliser() {
+	'use strict';
+	var self = this;
+	self.normaliseString = function (string) {
+		return string.toLocaleLowerCase().replace(/\s/g, '');
+	};
+	self.normaliseObject = function (object) {
+		var result = {};
+		Object.keys(object).forEach(function (key) {
+			result[self.normaliseString(key)] = object[key];
+		});
+		return result;
+	};
+	self.containsDuplicates = function (stringArray) {
+		if (!stringArray || !stringArray.length) {
+			return false;
+		}
+		var normalised = stringArray.map(self.normaliseString),
+			i, j;
+		for (i = 0; i < normalised.length - 1; i++) {
+			for (j = i + 1; j < normalised.length; j++) {
+				if (normalised[i] === normalised[j]) {
+					return true;
+				}
+			}
+		}
+		return false;
+	};
+};
+
+},{}],11:[function(require,module,exports){
+/*global module*/
+module.exports = function RegexUtil() {
 	'use strict';
 	var self = this,
 			listSymbolRegex = /^\s*[^\s]+\s+/;
@@ -679,7 +587,13 @@ module.exports = function () {
 	this.isTableHeaderDivider = function (line) {
 		return self.isTableItem(line) && /^[|= -]*$/.test(line);
 	};
+	this.isEmpty = function (line) {
+		return /^\s*$/.test(line);
+	};
 	this.isListItem = function (line) {
+		if (/^\s*\d+.\s/.test(line)) {
+			return true;
+		}
 		if (/^[\*\s-=]*$/.test(line)) {
 			return false;
 		}
@@ -730,7 +644,88 @@ module.exports = function () {
 	};
 };
 
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
+/*global module, require*/
+module.exports = function Runner(stepFunc) {
+	'use strict';
+	var Context = require('./context'),
+		RegexUtil = require('./regex-util'),
+		regexUtil = new RegexUtil(),
+		ExampleBlocks = require('./example-blocks'),
+		context = new Context(),
+		self = this;
+	stepFunc(context);
+
+	self.example = function (inputText) {
+		var MarkDownResultFormatter = require('./markdown-result-formatter'),
+			results = new MarkDownResultFormatter(),
+			blocks = new ExampleBlocks(inputText),
+			processTableBlock = function (block) {
+				var blockLines = block.getMatchText(),
+					step,
+					headerLine,
+					tableResultBlock,
+					startNewTable = function (line) {
+						step = context.getStepForLine(line);
+						if (!step) {
+							results.skippedLine(line);
+						} else {
+							headerLine = line;
+							tableResultBlock = results.tableResultBlock();
+							tableResultBlock.nonAssertionLine(line);
+						}
+					},
+					endCurrentTable = function () {
+						step = false;
+						if (tableResultBlock) {
+							results.appendResultBlock(tableResultBlock);
+							tableResultBlock = false;
+						}
+					};
+				blockLines.forEach(function (line) {
+					if (!regexUtil.isTableItem(line)) {
+						endCurrentTable();
+						results.nonAssertionLine(line);
+					} else if (!tableResultBlock) {
+						startNewTable(line);
+					} else if (regexUtil.isTableDataRow(line)) {
+						tableResultBlock.stepResult(step.executeTableRow(line, headerLine));
+					} else {
+						tableResultBlock.nonAssertionLine(line);
+					}
+				});
+				endCurrentTable();
+			},
+			processBlock = function (block) {
+				var blockLines = block.getMatchText(),
+					blockParam = block.getAttachment();
+				blockLines.forEach(function (line) {
+					if (!regexUtil.assertionLine(line)) { //Move to block?
+						results.nonAssertionLine(line);
+						return;
+					}
+
+					var step = context.getStepForLine(line);
+					if (!step) {
+						results.skippedLine(line);
+						return;
+					}
+					results.stepResult(step.execute(line, blockParam));
+				});
+			};
+
+		blocks.getBlocks().forEach(function (block) {
+			if (block.isTableBlock()) {
+				processTableBlock(block);
+			} else {
+				processBlock(block);
+			}
+		});
+		return results.formattedResults();
+	};
+};
+
+},{"./context":3,"./example-blocks":6,"./markdown-result-formatter":9,"./regex-util":11}],13:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepContext(result) {
 	'use strict';
@@ -770,23 +765,80 @@ module.exports = function StepContext(result) {
 	};
 };
 
-},{"./assertion":2,"./list-util":9,"./table-util":14}],14:[function(require,module,exports){
+},{"./assertion":2,"./list-util":7,"./table-util":15}],14:[function(require,module,exports){
+/*global module, require*/
+module.exports = function StepExecutor(regexMatcher, processFunction) {
+	'use strict';
+	var self = this,
+		StepContext = require('./step-context'),
+		TableUtil = require('./table-util'),
+		RegExUtil = require('./regex-util');
+	self.match = function (stepText) {
+		if (stepText instanceof RegExp) {
+			return regexMatcher.source === stepText.source;
+		}
+		return regexMatcher.test(stepText);
+	};
+	self.execute = function (stepText, attachment) {
+		var match = stepText.match(regexMatcher),
+			stepArgs = match.slice(1),
+			result = {
+				matcher: regexMatcher,
+				stepText: stepText,
+				attachment: attachment,
+				assertions: []
+			},
+			stepContext = new StepContext(result);
+
+		if (attachment) { /* we know it's a list and the symbol */
+			stepArgs.push(attachment);
+		}
+
+		try {
+			processFunction.apply(stepContext, stepArgs);
+		} catch (e) {
+			/* geniuine error, not assertion fail */
+			result.exception = e;
+		}
+
+
+		return result;
+	};
+	self.executeTableRow = function (dataRow, titleRow) {
+		var tableUtil = new TableUtil(),
+			regexUtil = new RegExUtil(),
+			stepArgs = tableUtil.cellValuesForRow(dataRow),
+			matcher = regexUtil.regexForTableDataRow(stepArgs.length),
+			result = {
+				matcher: matcher,
+				stepText: dataRow,
+				assertions: []
+			},
+			stepContext = new StepContext(result),
+			titleMatch = titleRow && titleRow.match(regexMatcher),
+			titleArgs = titleMatch && titleMatch.length > 1 && titleMatch.slice(1).map(function (item) {
+				return item.trim();
+			});
+
+		if (titleArgs) {
+			stepArgs = stepArgs.concat(titleArgs);
+		}
+		processFunction.apply(stepContext, stepArgs);
+
+		return result;
+	};
+};
+
+},{"./regex-util":11,"./step-context":13,"./table-util":15}],15:[function(require,module,exports){
 /*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
 	var self = this,
 		RegexUtil = require ('./regex-util'),
-		regexUtil = new RegexUtil();
-	self.normaliseTitle = function (string) {
-		return string.toLocaleLowerCase().replace(/\s/g, '');
-	};
-	self.normaliseObject = function (object) {
-		var result = {};
-		Object.keys(object).forEach(function (key) {
-			result[self.normaliseTitle(key)] = object[key];
-		});
-		return result;
-	};
+		regexUtil = new RegexUtil(),
+		Normaliser = require ('./normaliser'),
+		normaliser = new Normaliser();
+
 	self.cellValuesForRow = function (dataRow) {
 		if (!dataRow || dataRow.trim() === '') {
 			return [];
@@ -801,34 +853,33 @@ module.exports = function TableUtil() {
 			return v.trim();
 		});
 	};
-	//TODO: validate table. eg multiple columns matching same normalised title so non-deterministic results
 	self.tableValuesForTitles = function (table, titles) {
 		if (!titles || titles.length === 0) {
 			return false;
 		}
 		var pickItems = function (tableRow) {
-					return columnIndexes.map(function (val) {
-						return tableRow[val];
-					});
-				},
-				normalisedTitles = titles.map(self.normaliseTitle),
-				normalisedTableTitles = table.titles.map(self.normaliseTitle),
-				columnIndexes = normalisedTitles.map(function (title) {
-					return normalisedTableTitles.indexOf(title);
+				return columnIndexes.map(function (val) {
+					return tableRow[val];
 				});
+			},
+			normalisedTitles = titles.map(normaliser.normaliseString),
+			normalisedTableTitles = table.titles.map(normaliser.normaliseString),
+			columnIndexes = normalisedTitles.map(function (title) {
+				return normalisedTableTitles.indexOf(title);
+			});
 		return table.items.map(pickItems);
 	};
 	self.objectArrayValuesForTitles = function (list, titles) {
 		if (!titles || titles.length === 0) {
 			return false;
 		}
-		var normalisedTitles = titles.map(self.normaliseTitle),
-				pickItems = function (item) {
-					return normalisedTitles.map(function (title) {
-						return item[title];
-					});
-				};
-		return list.map(self.normaliseObject).map(pickItems);
+		var normalisedTitles = titles.map(normaliser.normaliseString),
+			pickItems = function (item) {
+				return normalisedTitles.map(function (title) {
+					return item[title];
+				});
+			};
+		return list.map(normaliser.normaliseObject).map(pickItems);
 	};
 	self.justifyTable = function (stringArray) {
 		var maxCellLengths = function (maxSoFar, tableRow, index) {
@@ -868,7 +919,7 @@ module.exports = function TableUtil() {
 	};
 };
 
-},{"./regex-util":12}],15:[function(require,module,exports){
+},{"./normaliser":10,"./regex-util":11}],16:[function(require,module,exports){
 /*global module*/
 module.exports = function (ctx) {
 	'use strict';
@@ -932,4 +983,4 @@ module.exports = function (ctx) {
 
 };
 
-},{}]},{},[3]);
+},{}]},{},[4]);

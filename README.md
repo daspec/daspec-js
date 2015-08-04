@@ -16,10 +16,11 @@ Detailed results
 (note the blank between -- and full)
 
 
-##Compiling a browser verion of DasSpec to main.js
+##Compiling a browser version of DasSpec
 
 > npm run compile
 
+this will save a file to [compiled/main.js](compiled/main.js)
 
 ##Design guidelines
 
