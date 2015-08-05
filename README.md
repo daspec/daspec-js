@@ -13,6 +13,10 @@ DaSpec helps teams achieve those benefits by validating human-readable documents
 
 DaSpec's primary target are teams practising Behaviour Driven Development, Specification by Example, ATDD and generally running short, frequent delivery cycles with a heavy dependency on test automation. It can, however, be useful to anyone looking to reduce the cost of discovering outdated information in documentation and tests. 
 
+## Try it out in your browser
+
+Visit [daspec.com/try.html](http://daspec.com/try.html) to try out the key features in your browser.
+
 ## Contributing to DaSpec
 
 Please see the [contributor's guide](CONTRIBUTING.md)
@@ -25,6 +29,7 @@ For the core NPM module
 
 ## Support
 
+* Documentation: Check out [DaSpec.com](http://daspec.com)
 * Questions or ideas: Please send an e-mail to the [DaSpec Google Group](https://groups.google.com/forum/#!forum/daspec)
 * Bugs: please create an issue directly in the [daspec-js project on GitHub](https://github.com/daspec/daspec-js/issues)
 * News and updates: subscribe via [RSS](http://daspec.com/feed.xml) or follow [@indaspec](https://twitter.com/indaspec) on Twitter
