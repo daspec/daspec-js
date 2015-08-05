@@ -1,10 +1,30 @@
 {
-  "name": "daspec",
-  "version": "0.0.1",
+  "name": "daspec-core",
+  "version": "0.0.3",
+  "description": "Official DaSpec core package for Node.js projects.",
+  "license": "MIT",
+  "files": ["src"],
+  "directories": { "lib": "./src" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/daspec/daspec-js.git"
+  },
+  "keywords": [
+    "daspec",
+    "test",
+    "tdd",
+    "bdd",
+	"specbyexample"
+  ],
   "scripts": {
     "compile": "browserify src/daspec-browser-main.js -o compiled/main.js",
     "test": "node spec/support/jasmine-runner.js"
   },
+  "bugs": {
+    "url": "https://github.com/daspec/daspec-js/issues"
+  },
+  "homepage": "http://daspec.com",
+  "main": "./src/daspec-npm-main.js",
   "devDependencies": {
     "browserify": "^11.0.0",
     "jasmine": "^2.3.1",
