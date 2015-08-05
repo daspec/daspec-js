@@ -1,34 +1,30 @@
-# daspec-js
-
 "It's in da spec!"
 
+# What is DaSpec?
 
-##Running development tests
+DaSpec is an automation framework for [Executable Specifications](http://daspec.com/guides/executable_specifications.html) in Markdown. It can help you:
 
-Summary results
+* Share information about planned features with non-technical stakeholders easily, and get actionable unambiguous feedback from them 
+* Ensure and document shared understanding of the planned software, making the definition of done stronger and more objective
+* Document software features and APIs in a way that is easy to understand and maintain, so you can reduce the bus factor of your team and onboard new team members easily
+* Make any kind of automated tests readable to non-technical team members and stakeholders
 
-    npm test
+DaSpec helps teams achieve those benefits by validating human-readable documents against a piece of software. This makes it easy to argue if the software really does what the document claims, and also quickly points out to places in your documentation that need to be updated. Because of that, DaSpec can support you in moving from  confidence-based to evidence-based acceptance testing, and creating a living documentation system to remove knowledge bottlenecks.
 
-Detailed results
+DaSpec's primary target are teams practising Behaviour Driven Development, Specification by Example, ATDD and generally running short, frequent delivery cycles with a heavy dependency on test automation. It can, however, be useful to anyone looking to reduce the cost of discovering outdated information in documentation and tests. 
 
-    npm test -- full
+## Contributing to DaSpec
 
-(note the blank between -- and full)
+Please see the [contributor's guide](CONTRIBUTING.md)
 
+## Installation
 
-##Compiling a browser version of DasSpec
+For the core NPM module
 
-    npm run compile
+    npm install daspec-core
 
-this will save a file to [compiled/main.js](compiled/main.js)
+## Support
 
-##Design guidelines
-
-* report errors as narrowly and as precisely as possible
-  - eg if only one word in a sentence represents failure, cross that out rather than a whole line
-  - report exact position of error in markdown file if possible
-* alert spec authors and developers about anything that could cause non-deterministic results
-  - eg if a table has two columns with same names, or if two step definitions match the same line
-* don't impose any markdown syntax restrictions that aren't absolutely necessary
-* support platform-native libraries and idioms so people can get started easily
-  - eg matchers people are already used to
+* Questions or ideas: Please send an e-mail to the [DaSpec Google Group](https://groups.google.com/forum/#!forum/daspec)
+* Bugs: please create an issue directly in the [daspec-js project on GitHub](https://github.com/daspec/daspec-js/issues)
+* News and updates: subscribe via [RSS](http://daspec.com/feed.xml) or follow [@indaspec](https://twitter.com/indaspec) on Twitter
