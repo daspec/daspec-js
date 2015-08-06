@@ -13,9 +13,6 @@ module.exports = function Context() {
 		if (!regexMatcher) {
 			throw new Error('Empty matchers are not supported');
 		}
-		if (!(regexMatcher instanceof RegExp)) {
-			throw new Error('Matcher must be a regex');
-		}
 		if (regexMatcher.source.indexOf('(?:') >= 0) {
 			throw new Error('Non-capturing regex groups are not supported');
 		}

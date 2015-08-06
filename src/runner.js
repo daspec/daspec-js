@@ -5,12 +5,12 @@ module.exports = function Runner(stepFunc) {
 		RegexUtil = require('./regex-util'),
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),
-		context = new Context(),
 		self = this;
-	stepFunc(context);
+
 
 	self.example = function (inputText) {
 		var MarkDownResultFormatter = require('./markdown-result-formatter'),
+			context = new Context(),
 			results = new MarkDownResultFormatter(),
 			blocks = new ExampleBlocks(inputText),
 			processTableBlock = function (block) {
@@ -66,7 +66,7 @@ module.exports = function Runner(stepFunc) {
 					results.stepResult(step.execute(line, blockParam));
 				});
 			};
-
+		stepFunc.apply(context, [context]);
 		blocks.getBlocks().forEach(function (block) {
 			if (block.isTableBlock()) {
 				processTableBlock(block);

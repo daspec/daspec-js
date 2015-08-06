@@ -35,11 +35,6 @@ describe('Context', function () {
 				underTest.defineStep(undefined, processorTwo);
 			}).toThrowError(Error, 'Empty matchers are not supported');
 		});
-		it('throws an error when the matcher is a regex', function () {
-			expect(function () {
-				underTest.defineStep('abc', processorTwo);
-			}).toThrowError(Error, 'Matcher must be a regex');
-		});
 	});
 	describe('getStepForLine', function () {
 		it('retrieves a step matching the line by regex', function () {

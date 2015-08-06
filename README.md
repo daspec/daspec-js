@@ -1,5 +1,7 @@
 "It's in da spec!"
 
+Core library for running executable specifications using DaSpec with JavaScript. 
+
 # What is DaSpec?
 
 DaSpec is an automation framework for [Executable Specifications](http://daspec.com/guides/executable_specifications.html) in Markdown. It can help you:
@@ -26,6 +28,10 @@ Please see the [contributor's guide](CONTRIBUTING.md)
 For the core NPM module
 
     npm install daspec-core
+
+To run daspec from the console using Node.js
+
+    npm install daspec
 
 ## Support
 
