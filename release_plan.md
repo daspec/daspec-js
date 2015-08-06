@@ -1,7 +1,7 @@
 Release plan
 ------------
 
-# Enable JS developers to write markdown executable specs
+# Enable JS teams and their stakeholders to write markdown executable specs
 
 * ~~support for tables~~
 * web browser runner
@@ -14,6 +14,8 @@ Release plan
 * optimistically convert to numbers whatever possible
 * increment numerical lists in output
 * whitespace before step and attachment
+* beforeEach/All, afterEach/All - technical steps
+* beforeEach/All, afterEach/All - business steps (eg a file pattern)
 
 # Enable JS developers to easily install and integrate daspec
 
