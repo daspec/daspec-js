@@ -163,7 +163,7 @@ module.exports = function MarkDownFormatter() {
 				if (!stepResult.exception) {
 					return '';
 				}
-				return '\n<!--\n' + stepResult.exception + '\n-->';
+				return '\n<!--\n' + (stepResult.exception.stack || stepResult.exception) + '\n-->';
 			};
 		return headingLine() + attachmentLines() + exceptionReport();
 	};
