@@ -10,7 +10,7 @@ Release plan
 * file/line number reporting on failed assertions
 * file/line number reporting on exceptions in parsing
 * report successful assertion on tables/lists with ticks
-* format whitespace on column headings in the initial report column
+* ~~Format whitespace on column headings in the initial report column~~
 * optimistically convert to numbers whatever possible
 * increment numerical lists in output
 * whitespace before step and attachment
@@ -28,6 +28,7 @@ Release plan
 * gulp integration
 * clean syntax for ~~step definitions~~ and assertions
 * simple syntax for async expectations
+* color reporting in the console
 
 # Enable JS developers to easily get started
 

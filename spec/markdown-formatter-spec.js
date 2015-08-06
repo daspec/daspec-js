@@ -164,7 +164,35 @@ describe('MarkDownFormatter', function () {
 							assertions: [{passed: false, expected: attachment, value: {additional: [['f', 'g']]}}]
 						})).toEqual(
 							'**~~Before table~~**\n' +
-							'|   | A     | B     |\n' +
+							'| ? | A     | B     |\n' +
+							'|---|-------|-------|\n' +
+							'| + | **f** | **g** |'
+						);
+					});
+					it('formats the results as passed if there are passed failed attachment assertions, but no failed ones', function () {
+						var attachment = {type: 'table', titles: ['A', 'B'], items: [[1, 2]]};
+						expect(underTest.markResult({
+							stepText: 'Before table',
+							attachment: attachment,
+							matcher: /.* (\d)/,
+							assertions: [{passed: true, expected: attachment}]
+						})).toEqual(
+							'**Before table**\n' +
+							'| ? | A | B |\n' +
+							'|---|---|---|\n' +
+							'| ' + tick + ' | 1 | 2 |'
+						);
+					});
+					it('formats the results as failed if there are both passed and failed attachment assertions', function () {
+						var attachment = {type: 'table', titles: ['A', 'B'], items: [[1, 2]]};
+						expect(underTest.markResult({
+							stepText: 'Before table',
+							attachment: attachment,
+							matcher: /.* (\d)/,
+							assertions: [{passed: true, expected: attachment}, {passed: false, expected: attachment, value: {additional: [['f', 'g']]}}]
+						})).toEqual(
+							'**~~Before table~~**\n' +
+							'| ? | A     | B     |\n' +
 							'|---|-------|-------|\n' +
 							'| + | **f** | **g** |'
 						);

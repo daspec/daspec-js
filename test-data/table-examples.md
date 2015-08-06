@@ -36,8 +36,17 @@ Check Star Wars Films are:
 | 1976 | A new Hope              |
 | 1983 | The Return of the Jedi  |
 
+> comparing whole tables marks successful attachment comparisons as passed 
+
+Good Star Wars Films are:
+| Title                   | Year |
+|-------------------------|------|
+| A new Hope              | 1976 |
+| The Empire Strikes Back | 1979 |
+| The Return of the Jedi  | 1983 |
+
 <!--OUTPUT
-> **In da spec:** executed: 4, passed: 1, failed: 3
+> **In da spec:** executed: 5, passed: 2, failed: 3
 
 # Table with no column titles as a parameter
 
@@ -62,7 +71,7 @@ In total there a **3** Star Wars Films
 > comparing items as lists
 
 **~~Good Star Wars Films are:~~**
-|   | Title                       | Year         |
+| ? | Title                       | Year         |
 |---|-----------------------------|--------------|
 | ✓ | A new Hope                  | 1976         |
 | ✓ | The Return of the Jedi      | 1983         |
@@ -72,11 +81,20 @@ In total there a **3** Star Wars Films
 > comparing whole tables takes titles into consideration - in this example reversed order
 
 **~~Check Star Wars Films are:~~**
-|   | Year         | Title                       |
+| ? | Year         | Title                       |
 |---|--------------|-----------------------------|
 | ✓ | 1976         | A new Hope                  |
 | ✓ | 1983         | The Return of the Jedi      |
 | – | **~~1999~~** | **~~Phantom Menace~~**      |
 | + | **1979**     | **The Empire Strikes Back** |
+
+> comparing whole tables marks successful attachment comparisons as passed 
+
+**Good Star Wars Films are:**
+| ? | Title                   | Year |
+|---|-------------------------|------|
+| ✓ | A new Hope              | 1976 |
+| ✓ | The Empire Strikes Back | 1979 |
+| ✓ | The Return of the Jedi  | 1983 |
 
 -->

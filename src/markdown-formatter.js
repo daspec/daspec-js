@@ -71,10 +71,12 @@ module.exports = function MarkDownFormatter() {
 			failed = function (assertion) {
 				return !assertion.passed;
 			},
-			failedForAttachment = function (assertion) {
+			passed = function (assertion) {
+				return assertion.passed;
+			},
+			forAttachment = function (assertion) {
 				return stepResult.attachment && stepResult.attachment.items && stepResult.attachment.items.length > 0 &&
-					(assertion.expected === stepResult.attachment.items || assertion.expected == stepResult.attachment) &&
-					!assertion.passed;
+					(assertion.expected === stepResult.attachment.items || assertion.expected == stepResult.attachment);
 			},
 			headingLine = function () {
 				if (stepResult.exception) {
@@ -115,7 +117,7 @@ module.exports = function MarkDownFormatter() {
 						if (stepResult.attachment.type !== 'list') {
 							return false;
 						}
-						var failedListAssertions = stepResult.assertions.filter(failedForAttachment),
+						var failedListAssertions = stepResult.assertions.filter(failed).filter(forAttachment),
 							values = stepResult.attachment.items,
 							symbol = stepResult.attachment.symbol || '* ';
 						if (failedListAssertions && failedListAssertions.length > 0) {
@@ -131,14 +133,20 @@ module.exports = function MarkDownFormatter() {
 							return false;
 						}
 						var resultTitles = stepResult.attachment.titles && stepResult.attachment.titles.slice(0),
-								failedTableAssertions = stepResult.assertions.filter(failedForAttachment),
+								failedTableAssertions = stepResult.assertions.filter(failed).filter(forAttachment),
+								passedTableAssertions = stepResult.assertions.filter(passed).filter(forAttachment),
 								values = stepResult.attachment.items,
 								resultRows = [];
 						if (failedTableAssertions && failedTableAssertions.length > 0) {
 							if (resultTitles) {
-								resultTitles.unshift(' ');
+								resultTitles.unshift('?');
 							}
 							values = self.getTableResult(failedTableAssertions[0].value);
+						} else if (passedTableAssertions && passedTableAssertions.length > 0) {
+							if (resultTitles) {
+								resultTitles.unshift('?');
+							}
+							values =  self.getTableResult({matching: stepResult.attachment.items});
 						}
 						if (resultTitles) {
 							resultRows.push(formatTableItem(resultTitles));
