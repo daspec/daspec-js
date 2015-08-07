@@ -17,7 +17,7 @@ DaSpec's primary target are teams practising Behaviour Driven Development, Speci
 
 ## Try it out in your browser
 
-Visit [daspec.com/try.html](http://daspec.com/try.html) to try out the key features in your browser.
+Visit [daspec.com/examples](http://daspec.com/examples) to try out the key features in your browser.
 
 ## Contributing to DaSpec
 
