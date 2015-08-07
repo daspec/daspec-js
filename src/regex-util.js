@@ -50,11 +50,11 @@ module.exports = function RegexUtil() {
 		}
 		return true;
 	};
-	this.stripListSymbol = function (line) {
+	this.lineItemContent = function (line) {
 		if (!self.isListItem(line)) {
 			return line;
 		}
-		return line.replace(listSymbolRegex, '');
+		return line.replace(listSymbolRegex, '').trim();
 	};
 	this.getListSymbol = function (line) {
 		if (!self.isListItem(line)) {

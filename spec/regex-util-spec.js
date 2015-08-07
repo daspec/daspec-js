@@ -86,15 +86,19 @@ describe('regex util', function () {
 
 		});
 	});
-	describe('stripListSymbol', function () {
+	describe('lineItemContent', function () {
 		it('ignores lines that are not list items', function () {
-			expect(underTest.stripListSymbol('**SHOUT**')).toBe('**SHOUT**');
+			expect(underTest.lineItemContent('**SHOUT**')).toBe('**SHOUT**');
 		});
 		it('removes list symbols from items', function () {
-			expect(underTest.stripListSymbol('* **SHOUT**')).toBe('**SHOUT**');
-			expect(underTest.stripListSymbol(' * **SHOUT**')).toBe('**SHOUT**');
-			expect(underTest.stripListSymbol(' - **SHOUT**')).toBe('**SHOUT**');
-			expect(underTest.stripListSymbol('-  **SHOUT**')).toBe('**SHOUT**');
+			expect(underTest.lineItemContent('* **SHOUT**')).toBe('**SHOUT**');
+			expect(underTest.lineItemContent(' * **SHOUT**')).toBe('**SHOUT**');
+			expect(underTest.lineItemContent(' - **SHOUT**')).toBe('**SHOUT**');
+			expect(underTest.lineItemContent('-  **SHOUT**')).toBe('**SHOUT**');
+		});
+		it('trims trailing spaces from the right', function () {
+			expect(underTest.lineItemContent('* with space ')).toBe('with space');
+			expect(underTest.lineItemContent('* with tab\t')).toBe('with tab');
 		});
 	});
 	describe('getListSymbol', function () {

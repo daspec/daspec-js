@@ -56,7 +56,7 @@ module.exports = function ExampleBlock() {
 			if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
 				return {type: 'list',
 					ordered: !isNaN(parseFloat(listSymbol)),
-					items: listLines.map(regexUtil.stripListSymbol),
+					items: listLines.map(regexUtil.lineItemContent),
 					symbol: listSymbol
 				};
 			}

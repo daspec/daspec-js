@@ -138,7 +138,32 @@ describe('MarkDownFormatter', function () {
 						' 1. **[+] f**\n' +
 						' 1. **[+] g**'
 					);
-
+				});
+				it('shows the list items as checked if there are no failed, but there is a passed attachment assertion', function () {
+					var list = {type: 'list', items: ['A', 'B']};
+					expect(underTest.markResult({
+						stepText: 'Before list',
+						attachment: list,
+						matcher: /.* (\d)/,
+						assertions: [{passed: true, expected: list.items}]
+					})).toEqual(
+						'**Before list**\n' +
+						'* [' + tick + '] A\n' +
+						'* [' + tick + '] B'
+					);
+				});
+				it('shows the failure if there are both failed and passed list assertions', function () {
+					var list = {type: 'list', items: ['A', 'B']};
+					expect(underTest.markResult({
+						stepText: 'Before list',
+						attachment: list,
+						matcher: /.* (\d)/,
+						assertions: [{passed: false, expected: list, value: {additional: ['f', 'g'] }}, {passed: true, expected: list.items}]
+					})).toEqual(
+						'**~~Before list~~**\n' +
+						'* **[+] f**\n' +
+						'* **[+] g**'
+					);
 				});
 			});
 			describe('tables', function () {
