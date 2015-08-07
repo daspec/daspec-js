@@ -9,7 +9,8 @@ Release plan
 * go through TODO items
 * file/line number reporting on failed assertions
 * file/line number reporting on exceptions in parsing
-* report successful assertion on tables/lists with ticks
+* mark skipped steps somehow (eg italicize?)
+* ~~report successful assertion on tables/lists with ticks~~
 * ~~Format whitespace on column headings in the initial report column~~
 * optimistically convert to numbers whatever possible
 * increment numerical lists in output
