@@ -83,4 +83,7 @@ module.exports = function MarkdownResultFormatter() {
 		resultBuffer = [];
 		counts = new AssertionCounts();
 	};
+	self.close = function () {
+
+	};
 };

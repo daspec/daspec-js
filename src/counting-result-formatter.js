@@ -1,5 +1,5 @@
 /*global module, require*/
-module.exports = function CountringResultFormatter() {
+module.exports = function CountingResultFormatter() {
 	'use strict';
 	var self = this,
 		AssertionCounts = require('./assertion-counts'),
@@ -29,5 +29,8 @@ module.exports = function CountringResultFormatter() {
 	};
 	self.exampleStarted = function () {
 		self.current = new AssertionCounts();
+	};
+	self.close = function () {
+
 	};
 };

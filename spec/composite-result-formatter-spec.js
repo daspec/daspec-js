@@ -59,6 +59,4 @@ describe('CompositeResultFormatter', function () {
 			expect(second.appendResultBlock).toHaveBeenCalledWith(secondTable);
 		});
 	});
-
-
 });
