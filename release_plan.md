@@ -17,6 +17,8 @@ Release plan
 * whitespace before step and attachment
 * beforeEach/All, afterEach/All - technical steps
 * beforeEach/All, afterEach/All - business steps (eg a file pattern)
+* allow assertSetEquals to work on lists (as well as arrays)
+* allow assertUnorderedTableEquals to work on simple two-dim arrays (not objects with titles)
 
 # Enable JS developers to easily install and integrate daspec
 
