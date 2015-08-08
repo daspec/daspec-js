@@ -32,6 +32,8 @@ Release plan
 * clean syntax for ~~step definitions~~ and assertions
 * simple syntax for async expectations
 * color reporting in the console
+* examples for table matching / various options
+* examples for list matching / various options
 
 # Enable JS developers to easily get started
 
