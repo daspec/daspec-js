@@ -88,11 +88,12 @@ module.exports = function Context() {
 
 global.DaSpec = {
 	Runner: require('./runner'),
+	MarkdownResultFormatter: require('./markdown-result-formatter'),
 	StepDefinitions: require('../test-data/test-steps')
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../test-data/test-steps":16,"./runner":12}],5:[function(require,module,exports){
+},{"../test-data/test-steps":16,"./markdown-result-formatter":9,"./runner":12}],5:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlock() {
 	'use strict';
@@ -151,7 +152,7 @@ module.exports = function ExampleBlock() {
 			if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
 				return {type: 'list',
 					ordered: !isNaN(parseFloat(listSymbol)),
-					items: listLines.map(regexUtil.stripListSymbol),
+					items: listLines.map(regexUtil.lineItemContent),
 					symbol: listSymbol
 				};
 			}
@@ -349,6 +350,9 @@ module.exports = function MarkDownFormatter() {
 			passed = function (assertion) {
 				return assertion.passed;
 			},
+			notEmpty = function (array) {
+				return array && array.length;
+			},
 			forAttachment = function (assertion) {
 				return stepResult.attachment && stepResult.attachment.items && stepResult.attachment.items.length > 0 &&
 					(assertion.expected === stepResult.attachment.items || assertion.expected == stepResult.attachment);
@@ -363,7 +367,7 @@ module.exports = function MarkDownFormatter() {
 				}
 				if (noIndexAssertions.some(failed)) {
 					if (regexUtil.isListItem(stepResult.stepText)) {
-						return regexUtil.getListSymbol(stepResult.stepText) + '**~~' + regexUtil.stripListSymbol(stepResult.stepText) + '~~**';
+						return regexUtil.getListSymbol(stepResult.stepText) + '**~~' + regexUtil.lineItemContent(stepResult.stepText) + '~~**';
 					} else if (regexUtil.isTableItem(stepResult.stepText)) {
 						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(crossValue).join(' | ') + ' |';
 					} else {
@@ -375,7 +379,7 @@ module.exports = function MarkDownFormatter() {
 				}
 				if (stepResult.assertions.length) {
 					if (regexUtil.isListItem(stepResult.stepText)) {
-						return regexUtil.getListSymbol(stepResult.stepText) + '**' + regexUtil.stripListSymbol(stepResult.stepText) + '**';
+						return regexUtil.getListSymbol(stepResult.stepText) + '**' + regexUtil.lineItemContent(stepResult.stepText) + '**';
 					} else if (regexUtil.isTableItem(stepResult.stepText)) {
 						return '| ' + tableUtil.cellValuesForRow(stepResult.stepText).map(boldValue).join(' | ') + ' |';
 					} else {
@@ -393,10 +397,13 @@ module.exports = function MarkDownFormatter() {
 							return false;
 						}
 						var failedListAssertions = stepResult.assertions.filter(failed).filter(forAttachment),
+							passedListAssertions = stepResult.assertions.filter(passed).filter(forAttachment),
 							values = stepResult.attachment.items,
 							symbol = stepResult.attachment.symbol || '* ';
-						if (failedListAssertions && failedListAssertions.length > 0) {
+						if (notEmpty(failedListAssertions)) {
 							values = self.formatListResult(failedListAssertions[0].value);
+						} else if (notEmpty(passedListAssertions)) {
+							values = self.formatListResult({matching: stepResult.attachment.items});
 						}
 						return '\n' + symbol + values.join('\n' + symbol);
 					},
@@ -412,12 +419,12 @@ module.exports = function MarkDownFormatter() {
 								passedTableAssertions = stepResult.assertions.filter(passed).filter(forAttachment),
 								values = stepResult.attachment.items,
 								resultRows = [];
-						if (failedTableAssertions && failedTableAssertions.length > 0) {
+						if (notEmpty(failedTableAssertions)) {
 							if (resultTitles) {
 								resultTitles.unshift('?');
 							}
 							values = self.getTableResult(failedTableAssertions[0].value);
-						} else if (passedTableAssertions && passedTableAssertions.length > 0) {
+						} else if (notEmpty(passedTableAssertions)) {
 							if (resultTitles) {
 								resultTitles.unshift('?');
 							}
@@ -610,11 +617,11 @@ module.exports = function RegexUtil() {
 		}
 		return true;
 	};
-	this.stripListSymbol = function (line) {
+	this.lineItemContent = function (line) {
 		if (!self.isListItem(line)) {
 			return line;
 		}
-		return line.replace(listSymbolRegex, '');
+		return line.replace(listSymbolRegex, '').trim();
 	};
 	this.getListSymbol = function (line) {
 		if (!self.isListItem(line)) {
@@ -651,7 +658,7 @@ module.exports = function RegexUtil() {
 
 },{}],12:[function(require,module,exports){
 /*global module, require*/
-module.exports = function Runner(stepFunc) {
+module.exports = function Runner(stepFunc, resultFormatter) {
 	'use strict';
 	var Context = require('./context'),
 		RegexUtil = require('./regex-util'),
@@ -661,9 +668,7 @@ module.exports = function Runner(stepFunc) {
 
 
 	self.example = function (inputText) {
-		var MarkDownResultFormatter = require('./markdown-result-formatter'),
-			context = new Context(),
-			results = new MarkDownResultFormatter(),
+		var context = new Context(),
 			blocks = new ExampleBlocks(inputText),
 			processTableBlock = function (block) {
 				var blockLines = block.getMatchText(),
@@ -673,24 +678,24 @@ module.exports = function Runner(stepFunc) {
 					startNewTable = function (line) {
 						step = context.getStepForLine(line);
 						if (!step) {
-							results.skippedLine(line);
+							resultFormatter.skippedLine(line);
 						} else {
 							headerLine = line;
-							tableResultBlock = results.tableResultBlock();
+							tableResultBlock = resultFormatter.tableResultBlock();
 							tableResultBlock.nonAssertionLine(line);
 						}
 					},
 					endCurrentTable = function () {
 						step = false;
 						if (tableResultBlock) {
-							results.appendResultBlock(tableResultBlock);
+							resultFormatter.appendResultBlock(tableResultBlock);
 							tableResultBlock = false;
 						}
 					};
 				blockLines.forEach(function (line) {
 					if (!regexUtil.isTableItem(line)) {
 						endCurrentTable();
-						results.nonAssertionLine(line);
+						resultFormatter.nonAssertionLine(line);
 					} else if (!tableResultBlock) {
 						startNewTable(line);
 					} else if (regexUtil.isTableDataRow(line)) {
@@ -706,16 +711,16 @@ module.exports = function Runner(stepFunc) {
 					blockParam = block.getAttachment();
 				blockLines.forEach(function (line) {
 					if (!regexUtil.assertionLine(line)) { //Move to block?
-						results.nonAssertionLine(line);
+						resultFormatter.nonAssertionLine(line);
 						return;
 					}
 
 					var step = context.getStepForLine(line);
 					if (!step) {
-						results.skippedLine(line);
+						resultFormatter.skippedLine(line);
 						return;
 					}
-					results.stepResult(step.execute(line, blockParam));
+					resultFormatter.stepResult(step.execute(line, blockParam));
 				});
 			};
 		stepFunc.apply(context, [context]);
@@ -726,11 +731,10 @@ module.exports = function Runner(stepFunc) {
 				processBlock(block);
 			}
 		});
-		return results.formattedResults();
 	};
 };
 
-},{"./context":3,"./example-blocks":6,"./markdown-result-formatter":9,"./regex-util":11}],13:[function(require,module,exports){
+},{"./context":3,"./example-blocks":6,"./regex-util":11}],13:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepContext(result) {
 	'use strict';

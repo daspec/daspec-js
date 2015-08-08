@@ -22,9 +22,10 @@ var runButton = document.getElementById('runButton'),
 runButton.addEventListener('click', function () {
 	'use strict';
 	var md = markdownArea.value,
-		runner = new DaSpec.Runner(DaSpec.StepDefinitions),
-		result = runner.example(md);
-	outputArea.innerText = result;
+    resultFormatter = new DaSpec.MarkdownResultFormatter(),
+		runner = new DaSpec.Runner(DaSpec.StepDefinitions, resultFormatter);
+	runner.example(md);
+	outputArea.innerText = resultFormatter.formattedResults();
 	localStorage.setItem('daspec.md', md);
 });
 

@@ -1,5 +1,5 @@
 /*global module, require*/
-module.exports = function Runner(stepFunc) {
+module.exports = function Runner(stepFunc, resultFormatter) {
 	'use strict';
 	var Context = require('./context'),
 		RegexUtil = require('./regex-util'),
@@ -9,9 +9,7 @@ module.exports = function Runner(stepFunc) {
 
 
 	self.example = function (inputText) {
-		var MarkDownResultFormatter = require('./markdown-result-formatter'),
-			context = new Context(),
-			results = new MarkDownResultFormatter(),
+		var context = new Context(),
 			blocks = new ExampleBlocks(inputText),
 			processTableBlock = function (block) {
 				var blockLines = block.getMatchText(),
@@ -21,24 +19,24 @@ module.exports = function Runner(stepFunc) {
 					startNewTable = function (line) {
 						step = context.getStepForLine(line);
 						if (!step) {
-							results.skippedLine(line);
+							resultFormatter.skippedLine(line);
 						} else {
 							headerLine = line;
-							tableResultBlock = results.tableResultBlock();
+							tableResultBlock = resultFormatter.tableResultBlock();
 							tableResultBlock.nonAssertionLine(line);
 						}
 					},
 					endCurrentTable = function () {
 						step = false;
 						if (tableResultBlock) {
-							results.appendResultBlock(tableResultBlock);
+							resultFormatter.appendResultBlock(tableResultBlock);
 							tableResultBlock = false;
 						}
 					};
 				blockLines.forEach(function (line) {
 					if (!regexUtil.isTableItem(line)) {
 						endCurrentTable();
-						results.nonAssertionLine(line);
+						resultFormatter.nonAssertionLine(line);
 					} else if (!tableResultBlock) {
 						startNewTable(line);
 					} else if (regexUtil.isTableDataRow(line)) {
@@ -54,16 +52,16 @@ module.exports = function Runner(stepFunc) {
 					blockParam = block.getAttachment();
 				blockLines.forEach(function (line) {
 					if (!regexUtil.assertionLine(line)) { //Move to block?
-						results.nonAssertionLine(line);
+						resultFormatter.nonAssertionLine(line);
 						return;
 					}
 
 					var step = context.getStepForLine(line);
 					if (!step) {
-						results.skippedLine(line);
+						resultFormatter.skippedLine(line);
 						return;
 					}
-					results.stepResult(step.execute(line, blockParam));
+					resultFormatter.stepResult(step.execute(line, blockParam));
 				});
 			};
 		stepFunc.apply(context, [context]);
@@ -74,6 +72,5 @@ module.exports = function Runner(stepFunc) {
 				processBlock(block);
 			}
 		});
-		return results.formattedResults();
 	};
 };
