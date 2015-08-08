@@ -10,10 +10,8 @@ module.exports = function CountingResultFormatter() {
 		},
 		listeners = {
 			closed: [],
-			exampleFinished: [],
-			started: []
+			exampleFinished: []
 		},
-		startDispatched = false,
 		dispatchEvent = function (eventName) {
 			var args = Array.prototype.slice.call(arguments, 1);
 			listeners[eventName].forEach(function (listener) {
@@ -44,10 +42,6 @@ module.exports = function CountingResultFormatter() {
 		dispatchEvent('exampleFinished', name, self.current);
 	};
 	self.exampleStarted = function () {
-		if (!startDispatched) {
-			dispatchEvent('started');
-			startDispatched = true;
-		}
 		self.current = new AssertionCounts();
 	};
 	self.close = function () {

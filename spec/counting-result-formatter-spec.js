@@ -177,20 +177,10 @@ describe('CountingResultFormatter', function () {
 	describe('events', function () {
 		var spies = {};
 		beforeEach(function () {
-			['started', 'exampleFinished', 'closed'].forEach(function (eventName) {
+			['exampleFinished', 'closed'].forEach(function (eventName) {
 				spies[eventName] = jasmine.createSpy(eventName);
 				underTest.addEventListener(eventName, spies[eventName]);
 			});
-		});
-		it('dispatches started when the first example starts', function () {
-			underTest.exampleStarted();
-			expect(spies.started).toHaveBeenCalled();
-		});
-		it('does not dispatch started when subsequent examples start', function () {
-			underTest.exampleStarted();
-			underTest.exampleFinished();
-			underTest.exampleStarted();
-			expect(spies.started.calls.count()).toEqual(1);
 		});
 		it('dispatches exampleFinished with the current counts when an example completes', function () {
 			underTest.stepResult({
