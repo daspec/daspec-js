@@ -76,4 +76,11 @@ module.exports = function MarkdownResultFormatter() {
 	self.tableResultBlock = function () {
 		return new TableResultBlock();
 	};
+	self.exampleFinished = function () {
+
+	};
+	self.exampleStarted = function () {
+		resultBuffer = [];
+		counts = new AssertionCounts();
+	};
 };

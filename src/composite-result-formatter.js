@@ -14,7 +14,7 @@ module.exports = function CompositeResultFormatter() {
 	self.add = function (formatter) {
 		formatters.push(formatter);
 	};
-	['stepResult', 'nonAssertionLine', 'skippedLine'].forEach(function (fname) {
+	['stepResult', 'nonAssertionLine', 'skippedLine', 'exampleStarted', 'exampleFinished'].forEach(function (fname) {
 		self[fname] = dispatchTo(formatters, fname);
 	});
 	self.tableResultBlock = function () {

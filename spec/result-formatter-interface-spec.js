@@ -31,10 +31,11 @@ describe('Runner - Result Formatter Interface', function () {
 		tableFormatter;
 	beforeEach(function () {
 		tableFormatter = jasmine.createSpyObj('table formatter', ['stepResult', 'nonAssertionLine']);
-		resultFormatter = jasmine.createSpyObj('resultFormatter', ['stepResult', 'nonAssertionLine', 'appendResultBlock', 'skippedLine', 'tableResultBlock']);
+		resultFormatter = jasmine.createSpyObj('resultFormatter', ['exampleStarted', 'exampleFinished', 'stepResult', 'nonAssertionLine', 'appendResultBlock', 'skippedLine', 'tableResultBlock']);
 		resultFormatter.tableResultBlock.and.returnValue(tableFormatter);
 		runner = new Runner(stepFunc, resultFormatter);
 	});
+
 	it('receives a call to nonAssertionLine for things that are not even expected to match to steps', function () {
 		runner.example('# header 1');
 		expect(resultFormatter.nonAssertionLine).toHaveBeenCalledWith('# header 1');
@@ -176,5 +177,21 @@ describe('Runner - Result Formatter Interface', function () {
 				);
 			});
 		});
+	});
+	it('receives a call to exampleStarted before any steps and exampleFinished after steps', function () {
+		var sequence = [];
+		resultFormatter.exampleStarted.and.callFake(function () {
+			sequence.push('exampleStarted');
+		});
+		resultFormatter.exampleFinished.and.callFake(function () {
+			sequence.push('exampleFinished');
+		});
+		resultFormatter.nonAssertionLine.and.callFake(function () {
+			sequence.push('steps');
+		});
+		runner.example('# header 1\n> comment', 'some-file-name');
+		expect(resultFormatter.exampleStarted).toHaveBeenCalledWith('some-file-name');
+		expect(resultFormatter.exampleFinished).toHaveBeenCalledWith('some-file-name');
+		expect(sequence).toEqual(['exampleStarted', 'steps', 'steps', 'exampleFinished']);
 	});
 });

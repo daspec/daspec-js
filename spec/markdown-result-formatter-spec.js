@@ -71,7 +71,6 @@ describe('MarkdownResultFormatter', function () {
 			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 5, passed: 3, failed: 2\n\nXXX\nYYY');
 		});
 	});
-
 	describe('tableResultBlock', function () {
 		it('should return a new formatter for tableResultBlocks', function () {
 			var tableBlock1 = underTest.tableResultBlock(),
@@ -149,5 +148,30 @@ describe('MarkdownResultFormatter', function () {
 			});
 		});
 	});
+	describe('batching example results', function () {
 
+		it('appends multiple lines together, and adds counts', function () {
+			underTest.stepResult({
+				stepText:'This will pass',
+				assertions: [new Assertion('a', 'a', true)]
+			});
+			underTest.stepResult({
+				stepText:'This will fail',
+				assertions: [new Assertion('a', 'a', false)]
+			});
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 2, passed: 1, failed: 1\n\n**This will pass**\n**~~This will fail~~**');
+		});
+		it('clears out the buffer and counts with exampleStarted', function () {
+			underTest.stepResult({
+				stepText:'This will pass',
+				assertions: [new Assertion('a', 'a', true)]
+			});
+			underTest.exampleStarted();
+			underTest.stepResult({
+				stepText:'This will fail',
+				assertions: [new Assertion('a', 'a', false)]
+			});
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 1, failed: 1\n\n**~~This will fail~~**');
+		});
+	});
 });
