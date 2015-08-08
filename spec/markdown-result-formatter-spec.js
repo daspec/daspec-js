@@ -46,11 +46,29 @@ describe('MarkdownResultFormatter', function () {
 			});
 			expect(underTest.formattedResults()).toEqual('> **In da spec:** Nada\n\nThis will just be copied');
 		});
+		it('reports exception in counts', function () {
+			underTest.stepResult({
+				stepText:'This will just be crossed',
+				assertions: [],
+				matcher: /This will just be crossed/,
+				exception: 'Some exception'
+			});
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** error: 1\n\n**~~This will just be crossed~~**\n<!--\nSome exception\n-->');
+
+		});
 	});
 	describe('skippedLine', function () {
 		it('copies the line and reports in skipped counts', function () {
 			underTest.skippedLine('sline');
 			expect(underTest.formattedResults()).toEqual('> **In da spec:** skipped: 1\n\nsline');
+		});
+	});
+	describe('appendResultBlock', function () {
+		it('copies the counts and the format from a sub-formatter', function () {
+			underTest.appendResultBlock({counts: {executed: 5, passed: 3, failed: 2}, formattedResults: function () {
+				return 'XXX\nYYY';
+			}});
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 5, passed: 3, failed: 2\n\nXXX\nYYY');
 		});
 	});
 
