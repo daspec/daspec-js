@@ -174,4 +174,65 @@ describe('CountingResultFormatter', function () {
 			});
 		});
 	});
+	describe('events', function () {
+		var spies = {};
+		beforeEach(function () {
+			['started', 'exampleFinished', 'closed'].forEach(function (eventName) {
+				spies[eventName] = jasmine.createSpy(eventName);
+				underTest.addEventListener(eventName, spies[eventName]);
+			});
+		});
+		it('dispatches started when the first example starts', function () {
+			underTest.exampleStarted();
+			expect(spies.started).toHaveBeenCalled();
+		});
+		it('does not dispatch started when subsequent examples start', function () {
+			underTest.exampleStarted();
+			underTest.exampleFinished();
+			underTest.exampleStarted();
+			expect(spies.started.calls.count()).toEqual(1);
+		});
+		it('dispatches exampleFinished with the current counts when an example completes', function () {
+			underTest.stepResult({
+				stepText:'This will pass',
+				assertions: [new Assertion('a', 'a', true)]
+			});
+			underTest.stepResult({
+				stepText:'This will fail',
+				assertions: [new Assertion('a', 'a', false)]
+			});
+			underTest.exampleFinished('some-name');
+			expect(spies.exampleFinished).toHaveBeenCalledWith('some-name', jasmine.objectContaining({executed: 2, passed: 1, failed: 1, error: 0, skipped: 0}));
+		});
+		it('dispatches the current, not the total counts, with exampleFinished', function () {
+			underTest.stepResult({
+				stepText:'This will pass',
+				assertions: [new Assertion('a', 'a', true)]
+			});
+			underTest.exampleFinished('some-name');
+			spies.exampleFinished.calls.reset();
+			underTest.exampleStarted('some-other-name');
+			underTest.stepResult({
+				stepText:'This will fail',
+				assertions: [new Assertion('a', 'a', false)]
+			});
+			underTest.exampleFinished('some-other-name');
+			expect(spies.exampleFinished).toHaveBeenCalledWith('some-other-name', jasmine.objectContaining({executed: 1, passed: 0, failed: 1, error: 0, skipped: 0}));
+		});
+		it('dispatches closed with the total count when the result formatter is closed', function () {
+			underTest.stepResult({
+				stepText:'This will pass',
+				assertions: [new Assertion('a', 'a', true)]
+			});
+			underTest.exampleFinished('some-name');
+			underTest.exampleStarted('some-other-name');
+			underTest.stepResult({
+				stepText:'This will fail',
+				assertions: [new Assertion('a', 'a', false)]
+			});
+			underTest.exampleFinished('some-other-name');
+			underTest.close();
+			expect(spies.closed).toHaveBeenCalledWith(jasmine.objectContaining({executed: 2, passed: 1, failed: 1, error: 0, skipped: 0}));
+		});
+	});
 });

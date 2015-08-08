@@ -7,7 +7,22 @@ module.exports = function CountingResultFormatter() {
 			var table = this;
 			table.nonAssertionLine = function () { };
 			table.stepResult = self.stepResult;
+		},
+		listeners = {
+			closed: [],
+			exampleFinished: [],
+			started: []
+		},
+		startDispatched = false,
+		dispatchEvent = function (eventName) {
+			var args = Array.prototype.slice.call(arguments, 1);
+			listeners[eventName].forEach(function (listener) {
+				listener.apply(undefined, args);
+			});
 		};
+	self.addEventListener = function (eventName, processor) {
+		listeners[eventName].push(processor);
+	};
 	self.current = new AssertionCounts();
 	self.total = new AssertionCounts();
 	self.stepResult = function (result) {
@@ -24,13 +39,18 @@ module.exports = function CountingResultFormatter() {
 	self.tableResultBlock = function () {
 		return new TableResultBlock();
 	};
-	self.exampleFinished = function () {
+	self.exampleFinished = function (name) {
 		self.total.incrementCounts(self.current);
+		dispatchEvent('exampleFinished', name, self.current);
 	};
 	self.exampleStarted = function () {
+		if (!startDispatched) {
+			dispatchEvent('started');
+			startDispatched = true;
+		}
 		self.current = new AssertionCounts();
 	};
 	self.close = function () {
-
+		dispatchEvent('closed', self.total);
 	};
 };
