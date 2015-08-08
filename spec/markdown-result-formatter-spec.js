@@ -8,15 +8,52 @@ describe('MarkdownResultFormatter', function () {
 	beforeEach(function () {
 		underTest = new MarkdownResultFormatter();
 	});
-	describe('stepResult', function () {
-		//TODO
+	describe('formattedResults', function () {
+		it('returns the current result buffer, appending the execution summary to the top as a blockquote', function () {
+			underTest.nonAssertionLine('hello there');
+			underTest.nonAssertionLine('second line');
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** Nada\n\nhello there\nsecond line');
+		});
 	});
-	describe('nonAssertionLine', function () {
-		//TODO
+	describe('stepResult', function () {
+		it('appends the execution result and adds to passed/executed all passed assertions', function () {
+			underTest.stepResult({
+				stepText:'This will pass',
+				assertions: [new Assertion('a', 'a', true)]
+			});
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 1, passed: 1\n\n**This will pass**');
+		});
+		it('counts assertions, not steps', function () {
+			underTest.stepResult({
+				stepText:'This will pass',
+				assertions: [new Assertion('a', 'a', true), new Assertion('b', 'b', true)]
+			});
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 2, passed: 2\n\n**This will pass**');
+		});
+		it('counts failed asertions as failed', function () {
+			underTest.stepResult({
+				stepText:'This will fail',
+				assertions: [new Assertion('a', 'a', false)]
+			});
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 1, failed: 1\n\n**~~This will fail~~**');
+		});
+		it('does not increment counts for step results without assertions (setup steps)', function () {
+
+			underTest.stepResult({
+				stepText:'This will just be copied',
+				assertions: [],
+				matcher: /This will just be copied/
+			});
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** Nada\n\nThis will just be copied');
+		});
 	});
 	describe('skippedLine', function () {
-		//TODO
+		it('copies the line and reports in skipped counts', function () {
+			underTest.skippedLine('sline');
+			expect(underTest.formattedResults()).toEqual('> **In da spec:** skipped: 1\n\nsline');
+		});
 	});
+
 	describe('tableResultBlock', function () {
 		it('should return a new formatter for tableResultBlocks', function () {
 			var tableBlock1 = underTest.tableResultBlock(),
