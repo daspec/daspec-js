@@ -1,0 +1,31 @@
+{
+  "name": "daspec-web",
+  "version": "0.0.5",
+  "homepage": "https://github.com/daspec/daspec-js",
+  "authors": [
+    "Sauf Pompiers <contact@saufpompiers.com>"
+  ],
+  "description": "Official packaging of DaSpec -- Awesome Executable Specifications in Markdown",
+  "main": "compiled/daspec-web.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "bdd",
+    "tdd",
+    "test",
+    "daspec",
+    "specbyexample"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+	"src",
+    "node_modules",
+    "bower_components",
+    "test_data",
+    "spec",
+	"compiled/test.js",
+	"compiled/*.html"
+  ]
+}
