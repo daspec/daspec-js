@@ -31,7 +31,7 @@ Release plan
 * gulp integration
 * clean syntax for ~~step definitions~~ and assertions
 * simple syntax for async expectations
-* color reporting in the console
+* ~~color reporting in the console~~
 * examples for table matching / various options
 * examples for list matching / various options
 
@@ -48,5 +48,4 @@ Release plan
 * ~~publish design objectives/guidelines~~ 
 * ~~clean build/test script using npm~~
 * ~~clean/simple pipeline for execution so people can easily understand what's going on where~~
-* extract formatter module so people can make their own reporters easily
-* extract runner module so people can make their own runners easily
+* ~~extract formatter module so people can make their own reporters easily~~
