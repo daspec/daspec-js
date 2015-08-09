@@ -4,7 +4,7 @@ Release plan
 # Enable JS teams and their stakeholders to write markdown executable specs
 
 * ~~support for tables~~
-* web browser runner
+* ~~web browser runner~~
 * ~~nodejs runner~~
 * go through TODO items
 * file/line number reporting on failed assertions
@@ -23,7 +23,7 @@ Release plan
 # Enable JS developers to easily install and integrate daspec
 
 * ~~npm package/install~~
-* bower install
+* ~~bower install~~
 * ~~integrated into npm test~~
 * junit XML output
 * tap output

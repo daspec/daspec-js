@@ -19,19 +19,19 @@ DaSpec's primary target are teams practising Behaviour Driven Development, Speci
 
 Visit [daspec.com/examples](http://daspec.com/examples) to try out the key features in your browser.
 
-## Contributing to DaSpec
-
-Please see the [contributor's guide](CONTRIBUTING.md)
-
 ## Installation
 
-For the core NPM module
-
-    npm install daspec-core
-
-To run daspec [from the console using Node.js](https://github.com/daspec/daspec-js-npm):
+To run DaSpec [from the console using Node.js](https://github.com/daspec/daspec-js-npm):
 
     npm install daspec
+
+To run DaSpec [client-side, in a browser](https://github.com/daspec/daspec-js-bower-example):
+
+    bower install daspec
+
+For the core NPM module, to develop and build extensions
+
+    npm install daspec-core
 
 ## Support
 
@@ -39,3 +39,8 @@ To run daspec [from the console using Node.js](https://github.com/daspec/daspec-
 * Questions or ideas: Please send an e-mail to the [DaSpec Google Group](https://groups.google.com/forum/#!forum/daspec)
 * Bugs: please create an issue directly in the [daspec-js project on GitHub](https://github.com/daspec/daspec-js/issues)
 * News and updates: subscribe via [RSS](http://daspec.com/feed.xml) or follow [@indaspec](https://twitter.com/indaspec) on Twitter
+
+## Contributing to DaSpec
+
+Please see the [contributor's guide](CONTRIBUTING.md)
+
