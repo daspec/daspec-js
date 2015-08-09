@@ -23,7 +23,9 @@
 	"src",
     "node_modules",
     "bower_components",
-    "test_data",
+    "test-data",
+	"*.md",
+	"*.json",
     "spec",
 	"compiled/test.js",
 	"compiled/*.html"
