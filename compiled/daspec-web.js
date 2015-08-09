@@ -121,7 +121,7 @@ module.exports = function Context() {
 	};
 };
 
-},{"./step-executor":16}],5:[function(require,module,exports){
+},{"./step-executor":17}],5:[function(require,module,exports){
 /*global module, require*/
 module.exports = function CountingResultFormatter() {
 	'use strict';
@@ -183,7 +183,14 @@ module.exports = {
 	TableUtil: require('./table-util')
 };
 
-},{"./composite-result-formatter":3,"./counting-result-formatter":5,"./markdown-result-formatter":11,"./runner":14,"./table-util":17}],7:[function(require,module,exports){
+},{"./composite-result-formatter":3,"./counting-result-formatter":5,"./markdown-result-formatter":12,"./runner":15,"./table-util":18}],7:[function(require,module,exports){
+(function (global){
+/*global require, global*/
+
+global.DaSpec = require('./daspec-npm-main');
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./daspec-npm-main":6}],8:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlock() {
 	'use strict';
@@ -294,7 +301,7 @@ module.exports = function ExampleBlock() {
 	};
 };
 
-},{"./normaliser":12,"./regex-util":13,"./table-util":17}],8:[function(require,module,exports){
+},{"./normaliser":13,"./regex-util":14,"./table-util":18}],9:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlocks(inputText) {
 	'use strict';
@@ -318,7 +325,7 @@ module.exports = function ExampleBlocks(inputText) {
 	};
 };
 
-},{"./example-block":7}],9:[function(require,module,exports){
+},{"./example-block":8}],10:[function(require,module,exports){
 /*global module*/
 module.exports = function ListUtil() {
 	'use strict';
@@ -363,7 +370,7 @@ module.exports = function ListUtil() {
 	};
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkDownFormatter() {
 	'use strict';
@@ -541,7 +548,7 @@ module.exports = function MarkDownFormatter() {
 	};
 };
 
-},{"./regex-util":13,"./table-util":17}],11:[function(require,module,exports){
+},{"./regex-util":14,"./table-util":18}],12:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkdownResultFormatter() {
 	'use strict';
@@ -632,7 +639,7 @@ module.exports = function MarkdownResultFormatter() {
 	};
 };
 
-},{"./assertion-counts":1,"./markdown-formatter":10,"./table-util":17}],12:[function(require,module,exports){
+},{"./assertion-counts":1,"./markdown-formatter":11,"./table-util":18}],13:[function(require,module,exports){
 /*global module*/
 module.exports = function Normaliser() {
 	'use strict';
@@ -664,7 +671,7 @@ module.exports = function Normaliser() {
 	};
 };
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /*global module*/
 module.exports = function RegexUtil() {
 	'use strict';
@@ -756,7 +763,7 @@ module.exports = function RegexUtil() {
 	};
 };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /*global module, require*/
 module.exports = function Runner(stepFunc, resultFormatter) {
 	'use strict';
@@ -836,7 +843,7 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 	};
 };
 
-},{"./context":4,"./example-blocks":8,"./regex-util":13}],15:[function(require,module,exports){
+},{"./context":4,"./example-blocks":9,"./regex-util":14}],16:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepContext(result) {
 	'use strict';
@@ -876,7 +883,7 @@ module.exports = function StepContext(result) {
 	};
 };
 
-},{"./assertion":2,"./list-util":9,"./table-util":17}],16:[function(require,module,exports){
+},{"./assertion":2,"./list-util":10,"./table-util":18}],17:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepExecutor(regexMatcher, processFunction) {
 	'use strict';
@@ -940,7 +947,7 @@ module.exports = function StepExecutor(regexMatcher, processFunction) {
 	};
 };
 
-},{"./regex-util":13,"./step-context":15,"./table-util":17}],17:[function(require,module,exports){
+},{"./regex-util":14,"./step-context":16,"./table-util":18}],18:[function(require,module,exports){
 /*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
@@ -1030,4 +1037,4 @@ module.exports = function TableUtil() {
 	};
 };
 
-},{"./normaliser":12,"./regex-util":13}]},{},[6]);
+},{"./normaliser":13,"./regex-util":14}]},{},[7]);
