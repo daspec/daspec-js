@@ -530,6 +530,16 @@ module.exports = function MarkdownResultFormatter() {
 	self.tableResultBlock = function () {
 		return new TableResultBlock();
 	};
+	self.exampleFinished = function () {
+
+	};
+	self.exampleStarted = function () {
+		resultBuffer = [];
+		counts = new AssertionCounts();
+	};
+	self.close = function () {
+
+	};
 };
 
 },{"./assertion-counts":1,"./markdown-formatter":8,"./table-util":15}],10:[function(require,module,exports){
@@ -667,7 +677,7 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 		self = this;
 
 
-	self.example = function (inputText) {
+	self.example = function (inputText, exampleName) {
 		var context = new Context(),
 			blocks = new ExampleBlocks(inputText),
 			processTableBlock = function (block) {
@@ -724,6 +734,7 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 				});
 			};
 		stepFunc.apply(context, [context]);
+		resultFormatter.exampleStarted(exampleName);
 		blocks.getBlocks().forEach(function (block) {
 			if (block.isTableBlock()) {
 				processTableBlock(block);
@@ -731,6 +742,7 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 				processBlock(block);
 			}
 		});
+		resultFormatter.exampleFinished(exampleName);
 	};
 };
 

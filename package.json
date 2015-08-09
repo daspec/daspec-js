@@ -25,7 +25,7 @@
     "lib": "./src"
   },
   "scripts": {
-    "compile": "browserify src/daspec-browser-main.js -o compiled/main.js",
+    "compile": "browserify src/daspec-test-main.js -o compiled/test.js && browserify src/daspec-npm-main.js -o compiled/daspec-web.js",
 	"pretest": "jshint src spec",
     "test": "node spec/support/jasmine-runner.js"
   },

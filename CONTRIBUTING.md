@@ -26,7 +26,10 @@ Detailed results in the console
 
     npm run compile
 
-this will save a file to [compiled/main.js](compiled/main.js)
+this will save two bundled files to [compiled](compiled):
+
+* [daspec-web.js](compiled/daspec-web.js): a complete bundle of all the DaSpec classes required to run tests in a browser
+* [test.js](compiled/test.js): a version of the browser scripts that includes the markdown formatter and the step definitions from the [test-data](test-data) folder, useful for debugging development versions of DaSpec in a browser.
 
 ##Design guidelines
 
