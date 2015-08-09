@@ -1,4 +1,4 @@
-"It's in da spec!"
+_"It's in da spec!"_
 
 Core library for running executable specifications using DaSpec with JavaScript. 
 
@@ -29,7 +29,7 @@ For the core NPM module
 
     npm install daspec-core
 
-To run daspec from the console using Node.js
+To run daspec [from the console using Node.js](https://github.com/daspec/daspec-js-npm):
 
     npm install daspec
 
