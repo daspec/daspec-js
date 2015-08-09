@@ -12,22 +12,28 @@
     "test",
     "tdd",
     "bdd",
-	"specbyexample"
+    "specbyexample"
   ],
   "bugs": {
     "url": "https://github.com/daspec/daspec-js/issues"
   },
   "homepage": "http://daspec.com",
-  "files": ["src"],
-  "directories": { "lib": "./src" },
+  "files": [
+    "src"
+  ],
+  "directories": {
+    "lib": "./src"
+  },
   "scripts": {
     "compile": "browserify src/daspec-browser-main.js -o compiled/main.js",
+	"pretest": "jshint src spec",
     "test": "node spec/support/jasmine-runner.js"
   },
   "main": "./src/daspec-npm-main.js",
   "devDependencies": {
     "browserify": "^11.0.0",
     "jasmine": "^2.3.1",
-    "jasmine-spec-reporter": "^2.4.0"
+    "jasmine-spec-reporter": "^2.4.0",
+    "jshint": "^2.8.0"
   }
 }
