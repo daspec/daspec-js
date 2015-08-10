@@ -2,7 +2,7 @@
 
 describe('CountingResultFormatter', function () {
 	'use strict';
-	var CountingResultFormatter = require('../src/counting-result-formatter'),
+	var CountingResultFormatter = require('../src/counting-result-listener'),
 		observable = require('../src/observable'),
 		Assertion = require('../src/assertion'),
 		runner,

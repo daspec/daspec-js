@@ -8,7 +8,7 @@ module.exports = function Runner(stepFunc) {
 		ExampleBlocks = require('./example-blocks'),
 		self = observable(this);
 
-	self.example = function (inputText, exampleName) {
+	self.execute = function (inputText, exampleName) {
 		var context = new Context(),
 			blocks = new ExampleBlocks(inputText),
 			lineNumber = 0,

@@ -12,7 +12,7 @@ describe('Key Examples from test-data', function () {
 		it(example.title, function () {
 			var runner = new Runner(stepDefinitions),
 				resultFormatter = new MarkDownResultFormatter(runner);
-			runner.example(example.input);
+			runner.execute(example.input);
 			expect(resultFormatter.formattedResults()).toEqual(example.output);
 
 		});

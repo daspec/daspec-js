@@ -82,7 +82,35 @@ module.exports = function Context() {
 	};
 };
 
-},{"./step-executor":14}],4:[function(require,module,exports){
+},{"./step-executor":16}],4:[function(require,module,exports){
+/*global module, require*/
+module.exports = function CountingResultListener(runner) {
+	'use strict';
+	var self = this,
+		AssertionCounts = require('./assertion-counts');
+
+	self.current = new AssertionCounts();
+	self.total = new AssertionCounts();
+
+	runner.addEventListener('stepResult', function (result) {
+		self.current.recordException(result.exception);
+		result.assertions.forEach(function (assertion) {
+			self.current.increment(assertion);
+		});
+	});
+
+	runner.addEventListener('skippedLine', function () {
+		self.current.skipped++;
+	});
+	runner.addEventListener('specStarted', function () {
+		self.current = new AssertionCounts();
+	});
+	runner.addEventListener('specEnded', function () {
+		self.total.incrementCounts(self.current);
+	});
+};
+
+},{"./assertion-counts":1}],5:[function(require,module,exports){
 (function (global){
 /*global require, global*/
 
@@ -93,7 +121,7 @@ global.DaSpec = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../test-data/test-steps":16,"./markdown-result-formatter":9,"./runner":12}],5:[function(require,module,exports){
+},{"../test-data/test-steps":18,"./markdown-result-formatter":10,"./runner":14}],6:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlock() {
 	'use strict';
@@ -204,7 +232,7 @@ module.exports = function ExampleBlock() {
 	};
 };
 
-},{"./normaliser":10,"./regex-util":11,"./table-util":15}],6:[function(require,module,exports){
+},{"./normaliser":11,"./regex-util":13,"./table-util":17}],7:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlocks(inputText) {
 	'use strict';
@@ -228,7 +256,7 @@ module.exports = function ExampleBlocks(inputText) {
 	};
 };
 
-},{"./example-block":5}],7:[function(require,module,exports){
+},{"./example-block":6}],8:[function(require,module,exports){
 /*global module*/
 module.exports = function ListUtil() {
 	'use strict';
@@ -273,7 +301,7 @@ module.exports = function ListUtil() {
 	};
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkDownFormatter() {
 	'use strict';
@@ -451,98 +479,72 @@ module.exports = function MarkDownFormatter() {
 	};
 };
 
-},{"./regex-util":11,"./table-util":15}],9:[function(require,module,exports){
+},{"./regex-util":13,"./table-util":17}],10:[function(require,module,exports){
 /*global module, require*/
-module.exports = function MarkdownResultFormatter() {
+module.exports = function MarkdownResultFormatter(runner) {
 	'use strict';
 	var self = this,
 		MarkDownFormatter = require('./markdown-formatter'),
 		markDownFormatter = new MarkDownFormatter(),
-		AssertionCounts = require('./assertion-counts'),
 		resultBuffer = [],
-		counts = new AssertionCounts(),
-		countDescription = function (counts) {
+		ResultCountListener = require('./counting-result-listener'),
+		resultCountListener = new ResultCountListener(runner),
+		tableRows = false,
+		TableUtil = require('./table-util'),
+		tableUtil = new TableUtil(),
+		countDescription = function () {
 			var labels = ['executed', 'passed', 'failed', 'error', 'skipped'],
 				description = '> **In da spec:** ',
 				comma = false;
 
 			labels.forEach(function (label) {
-				if (counts[label]) {
+				if (resultCountListener.current[label]) {
 					if (comma) {
 						description = description + ', ';
 					} else {
 						comma = true;
 					}
-					description = description + label + ': ' + counts[label];
+					description = description + label + ': ' + resultCountListener.current[label];
 				}
 			});
 			if (!comma) {
 				description = description + 'Nada';
 			}
 			return description;
-		},
-		TableResultBlock = function () {
-			var self = this,
-				tableCounts = new AssertionCounts(),
-				tableRows = [],
-				TableUtil = require('./table-util'),
-				tableUtil = new TableUtil();
-			self.counts = tableCounts;
-			self.nonAssertionLine = function (line) {
-				tableRows.push(line);
-			};
-			self.stepResult = function (result) {
-				tableCounts.recordException(result.exception);
-				result.assertions.forEach(function (assertion) {
-					tableCounts.increment(assertion);
-				});
-				tableRows.push(markDownFormatter.markResult(result));
-			};
-			self.formattedResults = function () {
-				return tableUtil.justifyTable(tableRows);
-			};
 		};
-	self.stepResult = function (result) {
-		counts.recordException(result.exception);
-		result.assertions.forEach(function (assertion) {
-			counts.increment(assertion);
-		});
-		resultBuffer.push(markDownFormatter.markResult(result));
-	};
-	self.nonAssertionLine = function (line) {
+	runner.addEventListener('stepResult', function (result) {
+		(tableRows || resultBuffer).push(markDownFormatter.markResult(result));
+	});
+	runner.addEventListener('nonAssertionLine',  function (line) {
+		(tableRows || resultBuffer).push(line);
+	});
+	runner.addEventListener('skippedLine', function (line) {
 		resultBuffer.push(line);
-	};
-	self.skippedLine = function (line) {
-		resultBuffer.push(line);
-		counts.skipped++;
-	};
+	});
+	runner.addEventListener('tableStarted', function () {
+		tableRows = [];
+	});
+	runner.addEventListener('tableEnded', function () {
+		if (tableRows) {
+			resultBuffer = resultBuffer.concat(tableUtil.justifyTable(tableRows));
+		}
+		tableRows = false;
+	});
+	runner.addEventListener('specStarted', function () {
+		resultBuffer = [];
+	});
+	runner.addEventListener('specEnded', function () {
+		resultBuffer.unshift('');
+		resultBuffer.unshift(countDescription());
+	});
 
 	self.formattedResults = function () {
-		var out = resultBuffer.slice(0);
-		out.unshift('');
-		out.unshift(countDescription(counts));
-		return out.join('\n');
+		return resultBuffer.join('\n');
 	};
-	self.appendResultBlock = function (formatter) {
-		counts.incrementCounts(formatter.counts);
-		resultBuffer = resultBuffer.concat(formatter.formattedResults());
-	};
-	self.tableResultBlock = function () {
-		return new TableResultBlock();
-	};
-	self.exampleFinished = function () {
 
-	};
-	self.exampleStarted = function () {
-		resultBuffer = [];
-		counts = new AssertionCounts();
-	};
-	self.close = function () {
-
-	};
 };
 
-},{"./assertion-counts":1,"./markdown-formatter":8,"./table-util":15}],10:[function(require,module,exports){
+},{"./counting-result-listener":4,"./markdown-formatter":9,"./table-util":17}],11:[function(require,module,exports){
 /*global module*/
 module.exports = function Normaliser() {
 	'use strict';
@@ -574,7 +576,56 @@ module.exports = function Normaliser() {
 	};
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
+/*global module, console*/
+/*jshint unused:false */
+module.exports = function observable(base) {
+	'use strict';
+	var listeners = [], x;
+	base.addEventListener = function (types, listener, priority) {
+		types.split(' ').forEach(function (type) {
+			if (type) {
+				listeners.push({
+					type: type,
+					listener: listener,
+					priority: priority || 0
+				});
+			}
+		});
+	};
+	base.listeners = function (type) {
+		return listeners.filter(function (listenerDetails) {
+			return listenerDetails.type === type;
+		}).map(function (listenerDetails) {
+			return listenerDetails.listener;
+		});
+	};
+	base.removeEventListener = function (type, listener) {
+		listeners = listeners.filter(function (details) {
+			return details.listener !== listener;
+		});
+	};
+	base.dispatchEvent = function (type) {
+		var args = Array.prototype.slice.call(arguments, 1);
+		listeners
+			.filter(function (listenerDetails) {
+				return listenerDetails.type === type;
+			})
+			.sort(function (firstListenerDetails, secondListenerDetails) {
+				return secondListenerDetails.priority - firstListenerDetails.priority;
+			})
+			.some(function (listenerDetails) {
+				try {
+					return listenerDetails.listener.apply(undefined, args) === false;
+				} catch (e) {
+					console.log('dispatchEvent failed', e, listenerDetails);
+				}
+			});
+	};
+	return base;
+};
+
+},{}],13:[function(require,module,exports){
 /*global module*/
 module.exports = function RegexUtil() {
 	'use strict';
@@ -666,52 +717,61 @@ module.exports = function RegexUtil() {
 	};
 };
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /*global module, require*/
-module.exports = function Runner(stepFunc, resultFormatter) {
+module.exports = function Runner(stepFunc) {
 	'use strict';
 	var Context = require('./context'),
 		RegexUtil = require('./regex-util'),
+		observable = require('./observable'),
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),
-		self = this;
+		self = observable(this);
 
-
-	self.example = function (inputText, exampleName) {
+	self.execute = function (inputText, exampleName) {
 		var context = new Context(),
 			blocks = new ExampleBlocks(inputText),
+			lineNumber = 0,
+			sendLineEvent = function (eventName, line) {
+				if (!line && line !== '') {
+					self.dispatchEvent(eventName, lineNumber, exampleName);
+				} else {
+					self.dispatchEvent(eventName, line, lineNumber, exampleName);
+				}
+			},
 			processTableBlock = function (block) {
 				var blockLines = block.getMatchText(),
 					step,
 					headerLine,
-					tableResultBlock,
+					// tableResultBlock,
 					startNewTable = function (line) {
 						step = context.getStepForLine(line);
 						if (!step) {
-							resultFormatter.skippedLine(line);
+							sendLineEvent('skippedLine', line);
 						} else {
 							headerLine = line;
-							tableResultBlock = resultFormatter.tableResultBlock();
-							tableResultBlock.nonAssertionLine(line);
+							sendLineEvent('tableStarted');
+							sendLineEvent('nonAssertionLine', line);
+
 						}
 					},
 					endCurrentTable = function () {
-						step = false;
-						if (tableResultBlock) {
-							resultFormatter.appendResultBlock(tableResultBlock);
-							tableResultBlock = false;
+						if (step) {
+							sendLineEvent('tableEnded');
+							step = false;
 						}
 					};
 				blockLines.forEach(function (line) {
+					lineNumber++;
 					if (!regexUtil.isTableItem(line)) {
 						endCurrentTable();
-						resultFormatter.nonAssertionLine(line);
-					} else if (!tableResultBlock) {
+						sendLineEvent('nonAssertionLine', line);
+					} else if (!step) {
 						startNewTable(line);
 					} else if (regexUtil.isTableDataRow(line)) {
-						tableResultBlock.stepResult(step.executeTableRow(line, headerLine));
+						sendLineEvent('stepResult', step.executeTableRow(line, headerLine));
 					} else {
-						tableResultBlock.nonAssertionLine(line);
+						sendLineEvent('nonAssertionLine', line);
 					}
 				});
 				endCurrentTable();
@@ -720,21 +780,22 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 				var blockLines = block.getMatchText(),
 					blockParam = block.getAttachment();
 				blockLines.forEach(function (line) {
+					lineNumber++;
 					if (!regexUtil.assertionLine(line)) { //Move to block?
-						resultFormatter.nonAssertionLine(line);
+						sendLineEvent('nonAssertionLine', line);
 						return;
 					}
 
 					var step = context.getStepForLine(line);
 					if (!step) {
-						resultFormatter.skippedLine(line);
+						sendLineEvent('skippedLine', line);
 						return;
 					}
-					resultFormatter.stepResult(step.execute(line, blockParam));
+					sendLineEvent('stepResult', step.execute(line, blockParam));
 				});
 			};
 		stepFunc.apply(context, [context]);
-		resultFormatter.exampleStarted(exampleName);
+		self.dispatchEvent('specStarted', exampleName);
 		blocks.getBlocks().forEach(function (block) {
 			if (block.isTableBlock()) {
 				processTableBlock(block);
@@ -742,11 +803,11 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 				processBlock(block);
 			}
 		});
-		resultFormatter.exampleFinished(exampleName);
+		self.dispatchEvent('specEnded', exampleName);
 	};
 };
 
-},{"./context":3,"./example-blocks":6,"./regex-util":11}],13:[function(require,module,exports){
+},{"./context":3,"./example-blocks":7,"./observable":12,"./regex-util":13}],15:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepContext(result) {
 	'use strict';
@@ -786,7 +847,7 @@ module.exports = function StepContext(result) {
 	};
 };
 
-},{"./assertion":2,"./list-util":7,"./table-util":15}],14:[function(require,module,exports){
+},{"./assertion":2,"./list-util":8,"./table-util":17}],16:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepExecutor(regexMatcher, processFunction) {
 	'use strict';
@@ -850,7 +911,7 @@ module.exports = function StepExecutor(regexMatcher, processFunction) {
 	};
 };
 
-},{"./regex-util":11,"./step-context":13,"./table-util":15}],15:[function(require,module,exports){
+},{"./regex-util":13,"./step-context":15,"./table-util":17}],17:[function(require,module,exports){
 /*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
@@ -940,7 +1001,7 @@ module.exports = function TableUtil() {
 	};
 };
 
-},{"./normaliser":10,"./regex-util":11}],16:[function(require,module,exports){
+},{"./normaliser":11,"./regex-util":13}],18:[function(require,module,exports){
 /*global module*/
 module.exports = function (ctx) {
 	'use strict';
@@ -1004,4 +1065,4 @@ module.exports = function (ctx) {
 
 };
 
-},{}]},{},[4]);
+},{}]},{},[5]);
