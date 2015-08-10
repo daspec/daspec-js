@@ -1,5 +1,5 @@
 /*global module, require*/
-module.exports = function Runner(stepFunc, resultFormatter) {
+module.exports = function Runner(stepFunc) {
 	'use strict';
 	var Context = require('./context'),
 		RegexUtil = require('./regex-util'),
@@ -13,7 +13,7 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 			blocks = new ExampleBlocks(inputText),
 			lineNumber = 0,
 			sendLineEvent = function (eventName, line) {
-				if (!line) {
+				if (!line && line !== '') {
 					self.dispatchEvent(eventName, lineNumber, exampleName);
 				} else {
 					self.dispatchEvent(eventName, line, lineNumber, exampleName);
@@ -23,42 +23,34 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 				var blockLines = block.getMatchText(),
 					step,
 					headerLine,
-					tableResultBlock,
+					// tableResultBlock,
 					startNewTable = function (line) {
 						step = context.getStepForLine(line);
 						if (!step) {
-							resultFormatter.skippedLine(line);
 							sendLineEvent('skippedLine', line);
 						} else {
 							headerLine = line;
-							tableResultBlock = resultFormatter.tableResultBlock();
 							sendLineEvent('tableStarted');
 							sendLineEvent('nonAssertionLine', line);
-							tableResultBlock.nonAssertionLine(line);
 
 						}
 					},
 					endCurrentTable = function () {
-						step = false;
-						if (tableResultBlock) {
-							resultFormatter.appendResultBlock(tableResultBlock);
+						if (step) {
 							sendLineEvent('tableEnded');
-							tableResultBlock = false;
+							step = false;
 						}
 					};
 				blockLines.forEach(function (line) {
 					lineNumber++;
 					if (!regexUtil.isTableItem(line)) {
 						endCurrentTable();
-						resultFormatter.nonAssertionLine(line);
 						sendLineEvent('nonAssertionLine', line);
-					} else if (!tableResultBlock) {
+					} else if (!step) {
 						startNewTable(line);
 					} else if (regexUtil.isTableDataRow(line)) {
-						tableResultBlock.stepResult(step.executeTableRow(line, headerLine));
 						sendLineEvent('stepResult', step.executeTableRow(line, headerLine));
 					} else {
-						tableResultBlock.nonAssertionLine(line);
 						sendLineEvent('nonAssertionLine', line);
 					}
 				});
@@ -70,24 +62,20 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 				blockLines.forEach(function (line) {
 					lineNumber++;
 					if (!regexUtil.assertionLine(line)) { //Move to block?
-						resultFormatter.nonAssertionLine(line);
 						sendLineEvent('nonAssertionLine', line);
 						return;
 					}
 
 					var step = context.getStepForLine(line);
 					if (!step) {
-						resultFormatter.skippedLine(line);
 						sendLineEvent('skippedLine', line);
 						return;
 					}
-					resultFormatter.stepResult(step.execute(line, blockParam));
 					sendLineEvent('stepResult', step.execute(line, blockParam));
 				});
 			};
 		stepFunc.apply(context, [context]);
 		self.dispatchEvent('specStarted', exampleName);
-		resultFormatter.exampleStarted(exampleName);
 		blocks.getBlocks().forEach(function (block) {
 			if (block.isTableBlock()) {
 				processTableBlock(block);
@@ -95,7 +83,6 @@ module.exports = function Runner(stepFunc, resultFormatter) {
 				processBlock(block);
 			}
 		});
-		resultFormatter.exampleFinished(exampleName);
 		self.dispatchEvent('specEnded', exampleName);
 	};
 };

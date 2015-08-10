@@ -1,89 +1,63 @@
 /*global module, require*/
-module.exports = function MarkdownResultFormatter() {
+module.exports = function MarkdownResultFormatter(runner) {
 	'use strict';
 	var self = this,
 		MarkDownFormatter = require('./markdown-formatter'),
 		markDownFormatter = new MarkDownFormatter(),
-		AssertionCounts = require('./assertion-counts'),
 		resultBuffer = [],
-		counts = new AssertionCounts(),
-		countDescription = function (counts) {
+		ResultCountListener = require('./counting-result-formatter'),
+		resultCountListener = new ResultCountListener(runner),
+		tableRows = false,
+		TableUtil = require('./table-util'),
+		tableUtil = new TableUtil(),
+		countDescription = function () {
 			var labels = ['executed', 'passed', 'failed', 'error', 'skipped'],
 				description = '> **In da spec:** ',
 				comma = false;
 
 			labels.forEach(function (label) {
-				if (counts[label]) {
+				if (resultCountListener.current[label]) {
 					if (comma) {
 						description = description + ', ';
 					} else {
 						comma = true;
 					}
-					description = description + label + ': ' + counts[label];
+					description = description + label + ': ' + resultCountListener.current[label];
 				}
 			});
 			if (!comma) {
 				description = description + 'Nada';
 			}
 			return description;
-		},
-		TableResultBlock = function () {
-			var self = this,
-				tableCounts = new AssertionCounts(),
-				tableRows = [],
-				TableUtil = require('./table-util'),
-				tableUtil = new TableUtil();
-			self.counts = tableCounts;
-			self.nonAssertionLine = function (line) {
-				tableRows.push(line);
-			};
-			self.stepResult = function (result) {
-				tableCounts.recordException(result.exception);
-				result.assertions.forEach(function (assertion) {
-					tableCounts.increment(assertion);
-				});
-				tableRows.push(markDownFormatter.markResult(result));
-			};
-			self.formattedResults = function () {
-				return tableUtil.justifyTable(tableRows);
-			};
 		};
-	self.stepResult = function (result) {
-		counts.recordException(result.exception);
-		result.assertions.forEach(function (assertion) {
-			counts.increment(assertion);
-		});
-		resultBuffer.push(markDownFormatter.markResult(result));
-	};
-	self.nonAssertionLine = function (line) {
+	runner.addEventListener('stepResult', function (result) {
+		(tableRows || resultBuffer).push(markDownFormatter.markResult(result));
+	});
+	runner.addEventListener('nonAssertionLine',  function (line) {
+		(tableRows || resultBuffer).push(line);
+	});
+	runner.addEventListener('skippedLine', function (line) {
 		resultBuffer.push(line);
-	};
-	self.skippedLine = function (line) {
-		resultBuffer.push(line);
-		counts.skipped++;
-	};
+	});
+	runner.addEventListener('tableStarted', function () {
+		tableRows = [];
+	});
+	runner.addEventListener('tableEnded', function () {
+		if (tableRows) {
+			resultBuffer = resultBuffer.concat(tableUtil.justifyTable(tableRows));
+		}
+		tableRows = false;
+	});
+	runner.addEventListener('specStarted', function () {
+		resultBuffer = [];
+	});
+	runner.addEventListener('specEnded', function () {
+		resultBuffer.unshift('');
+		resultBuffer.unshift(countDescription());
+	});
 
 	self.formattedResults = function () {
-		var out = resultBuffer.slice(0);
-		out.unshift('');
-		out.unshift(countDescription(counts));
-		return out.join('\n');
+		return resultBuffer.join('\n');
 	};
-	self.appendResultBlock = function (formatter) {
-		counts.incrementCounts(formatter.counts);
-		resultBuffer = resultBuffer.concat(formatter.formattedResults());
-	};
-	self.tableResultBlock = function () {
-		return new TableResultBlock();
-	};
-	self.exampleFinished = function () {
 
-	};
-	self.exampleStarted = function () {
-		resultBuffer = [];
-		counts = new AssertionCounts();
-	};
-	self.close = function () {
-
-	};
 };

@@ -10,8 +10,8 @@ describe('Key Examples from test-data', function () {
 	exampleFiles.forEach(function (exampleName) {
 		var example = helper.loadExample(exampleName);
 		it(example.title, function () {
-			var resultFormatter = new MarkDownResultFormatter(),
-				runner = new Runner(stepDefinitions, resultFormatter);
+			var runner = new Runner(stepDefinitions),
+				resultFormatter = new MarkDownResultFormatter(runner);
 			runner.example(example.input);
 			expect(resultFormatter.formattedResults()).toEqual(example.output);
 

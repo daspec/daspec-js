@@ -4,173 +4,123 @@ describe('MarkdownResultFormatter', function () {
 	'use strict';
 	var MarkdownResultFormatter = require('../src/markdown-result-formatter'),
 		Assertion = require('../src/assertion'),
-		underTest;
+		observable = require('../src/observable'),
+		underTest,
+		runner,
+		dispatch = function (eventName, arg) {
+			runner.dispatchEvent(eventName, arg);
+		};
 	beforeEach(function () {
-		underTest = new MarkdownResultFormatter();
+		runner = observable({});
+		underTest = new MarkdownResultFormatter(runner);
 	});
 	describe('formattedResults', function () {
 		it('returns the current result buffer, appending the execution summary to the top as a blockquote', function () {
-			underTest.nonAssertionLine('hello there');
-			underTest.nonAssertionLine('second line');
-			expect(underTest.formattedResults()).toEqual('> **In da spec:** Nada\n\nhello there\nsecond line');
+			dispatch('nonAssertionLine', 'hello there');
+			dispatch('nonAssertionLine', 'second line');
+			expect(underTest.formattedResults()).toEqual('hello there\nsecond line');
 		});
+
+		it('should preserve empty non assertion lines', function () {
+			dispatch('nonAssertionLine', 'hello there', 1, 'foo');
+			dispatch('nonAssertionLine',  '', 2, 'foo');
+			dispatch('nonAssertionLine', 'second line', 3, 'foo');
+			expect(underTest.formattedResults()).toEqual('hello there\n\nsecond line');
+		});
+
 	});
 	describe('stepResult', function () {
 		it('appends the execution result and adds to passed/executed all passed assertions', function () {
-			underTest.stepResult({
+			dispatch('stepResult', {
 				stepText:'This will pass',
 				assertions: [new Assertion('a', 'a', true)]
 			});
-			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 1, passed: 1\n\n**This will pass**');
-		});
-		it('counts assertions, not steps', function () {
-			underTest.stepResult({
-				stepText:'This will pass',
-				assertions: [new Assertion('a', 'a', true), new Assertion('b', 'b', true)]
-			});
-			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 2, passed: 2\n\n**This will pass**');
-		});
-		it('counts failed asertions as failed', function () {
-			underTest.stepResult({
-				stepText:'This will fail',
-				assertions: [new Assertion('a', 'a', false)]
-			});
-			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 1, failed: 1\n\n**~~This will fail~~**');
-		});
-		it('does not increment counts for step results without assertions (setup steps)', function () {
 
-			underTest.stepResult({
-				stepText:'This will just be copied',
-				assertions: [],
-				matcher: /This will just be copied/
-			});
-			expect(underTest.formattedResults()).toEqual('> **In da spec:** Nada\n\nThis will just be copied');
-		});
-		it('reports exception in counts', function () {
-			underTest.stepResult({
-				stepText:'This will just be crossed',
-				assertions: [],
-				matcher: /This will just be crossed/,
-				exception: 'Some exception'
-			});
-			expect(underTest.formattedResults()).toEqual('> **In da spec:** error: 1\n\n**~~This will just be crossed~~**\n<!--\nSome exception\n-->');
-
+			expect(underTest.formattedResults()).toEqual('**This will pass**');
 		});
 	});
 	describe('skippedLine', function () {
-		it('copies the line and reports in skipped counts', function () {
-			underTest.skippedLine('sline');
-			expect(underTest.formattedResults()).toEqual('> **In da spec:** skipped: 1\n\nsline');
+		it('copies the line', function () {
+			dispatch('skippedLine', 'sline');
+			expect(underTest.formattedResults()).toEqual('sline');
+		});
+		it('copies the attached lines', function () {
+			//TODO
 		});
 	});
-	describe('appendResultBlock', function () {
-		it('copies the counts and the format from a sub-formatter', function () {
-			underTest.appendResultBlock({counts: {executed: 5, passed: 3, failed: 2}, formattedResults: function () {
-				return 'XXX\nYYY';
-			}});
-			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 5, passed: 3, failed: 2\n\nXXX\nYYY');
+	describe('table formatting', function () {
+		beforeEach(function () {
+			dispatch('tableStarted');
 		});
-	});
-	describe('tableResultBlock', function () {
-		it('should return a new formatter for tableResultBlocks', function () {
-			var tableBlock1 = underTest.tableResultBlock(),
-				tableBlock2 = underTest.tableResultBlock();
-			expect(tableBlock1).not.toBe(tableBlock2);
+		describe('stepResult', function () {
+			it('should create a markdown formatted table lines', function () {
+				dispatch('stepResult', {
+					stepText:'|a|b|',
+					assertions: [new Assertion('a', 'a', true)]
+				});
+				dispatch('stepResult', {
+					stepText:'|c|d|',
+					assertions: [new Assertion('a', 'a', true)]
+				});
+				dispatch('tableEnded');
+				var results = underTest.formattedResults();
+				expect(results).toEqual([
+					'| **a** | **b** |',
+					'| **c** | **d** |'
+				].join('\n'));
+			});
 		});
-		describe('TableResultBlock', function () {
-			var tableResultBlock;
-			beforeEach(function () {
-				tableResultBlock = underTest.tableResultBlock();
+		describe('nonAssertionLine', function () {
+			it('should create a markdown formatted table lines', function () {
+				dispatch('nonAssertionLine', '| a | b |');
+				dispatch('nonAssertionLine', '| c | d |');
+				dispatch('tableEnded');
+				var results = underTest.formattedResults();
+				expect(results).toEqual([
+					'| a | b |',
+					'| c | d |'
+				].join('\n'));
 			});
-			describe('stepResult', function () {
-				it('should create a markdown formatted table lines', function () {
-					tableResultBlock.stepResult({
-						stepText:'|a|b|',
-						assertions: [new Assertion('a', 'a', true)]
-					});
-					tableResultBlock.stepResult({
-						stepText:'|c|d|',
-						assertions: [new Assertion('a', 'a', true)]
-					});
-					var results = tableResultBlock.formattedResults();
-					expect(results).toEqual([
-						'| **a** | **b** |',
-						'| **c** | **d** |'
-					]);
-				});
-				it('should record  assertion results in counts', function () {
-					tableResultBlock.stepResult({
-						assertions: [
-							new Assertion('a', 'a', true),
-							new Assertion('a', 'b', false)
-						]
-					});
-					expect(tableResultBlock.counts.executed).toEqual(2);
-					expect(tableResultBlock.counts.passed).toEqual(1);
-					expect(tableResultBlock.counts.failed).toEqual(1);
-				});
-				it('should record assertion exceptions in counts', function () {
-					tableResultBlock.stepResult({
-						exception: 'foo',
-						assertions: [
-							new Assertion('a', 'b', false)
-						]
-					});
-					expect(tableResultBlock.counts.error).toEqual(1);
-				});
-			});
-			describe('nonAssertionLine', function () {
-				it('should create a markdown formatted table lines', function () {
-					tableResultBlock.nonAssertionLine('| a | b |');
-					tableResultBlock.nonAssertionLine('| c | d |');
-					var results = tableResultBlock.formattedResults();
-					expect(results).toEqual([
-						'| a | b |',
-						'| c | d |'
-					]);
-				});
-				it('should record not assertion results in counts', function () {
-					tableResultBlock.nonAssertionLine('|a|b|');
-					tableResultBlock.nonAssertionLine('|c|d|');
-					expect(tableResultBlock.counts.skipped).toEqual(0);
-				});
-			});
-			describe('table column width formatting', function () {
-				it('should size the columns to fit the longest data in all the data rows', function () {
-					tableResultBlock.nonAssertionLine('| aaaaaaaaaaaaaa| b |');
-					tableResultBlock.nonAssertionLine('| c |**d**|');
-					var results = tableResultBlock.formattedResults();
-					expect(results).toEqual([
-						'| aaaaaaaaaaaaaa | b     |',
-						'| c              | **d** |'
-					]);
-				});
+		});
+		describe('table column width formatting', function () {
+			it('should size the columns to fit the longest data in all the data rows', function () {
+				dispatch('nonAssertionLine', '| aaaaaaaaaaaaaa| b |');
+				dispatch('nonAssertionLine', '| c |**d**|');
+				dispatch('tableEnded');
+				var results = underTest.formattedResults();
+				expect(results).toEqual([
+					'| aaaaaaaaaaaaaa | b     |',
+					'| c              | **d** |'
+				].join('\n'));
 			});
 		});
 	});
 	describe('batching example results', function () {
 
-		it('appends multiple lines together, and adds counts', function () {
-			underTest.stepResult({
+		it('specEnded appends multiple lines together, and adds counts', function () {
+			dispatch('stepResult', {
 				stepText:'This will pass',
 				assertions: [new Assertion('a', 'a', true)]
 			});
-			underTest.stepResult({
+			dispatch('stepResult', {
 				stepText:'This will fail',
 				assertions: [new Assertion('a', 'a', false)]
 			});
+			dispatch('specEnded');
 			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 2, passed: 1, failed: 1\n\n**This will pass**\n**~~This will fail~~**');
 		});
-		it('clears out the buffer and counts with exampleStarted', function () {
-			underTest.stepResult({
+		it('specStarted clears out the buffer', function () {
+			dispatch('stepResult', {
 				stepText:'This will pass',
 				assertions: [new Assertion('a', 'a', true)]
 			});
-			underTest.exampleStarted();
-			underTest.stepResult({
+			dispatch('specEnded');
+			dispatch('specStarted');
+			dispatch('stepResult', {
 				stepText:'This will fail',
 				assertions: [new Assertion('a', 'a', false)]
 			});
+			dispatch('specEnded');
 			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 1, failed: 1\n\n**~~This will fail~~**');
 		});
 	});
