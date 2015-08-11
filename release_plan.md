@@ -9,8 +9,8 @@ Release 1
 * ~~formatters as observers on runner~~
 * mark skipped steps
 	- ~~mark skipped lines by default by prepending `skipped`~~
-  - allow skipped lines if global config has allowSkipped: true
-  - use configured skipped line indicator in markdown config
+  - ~~allow skipped lines if global config has allowSkipped: true~~
+  - ~~use configured skipped line indicator in markdown config~~
 * optimistically convert to numbers whatever possible
 * allow assertSetEquals to work on lists (as well as arrays)
 * allow assertUnorderedTableEquals to work on simple two-dim arrays (not objects with titles)
@@ -22,7 +22,7 @@ Release 1
 * go through TODO items
 * markdown formatter config
 	- template for the header line
-	- template for skipped marker
+	- ~~template for skipped marker~~
 	- template for attachment markers (tick, question...)
 * doc web site examples for table matching / various options -< show we can do lists, two-dim tables,
 * doc web site examples for list matching / various options
