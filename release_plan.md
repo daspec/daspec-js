@@ -6,21 +6,22 @@ Release 1
 
 # Enable JS teams and their stakeholders to write markdown executable specs
 
-* formatters as observers on runner
-* mark skipped steps somehow (eg italicize?)
+* ~~formatters as observers on runner~~
+* mark skipped steps
+	- ~~mark skiiped lines by default by prepending `skipped`~~
 * optimistically convert to numbers whatever possible
 * allow assertSetEquals to work on lists (as well as arrays)
 * allow assertUnorderedTableEquals to work on simple two-dim arrays (not objects with titles)
 * flexible matcher library support (js hamcrest?)
-  * try to discover positions from expected values
+	* try to discover positions from expected values
 
 * concept solution for async -- just to make sure there won't be huge api changes
 * concept solution for before/after tags
 * go through TODO items
 * markdown formatter config
-  - template for the header line
-  - template for skipped marker
-  - template for attachment markers (tick, question...)
+	- template for the header line
+	- template for skipped marker
+	- template for attachment markers (tick, question...)
 * doc web site examples for table matching / various options -< show we can do lists, two-dim tables,
 * doc web site examples for list matching / various options
 

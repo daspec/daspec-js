@@ -481,7 +481,7 @@ module.exports = function MarkDownFormatter() {
 
 },{"./regex-util":13,"./table-util":17}],10:[function(require,module,exports){
 /*global module, require*/
-module.exports = function MarkdownResultFormatter(runner) {
+module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 	'use strict';
 	var self = this,
 		MarkDownFormatter = require('./markdown-formatter'),
@@ -492,6 +492,10 @@ module.exports = function MarkdownResultFormatter(runner) {
 		tableRows = false,
 		TableUtil = require('./table-util'),
 		tableUtil = new TableUtil(),
+		config = (globalConfig && globalConfig.markdown) || {},
+		allowSkippedLines = globalConfig && globalConfig.allowSkippedLines,
+		skippedLineIndicator = config.skippedLineIndicator || '`skipped`',
+		skippedPrepend =  allowSkippedLines ? '' : skippedLineIndicator + ' ',
 		countDescription = function () {
 			var labels = ['executed', 'passed', 'failed', 'error', 'skipped'],
 				description = '> **In da spec:** ',
@@ -519,7 +523,7 @@ module.exports = function MarkdownResultFormatter(runner) {
 		(tableRows || resultBuffer).push(line);
 	});
 	runner.addEventListener('skippedLine', function (line) {
-		resultBuffer.push(line);
+		resultBuffer.push(skippedPrepend +  line);
 	});
 	runner.addEventListener('tableStarted', function () {
 		tableRows = [];
@@ -1042,6 +1046,9 @@ module.exports = function (ctx) {
 	});
 	ctx.defineStep(/Check ([A-Za-z ]*) Films/, function (seriesName, listOfEpisodes) {
 		this.assertUnorderedTableEquals(listOfEpisodes, tables[seriesName]);
+	});
+	ctx.defineStep(/List can contain sub lists/, function () {
+
 	});
 	ctx.defineStep(/\|([A-Za-z ]*) episode \| Year of release \|/, function (episode, yearOfRelease, seriesName) {
 		var series = films[seriesName],

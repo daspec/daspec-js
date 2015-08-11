@@ -19,7 +19,7 @@
 101. Simple arithmetic: 3 plus 3 is 5
 
 
-##Whole line failures/passes bold the list items, not the list symbol 
+##Whole line failures/passes bold the list items, not the list symbol
 
 * Multiple Assertions 1 is 1 and fails
 * Multiple Assertions 1 is 3 and fails
@@ -27,7 +27,7 @@
   - Multiple Assertions 1 is 1 and passes
 
 <!--OUTPUT
-> **In da spec:** executed: 18, passed: 12, failed: 6, skipped: 1
+> **In da spec:** executed: 18, passed: 12, failed: 6
 
 #Lists can be a set of assertions
 
@@ -50,7 +50,7 @@
 101. Simple arithmetic: 3 plus 3 is **~~5~~ [6]**
 
 
-##Whole line failures/passes bold the list items, not the list symbol 
+##Whole line failures/passes bold the list items, not the list symbol
 
 * **~~Multiple Assertions 1 is 1 and fails~~**
 * **~~Multiple Assertions 1 is 3 and fails~~**

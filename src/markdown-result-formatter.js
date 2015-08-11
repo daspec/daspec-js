@@ -1,5 +1,5 @@
 /*global module, require*/
-module.exports = function MarkdownResultFormatter(runner) {
+module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 	'use strict';
 	var self = this,
 		MarkDownFormatter = require('./markdown-formatter'),
@@ -10,6 +10,10 @@ module.exports = function MarkdownResultFormatter(runner) {
 		tableRows = false,
 		TableUtil = require('./table-util'),
 		tableUtil = new TableUtil(),
+		config = (globalConfig && globalConfig.markdown) || {},
+		allowSkippedLines = globalConfig && globalConfig.allowSkippedLines,
+		skippedLineIndicator = config.skippedLineIndicator || '`skipped`',
+		skippedPrepend =  allowSkippedLines ? '' : skippedLineIndicator + ' ',
 		countDescription = function () {
 			var labels = ['executed', 'passed', 'failed', 'error', 'skipped'],
 				description = '> **In da spec:** ',
@@ -37,7 +41,7 @@ module.exports = function MarkdownResultFormatter(runner) {
 		(tableRows || resultBuffer).push(line);
 	});
 	runner.addEventListener('skippedLine', function (line) {
-		resultBuffer.push(line);
+		resultBuffer.push(skippedPrepend +  line);
 	});
 	runner.addEventListener('tableStarted', function () {
 		tableRows = [];

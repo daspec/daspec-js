@@ -39,6 +39,9 @@ module.exports = function (ctx) {
 	ctx.defineStep(/Check ([A-Za-z ]*) Films/, function (seriesName, listOfEpisodes) {
 		this.assertUnorderedTableEquals(listOfEpisodes, tables[seriesName]);
 	});
+	ctx.defineStep(/List can contain sub lists/, function () {
+
+	});
 	ctx.defineStep(/\|([A-Za-z ]*) episode \| Year of release \|/, function (episode, yearOfRelease, seriesName) {
 		var series = films[seriesName],
 			matching = series && series.filter(function (film) {
