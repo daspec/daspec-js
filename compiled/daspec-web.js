@@ -498,9 +498,9 @@ module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 		TableUtil = require('./table-util'),
 		tableUtil = new TableUtil(),
 		config = (globalConfig && globalConfig.markdown) || {},
-		allowSkippedLines = globalConfig && globalConfig.allowSkippedLines,
+		allowSkipped = globalConfig && globalConfig.allowSkipped,
 		skippedLineIndicator = config.skippedLineIndicator || '`skipped`',
-		skippedPrepend =  allowSkippedLines ? '' : skippedLineIndicator + ' ',
+		skippedPrepend =  allowSkipped ? '' : skippedLineIndicator + ' ',
 		countDescription = function () {
 			var labels = ['executed', 'passed', 'failed', 'error', 'skipped'],
 				description = '> **In da spec:** ',
@@ -728,19 +728,46 @@ module.exports = function RegexUtil() {
 
 },{}],15:[function(require,module,exports){
 /*global module, require*/
-module.exports = function Runner(stepFunc) {
+module.exports = function Runner(stepFunc, config) {
 	'use strict';
 	var Context = require('./context'),
+		CountingResultListener = require('./counting-result-listener'),
 		RegexUtil = require('./regex-util'),
 		observable = require('./observable'),
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),
 		self = observable(this);
 
+	self.executeSuite = function (suite) {
+		var counts = new CountingResultListener(self),
+			executeSpecs = true;
+
+		suite.forEach(function (spec) {
+			if (!executeSpecs) {
+				return;
+			}
+			if (typeof spec.content === 'function') {
+				self.execute(spec.content(), spec.name);
+			} else {
+				self.execute(spec.content, spec.name);
+			}
+			if (config && config.failFast) {
+				if (counts.current.error ||  counts.current.failed || (!config.allowSkipped && counts.current.skipped) || !counts.current.passed) {
+					executeSpecs = false;
+				}
+			}
+		});
+		self.dispatchEvent('suiteEnded', counts.total);
+		if (counts.total.failed || counts.total.error || (!config.allowSkipped && counts.total.skipped) || !counts.current.passed) {
+			return false;
+		}
+		return true;
+	};
 	self.execute = function (inputText, exampleName) {
 		var context = new Context(),
 			blocks = new ExampleBlocks(inputText),
 			lineNumber = 0,
+			counts = new CountingResultListener(self),
 			sendLineEvent = function (eventName, line) {
 				if (!line && line !== '') {
 					self.dispatchEvent(eventName, lineNumber, exampleName);
@@ -812,11 +839,11 @@ module.exports = function Runner(stepFunc) {
 				processBlock(block);
 			}
 		});
-		self.dispatchEvent('specEnded', exampleName);
+		self.dispatchEvent('specEnded', exampleName, counts.current);
 	};
 };
 
-},{"./context":3,"./example-blocks":8,"./observable":13,"./regex-util":14}],16:[function(require,module,exports){
+},{"./context":3,"./counting-result-listener":4,"./example-blocks":8,"./observable":13,"./regex-util":14}],16:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepContext(result) {
 	'use strict';

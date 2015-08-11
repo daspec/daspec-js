@@ -12,7 +12,7 @@ describe('MarkdownResultFormatter', function () {
 			runner.dispatchEvent(eventName, arg);
 		};
 	beforeEach(function () {
-		globalConfig = {allowSkippedLines: true, markdown: {skippedLineIndicator: 'foo'}};
+		globalConfig = {allowSkipped: true, markdown: {skippedLineIndicator: 'foo'}};
 		runner = observable({});
 		underTest = new MarkdownResultFormatter(runner, globalConfig);
 	});
@@ -51,21 +51,21 @@ describe('MarkdownResultFormatter', function () {
 
 			it('when no markdown config supplied and skipped lines are not allowed', function () {
 				delete globalConfig.markdown;
-				globalConfig.allowSkippedLines = false;
+				globalConfig.allowSkipped = false;
 				underTest = new MarkdownResultFormatter(runner, globalConfig);
 				dispatch('skippedLine', 'sline');
 				expect(underTest.formattedResults()).toEqual('`skipped` sline');
 			});
 			it('when markdown config is supplied but does not define a skipped line indicator and skipped lines are not allowed', function () {
 				delete globalConfig.markdown.skippedLineIndicator;
-				globalConfig.allowSkippedLines = false;
+				globalConfig.allowSkipped = false;
 				underTest = new MarkdownResultFormatter(runner, globalConfig);
 				dispatch('skippedLine', 'sline');
 				expect(underTest.formattedResults()).toEqual('`skipped` sline');
 			});
 		});
 		it('prepends a configured indicator when markdown skipped line indicator is supplied and skipped lines are not allowed', function () {
-			globalConfig.allowSkippedLines = false;
+			globalConfig.allowSkipped = false;
 			underTest = new MarkdownResultFormatter(runner, globalConfig);
 			dispatch('skippedLine', 'sline');
 			expect(underTest.formattedResults()).toEqual('foo sline');
