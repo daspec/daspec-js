@@ -8,7 +8,9 @@ Release 1
 
 * ~~formatters as observers on runner~~
 * mark skipped steps
-	- ~~mark skiiped lines by default by prepending `skipped`~~
+	- ~~mark skipped lines by default by prepending `skipped`~~
+  - allow skipped lines if global config has allowSkippedLines: true
+  - use configured skipped line indicator in markdown config
 * optimistically convert to numbers whatever possible
 * allow assertSetEquals to work on lists (as well as arrays)
 * allow assertUnorderedTableEquals to work on simple two-dim arrays (not objects with titles)
