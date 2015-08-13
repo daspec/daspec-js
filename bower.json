@@ -1,6 +1,6 @@
 {
   "name": "daspec",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "homepage": "https://github.com/daspec/daspec-js",
   "authors": [
     "Sauf Pompiers <contact@saufpompiers.com>"
@@ -20,14 +20,14 @@
   "license": "MIT",
   "ignore": [
     "**/.*",
-	"src",
+    "src",
     "node_modules",
     "bower_components",
     "test-data",
-	"*.md",
-	"*.json",
+    "*.md",
+    "*.json",
     "spec",
-	"compiled/test.js",
-	"compiled/*.html"
+    "compiled/test.js",
+    "compiled/*.html"
   ]
 }
