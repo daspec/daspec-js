@@ -15,7 +15,7 @@ DaSpec helps teams achieve those benefits by validating human-readable documents
 
 DaSpec's primary target are teams practising Behaviour Driven Development, Specification by Example, ATDD and generally running short, frequent delivery cycles with a heavy dependency on test automation. It can, however, be useful to anyone looking to reduce the cost of discovering outdated information in documentation and tests. 
 
-To read about the motivation behind DaSpec, check out [Why Another Tool](http://daspec.com/news/2015/08/08/why-another-tool.html).
+To read about the motivation behind DaSpec, check out [Why another tool?](http://daspec.com/news/2015/08/08/why-another-tool.html).
 
 ## Try it out in your browser
 
