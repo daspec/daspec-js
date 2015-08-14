@@ -87,4 +87,20 @@ module.exports = function RegexUtil() {
 		}
 		return new RegExp(regexTemplate);
 	};
+	this.getMatchedArguments = function (regex, text) {
+		var match = text.match(regex),
+			trim = function (val) {
+				return val.trim();
+			},
+			toNum = function (val) {
+				if (isNaN(val)) {
+					return val;
+				}
+				return parseFloat(val);
+			};
+		if (match) {
+			return match.slice(1).map(trim).map(toNum);
+		}
+		return [];
+	};
 };

@@ -61,7 +61,7 @@ describe('StepExecutor', function () {
 				matcher: /equal numbers (\d*) = (\d*)/,
 				stepText: 'equal numbers 5 = 5',
 				attachment: false,
-				assertions: [new Assertion('5', '5', true, 1)]
+				assertions: [new Assertion(5, 5, true, 1)]
 			});
 		});
 		it('should return result for non-positional failure', function () {
@@ -82,7 +82,7 @@ describe('StepExecutor', function () {
 				matcher: /equal numbers (\d*) = (\d*)/,
 				stepText: 'equal numbers 5 = 6',
 				attachment: false,
-				assertions: [new Assertion('6', '5', false, 1)]
+				assertions: [new Assertion(6, 5, false, 1)]
 			});
 		});
 		it('should return result for exceptions, with an exception in the step result', function () {

@@ -254,4 +254,21 @@ describe('regex util', function () {
 			expect(underTest.isEmpty('     X')).toBeFalsy();
 		});
 	});
+	describe('getMatchedArguments', function () {
+		it('returns a list of arguments matching the regex', function () {
+			expect(underTest.getMatchedArguments(/The ([A-Za-z]*) is ([A-Za-z]*)/, 'The CEO is Mike')).toEqual(['CEO', 'Mike']);
+		});
+		it('returns an empty array if the args do not match', function () {
+			expect(underTest.getMatchedArguments(/The ([A-Za-z]*) is ([A-Za-z]*)/, 'CEO is Mike')).toEqual([]);
+		});
+		it('optimistically converts integers to numbers', function () {
+			expect(underTest.getMatchedArguments(/The ([A-Za-z]*) is (.*) and (.*) and (.*)/, 'The CEO is 5 and -4 and 0')).toEqual(['CEO', 5, -4, 0]);
+		});
+		it('optimistically converts floats to numbers', function () {
+			expect(underTest.getMatchedArguments(/The ([A-Za-z]*) is (.*) and (.*) and (.*)/, 'The CEO is 3.5 and -0.01 and 0.001')).toEqual(['CEO', 3.5, -0.01, 0.001]);
+		});
+		it('trims strings', function () {
+			expect(underTest.getMatchedArguments(/The (.*) is (.*)/, 'The   CEO   is   Mike  ')).toEqual(['CEO', 'Mike']);
+		});
+	});
 });

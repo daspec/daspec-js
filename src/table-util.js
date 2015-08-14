@@ -18,7 +18,7 @@ module.exports = function TableUtil() {
 		values.pop();
 		values =  values.slice(1);
 		return values.map(function (v) {
-			return v.trim();
+			return v.trim(); //TODO: reuse regex util value cleanup
 		});
 	};
 	self.tableValuesForTitles = function (table, titles) {

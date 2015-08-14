@@ -6,7 +6,8 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		TableUtil = require('./table-util'),
 		RegExUtil = require('./regex-util'),
 		Assertion = require('./assertion'),
-		ExpectationBuilder = require('daspec-matchers').ExpectationBuilder;
+		ExpectationBuilder = require('daspec-matchers').ExpectationBuilder,
+		regexUtil = new RegExUtil();
 	self.match = function (stepText) {
 		if (stepText instanceof RegExp) {
 			return regexMatcher.source === stepText.source;
@@ -14,8 +15,7 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		return regexMatcher.test(stepText);
 	};
 	self.execute = function (stepText, attachment) {
-		var match = stepText.match(regexMatcher),
-			stepArgs = match.slice(1),
+		var stepArgs = regexUtil.getMatchedArguments(regexMatcher, stepText),
 			result = {
 				matcher: regexMatcher,
 				stepText: stepText,
@@ -24,10 +24,9 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 			},
 			stepContext = new StepContext(result),
 			expectationBuilder;
-		if (attachment) { /* we know it's a list and the symbol */
+		if (attachment) {
 			stepArgs.push(attachment);
 		}
-
 		expectationBuilder = new ExpectationBuilder(stepArgs);
 		specContext.expect = expectationBuilder.expect;
 
@@ -46,7 +45,6 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 	};
 	self.executeTableRow = function (dataRow, titleRow) {
 		var tableUtil = new TableUtil(),
-			regexUtil = new RegExUtil(),
 			stepArgs = tableUtil.cellValuesForRow(dataRow),
 			matcher = regexUtil.regexForTableDataRow(stepArgs.length),
 			result = {
