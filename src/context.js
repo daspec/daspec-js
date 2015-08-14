@@ -8,7 +8,14 @@ module.exports = function Context() {
 			return steps.filter(function (step) {
 				return step.match(stepText);
 			});
-		};
+		},
+		builder;
+	self.setExpectationBuilder = function (builderArg) {
+		builder = builderArg;
+	};
+	self.expect = function (actual) {
+		return builder.expect(actual);
+	};
 	self.defineStep = function (regexMatcher, processFunction) {
 		if (!regexMatcher) {
 			throw new Error('Empty matchers are not supported');
@@ -20,7 +27,7 @@ module.exports = function Context() {
 		if (matching.length > 0) {
 			throw new Error('The matching step is already defined');
 		}
-		steps.push(new StepExecutor(regexMatcher, processFunction, this));
+		steps.push(new StepExecutor(regexMatcher, processFunction, self));
 	};
 	self.getStepForLine = function (stepText) {
 		var matching = matchingSteps(stepText);

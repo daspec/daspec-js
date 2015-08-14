@@ -28,8 +28,9 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 			stepArgs.push(attachment);
 		}
 		expectationBuilder = new ExpectationBuilder(stepArgs);
-		specContext.expect = expectationBuilder.expect;
-
+		if (specContext && specContext.setExpectationBuilder) {
+			specContext.setExpectationBuilder(expectationBuilder);
+		}
 		try {
 			processFunction.apply(stepContext, stepArgs);
 			expectationBuilder.getAssertions().forEach(function (a) {
