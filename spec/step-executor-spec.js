@@ -6,13 +6,13 @@ describe('StepExecutor', function () {
 		Assertion = require('../src/assertion'),
 		underTest,
 		regexMatcher,
-		processFunction;
-
-
+		processFunction,
+		specContext;
 	beforeEach(function () {
 		regexMatcher = /this is a (.*)/;
+		specContext = {};
 		processFunction = jasmine.createSpy('processFunction');
-		underTest = new StepExecutor(regexMatcher, processFunction);
+		underTest = new StepExecutor(regexMatcher, processFunction, specContext);
 	});
 	describe('executeTableRow', function () {
 		it('should pass the the cell values to the process function as parameters - ' +
@@ -37,12 +37,12 @@ describe('StepExecutor', function () {
 		beforeEach(function () {
 			equalNumberStep = new StepExecutor(/equal numbers (\d*) = (\d*)/, function (first, second) {
 				this.assertEquals(second, first, 1);
-			});
+			}, specContext);
 		});
 		it('should return result for non-positional, without an assertion index', function () {
 			underTest = new StepExecutor(/this will pass/, function () {
 				this.assertEquals('expected', 'expected');
-			});
+			}, specContext);
 			var result = underTest.execute('this will pass -- whole line', false);
 			expect(result).toEqual(
 				{
@@ -67,7 +67,7 @@ describe('StepExecutor', function () {
 		it('should return result for non-positional failure', function () {
 			underTest = new StepExecutor(/this will fail/, function () {
 				this.assertEquals('expected', 'not expected');
-			});
+			}, specContext);
 			var result = underTest.execute('this will fail -- whole line', false);
 			expect(result).toEqual({
 				matcher: /this will fail/,
@@ -88,7 +88,7 @@ describe('StepExecutor', function () {
 		it('should return result for exceptions, with an exception in the step result', function () {
 			underTest = new StepExecutor(/throw ([a-z]*)/, function (msg) {
 				throw msg;
-			});
+			}, specContext);
 			var result = underTest.execute('throw blabla', false);
 			expect(result).toEqual({
 				matcher: /throw ([a-z]*)/,
@@ -102,7 +102,7 @@ describe('StepExecutor', function () {
 		it('receives a simple call for a list attachment', function () {
 			underTest = new StepExecutor(/list of ([a-z]*)/, function (title, list) {
 				this.assertSetEquals(list.items, [title]);
-			});
+			}, specContext);
 			var result = underTest.execute('list of yum', { type: 'list', ordered: false, items: ['yum'], symbol: '* ' });
 			expect(result).toEqual({
 				matcher: /list of ([a-z]*)/,
@@ -120,7 +120,7 @@ describe('StepExecutor', function () {
 		it('receives a simple call for a table attachment', function () {
 			underTest = new StepExecutor(/table of ([a-z]*)/, function (title, table) {
 				this.assertUnorderedTableEquals(table, [{name: 'yum'}]);
-			});
+			}, specContext);
 			var result = underTest.execute('table of yum', { type: 'table', titles: ['name'], items: [['yum']]});
 			expect(result).toEqual({
 				matcher: /table of ([a-z]*)/,

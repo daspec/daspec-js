@@ -26,12 +26,13 @@
   },
   "scripts": {
     "compile": "browserify src/daspec-test-main.js -o compiled/test.js && browserify src/daspec-web-main.js -o compiled/daspec-web.js",
-	"pretest": "jshint src spec",
+    "pretest": "jshint src spec",
     "test": "node spec/support/jasmine-runner.js"
   },
   "main": "./src/daspec-npm-main.js",
   "devDependencies": {
     "browserify": "^11.0.0",
+    "daspec-matchers": "file:../daspec-js-matchers",
     "jasmine": "^2.3.1",
     "jasmine-spec-reporter": "^2.4.0",
     "jshint": "^2.8.0"

@@ -20,7 +20,7 @@ module.exports = function Context() {
 		if (matching.length > 0) {
 			throw new Error('The matching step is already defined');
 		}
-		steps.push(new StepExecutor(regexMatcher, processFunction));
+		steps.push(new StepExecutor(regexMatcher, processFunction, this));
 	};
 	self.getStepForLine = function (stepText) {
 		var matching = matchingSteps(stepText);

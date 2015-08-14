@@ -2,7 +2,8 @@
 module.exports = function (ctx) {
 	'use strict';
 	ctx.defineStep(/Simple arithmetic: (\d*) plus (\d*) is (\d*)/, function (firstArg, secondArg, expectedResult) {
-		this.assertEquals(expectedResult, parseFloat(firstArg) + parseFloat(secondArg), 2);
+//		this.assertEquals(expectedResult, parseFloat(firstArg) + parseFloat(secondArg), 2);
+		ctx.expect(parseFloat(firstArg) + parseFloat(secondArg)).toEqual(parseFloat(expectedResult)).atPosition(2);
 	});
 	ctx.defineStep(/Simple arithmetic: (\d*) and (\d*) added is (\d*) and multiplied is (\d*)/, function (firstArg, secondArg, expectedAdd, expectedMultiply) {
 		this.assertEquals(expectedAdd, parseFloat(firstArg) + parseFloat(secondArg), 2);

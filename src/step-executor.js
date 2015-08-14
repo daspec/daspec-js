@@ -1,10 +1,12 @@
 /*global module, require*/
-module.exports = function StepExecutor(regexMatcher, processFunction) {
+module.exports = function StepExecutor(regexMatcher, processFunction, specContext) {
 	'use strict';
 	var self = this,
 		StepContext = require('./step-context'),
 		TableUtil = require('./table-util'),
-		RegExUtil = require('./regex-util');
+		RegExUtil = require('./regex-util'),
+		Assertion = require('./assertion'),
+		ExpectationBuilder = require('daspec-matchers').ExpectationBuilder;
 	self.match = function (stepText) {
 		if (stepText instanceof RegExp) {
 			return regexMatcher.source === stepText.source;
@@ -20,14 +22,20 @@ module.exports = function StepExecutor(regexMatcher, processFunction) {
 				attachment: attachment,
 				assertions: []
 			},
-			stepContext = new StepContext(result);
-
+			stepContext = new StepContext(result),
+			expectationBuilder;
 		if (attachment) { /* we know it's a list and the symbol */
 			stepArgs.push(attachment);
 		}
 
+		expectationBuilder = new ExpectationBuilder(stepArgs);
+		specContext.expect = expectationBuilder.expect;
+
 		try {
 			processFunction.apply(stepContext, stepArgs);
+			expectationBuilder.getAssertions().forEach(function (a) {
+				result.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
+			});
 		} catch (e) {
 			/* geniuine error, not assertion fail */
 			result.exception = e;
