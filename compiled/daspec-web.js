@@ -1,4 +1,197 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*global module, require */
+module.exports = function Expect(actualValue) {
+	'use strict';
+	var self = this,
+		ListUtil = require('./list-util'),
+		listUtil = new ListUtil(),
+		negated = false,
+		assertions = [],
+		addAssertion = function (didPass, expected, actual) {
+			var calcPassed = function (didPass) {
+					if (negated) {
+						return !didPass;
+					}
+					return didPass;
+				},
+				assertion = {actual: actual || actualValue, passed: calcPassed(didPass)};
+			if (expected) {
+				assertion.expected = expected;
+			}
+			assertions.push(assertion);
+			return assertion;
+		};
+	self.actual = actualValue;
+	Object.defineProperty(self, 'not', {get: function () {
+		negated = !negated;
+		return self;
+	}});
+	Object.defineProperty(self, 'assertions', {get: function () {
+		return assertions.slice(0);
+	}});
+	Object.defineProperty(self, 'lastAssertion', {get: function () {
+		if (assertions.length === 0) {
+			return;
+		}
+		return assertions[assertions.length - 1];
+	}});
+	self.atPosition = function (position) {
+		var last = self.lastAssertion;
+		if (last) {
+			last.position = position;
+		}
+		return self;
+	};
+	self.toEqual = function (expected) {
+		addAssertion(self.actual === expected, expected);
+		return self;
+	};
+
+	self.toBeTruthy = function () {
+		addAssertion(!!self.actual);
+		return self;
+	};
+	self.toBeFalsy = function () {
+		addAssertion(!self.actual);
+		return self;
+	};
+	self.toBeTrue = function () {
+		addAssertion(self.actual === true);
+		return self;
+	};
+	self.toBeFalse = function () {
+		addAssertion(self.actual === false);
+		return self;
+	};
+
+
+	self.toBeGreaterThan = function (expected) {
+		addAssertion(self.actual > expected, expected);
+		return self;
+	};
+	self.toBeLessThan = function (expected) {
+		self.expected = expected;
+		addAssertion(self.actual < expected, expected);
+		return self;
+	};
+	self.toBeGreaterThanOrEqual = function (expected) {
+		addAssertion(self.actual >= expected, expected);
+		return self;
+	};
+	self.toBeLessThanOrEqual = function (expected) {
+		addAssertion(self.actual <= expected, expected);
+		return self;
+	};
+	self.toBeBetween = function (range1, range2) {
+		self.toBeGreaterThanOrEqual(Math.min(range1, range2)).toBeLessThanOrEqual(Math.max(range1, range2));
+		return self;
+	};
+	self.toBeWithin = function (range1, range2) {
+		self.toBeGreaterThan(Math.min(range1, range2)).toBeLessThan(Math.max(range1, range2));
+		return self;
+	};
+	self.toEqualSet = function (expected) {
+		var listResult = listUtil.unorderedMatch(expected, actualValue);
+		addAssertion(listResult.matches, expected, listResult);
+		return self;
+	};
+
+};
+
+},{"./list-util":3}],2:[function(require,module,exports){
+/*global module, require */
+module.exports = function (stepArgumentArray) {
+	'use strict';
+	var Expect = require('./expect'),
+		expectations = [],
+		findPosition = function (expectation) {
+			if (expectation.position !== undefined) {
+				if (expectation.position >= 0 && expectation.position < stepArgumentArray.length) {
+					return expectation.position;
+				}
+				return;
+			}
+			var lastIndex = stepArgumentArray.lastIndexOf(expectation.expected);
+			if (lastIndex >= 0) {
+				return lastIndex;
+			}
+		};
+	this.expect = function (actual) {
+		var ex = new Expect(actual);
+		expectations.push(ex);
+		return ex;
+	};
+	this.getAssertions = function () {
+		var assertions = [];
+		expectations.forEach(function (expectation) {
+			var results = expectation.assertions;
+			// console.log('results', results);
+			results.forEach(function (result) {
+				var position = findPosition(result);
+				if (position !== undefined) {
+					result.position = position;
+				} else {
+					delete result.position;
+				}
+			});
+			assertions = assertions.concat(results);
+		});
+		return assertions;
+	};
+};
+
+},{"./expect":1}],3:[function(require,module,exports){
+/*global module*/
+module.exports = function ListUtil() {
+	'use strict';
+	var self = this,
+			arrayEquals = function (array1, array2) {
+				var i;
+				if (!Array.isArray(array1) || !Array.isArray(array2) || array1.length !== array2.length) {
+					return false;
+				}
+				for (i = 0; i < array1.length; i++) {
+					if (array2[i] != array1[i]) {
+						return false;
+					}
+				}
+				return true;
+			},
+			equals = function (item) {
+				if (Array.isArray(item)) {
+					return arrayEquals(item, this);
+				} else {
+					return item == this;
+				}
+			};
+	self.unorderedMatch = function (array1, array2) {
+		array1 = array1 || [];
+		array2 = array2 || [];
+		var matching = array1.filter(function (el) {
+				return array2.some(equals, el);
+			}),
+			missing = array1.filter(function (el) {
+				return !array2.some(equals, el);
+			}),
+			additional = array2.filter(function (el) {
+				return !array1.some(equals, el);
+			});
+		return {
+			matches: missing.length === 0 && additional.length === 0,
+			missing: missing,
+			additional: additional,
+			matching: matching
+		};
+	};
+};
+
+},{}],4:[function(require,module,exports){
+/*global module, require*/
+module.exports = {
+	ExpectationBuilder: require('./expectation-builder')
+};
+
+},{"./expectation-builder":2}],5:[function(require,module,exports){
 /*global module*/
 module.exports = function AssertionCounts() {
 	'use strict';
@@ -35,7 +228,7 @@ module.exports = function AssertionCounts() {
 	};
 };
 
-},{}],2:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /*global module*/
 module.exports = function Assertion(expected, actual, passed, outputIndex) {
 	'use strict';
@@ -46,7 +239,7 @@ module.exports = function Assertion(expected, actual, passed, outputIndex) {
 	self.expected = expected;
 };
 
-},{}],3:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /*global module, require*/
 module.exports = function Context() {
 	'use strict';
@@ -57,7 +250,14 @@ module.exports = function Context() {
 			return steps.filter(function (step) {
 				return step.match(stepText);
 			});
-		};
+		},
+		builder;
+	self.setExpectationBuilder = function (builderArg) {
+		builder = builderArg;
+	};
+	self.expect = function (actual) {
+		return builder.expect(actual);
+	};
 	self.defineStep = function (regexMatcher, processFunction) {
 		if (!regexMatcher) {
 			throw new Error('Empty matchers are not supported');
@@ -69,7 +269,7 @@ module.exports = function Context() {
 		if (matching.length > 0) {
 			throw new Error('The matching step is already defined');
 		}
-		steps.push(new StepExecutor(regexMatcher, processFunction));
+		steps.push(new StepExecutor(regexMatcher, processFunction, self));
 	};
 	self.getStepForLine = function (stepText) {
 		var matching = matchingSteps(stepText);
@@ -82,7 +282,7 @@ module.exports = function Context() {
 	};
 };
 
-},{"./step-executor":17}],4:[function(require,module,exports){
+},{"./step-executor":21}],8:[function(require,module,exports){
 /*global module, require*/
 module.exports = function CountingResultListener(runner) {
 	'use strict';
@@ -110,7 +310,7 @@ module.exports = function CountingResultListener(runner) {
 	});
 };
 
-},{"./assertion-counts":1}],5:[function(require,module,exports){
+},{"./assertion-counts":5}],9:[function(require,module,exports){
 /*global module, require */
 module.exports = {
 	Runner: require('./runner'),
@@ -119,14 +319,14 @@ module.exports = {
 	TableUtil: require('./table-util')
 };
 
-},{"./counting-result-listener":4,"./markdown-result-formatter":11,"./runner":15,"./table-util":18}],6:[function(require,module,exports){
+},{"./counting-result-listener":8,"./markdown-result-formatter":15,"./runner":19,"./table-util":22}],10:[function(require,module,exports){
 (function (global){
 /*global require, global*/
 
 global.DaSpec = require('./daspec-npm-main');
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./daspec-npm-main":5}],7:[function(require,module,exports){
+},{"./daspec-npm-main":9}],11:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlock() {
 	'use strict';
@@ -237,7 +437,7 @@ module.exports = function ExampleBlock() {
 	};
 };
 
-},{"./normaliser":12,"./regex-util":14,"./table-util":18}],8:[function(require,module,exports){
+},{"./normaliser":16,"./regex-util":18,"./table-util":22}],12:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlocks(inputText) {
 	'use strict';
@@ -261,52 +461,9 @@ module.exports = function ExampleBlocks(inputText) {
 	};
 };
 
-},{"./example-block":7}],9:[function(require,module,exports){
-/*global module*/
-module.exports = function ListUtil() {
-	'use strict';
-	var self = this,
-			arrayEquals = function (array1, array2) {
-				var i;
-				if (!Array.isArray(array1) || !Array.isArray(array2) || array1.length !== array2.length) {
-					return false;
-				}
-				for (i = 0; i < array1.length; i++) {
-					if (array2[i] != array1[i]) {
-						return false;
-					}
-				}
-				return true;
-			},
-			equals = function (item) {
-				if (Array.isArray(item)) {
-					return arrayEquals(item, this);
-				} else {
-					return item == this;
-				}
-			};
-	self.unorderedMatch = function (array1, array2) {
-		array1 = array1 || [];
-		array2 = array2 || [];
-		var matching = array1.filter(function (el) {
-				return array2.some(equals, el);
-			}),
-			missing = array1.filter(function (el) {
-				return !array2.some(equals, el);
-			}),
-			additional = array2.filter(function (el) {
-				return !array1.some(equals, el);
-			});
-		return {
-			matches: missing.length === 0 && additional.length === 0,
-			missing: missing,
-			additional: additional,
-			matching: matching
-		};
-	};
-};
-
-},{}],10:[function(require,module,exports){
+},{"./example-block":11}],13:[function(require,module,exports){
+arguments[4][3][0].apply(exports,arguments)
+},{"dup":3}],14:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkDownFormatter() {
 	'use strict';
@@ -484,7 +641,7 @@ module.exports = function MarkDownFormatter() {
 	};
 };
 
-},{"./regex-util":14,"./table-util":18}],11:[function(require,module,exports){
+},{"./regex-util":18,"./table-util":22}],15:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 	'use strict';
@@ -553,7 +710,7 @@ module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 
 };
 
-},{"./counting-result-listener":4,"./markdown-formatter":10,"./table-util":18}],12:[function(require,module,exports){
+},{"./counting-result-listener":8,"./markdown-formatter":14,"./table-util":22}],16:[function(require,module,exports){
 /*global module*/
 module.exports = function Normaliser() {
 	'use strict';
@@ -585,7 +742,7 @@ module.exports = function Normaliser() {
 	};
 };
 
-},{}],13:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /*global module, console*/
 /*jshint unused:false */
 module.exports = function observable(base) {
@@ -634,7 +791,7 @@ module.exports = function observable(base) {
 	return base;
 };
 
-},{}],14:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /*global module*/
 module.exports = function RegexUtil() {
 	'use strict';
@@ -724,9 +881,25 @@ module.exports = function RegexUtil() {
 		}
 		return new RegExp(regexTemplate);
 	};
+	this.getMatchedArguments = function (regex, text) {
+		var match = text.match(regex),
+			trim = function (val) {
+				return val.trim();
+			},
+			toNum = function (val) {
+				if (isNaN(val)) {
+					return val;
+				}
+				return parseFloat(val);
+			};
+		if (match) {
+			return match.slice(1).map(trim).map(toNum);
+		}
+		return [];
+	};
 };
 
-},{}],15:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /*global module, require*/
 module.exports = function Runner(stepFunc, config) {
 	'use strict';
@@ -843,7 +1016,7 @@ module.exports = function Runner(stepFunc, config) {
 	};
 };
 
-},{"./context":3,"./counting-result-listener":4,"./example-blocks":8,"./observable":13,"./regex-util":14}],16:[function(require,module,exports){
+},{"./context":7,"./counting-result-listener":8,"./example-blocks":12,"./observable":17,"./regex-util":18}],20:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepContext(result) {
 	'use strict';
@@ -883,14 +1056,17 @@ module.exports = function StepContext(result) {
 	};
 };
 
-},{"./assertion":2,"./list-util":9,"./table-util":18}],17:[function(require,module,exports){
+},{"./assertion":6,"./list-util":13,"./table-util":22}],21:[function(require,module,exports){
 /*global module, require*/
-module.exports = function StepExecutor(regexMatcher, processFunction) {
+module.exports = function StepExecutor(regexMatcher, processFunction, specContext) {
 	'use strict';
 	var self = this,
 		StepContext = require('./step-context'),
 		TableUtil = require('./table-util'),
-		RegExUtil = require('./regex-util');
+		RegExUtil = require('./regex-util'),
+		Assertion = require('./assertion'),
+		ExpectationBuilder = require('daspec-matchers').ExpectationBuilder,
+		regexUtil = new RegExUtil();
 	self.match = function (stepText) {
 		if (stepText instanceof RegExp) {
 			return regexMatcher.source === stepText.source;
@@ -898,22 +1074,27 @@ module.exports = function StepExecutor(regexMatcher, processFunction) {
 		return regexMatcher.test(stepText);
 	};
 	self.execute = function (stepText, attachment) {
-		var match = stepText.match(regexMatcher),
-			stepArgs = match.slice(1),
+		var stepArgs = regexUtil.getMatchedArguments(regexMatcher, stepText),
 			result = {
 				matcher: regexMatcher,
 				stepText: stepText,
 				attachment: attachment,
 				assertions: []
 			},
-			stepContext = new StepContext(result);
-
-		if (attachment) { /* we know it's a list and the symbol */
+			stepContext = new StepContext(result),
+			expectationBuilder;
+		if (attachment) {
 			stepArgs.push(attachment);
 		}
-
+		expectationBuilder = new ExpectationBuilder(stepArgs);
+		if (specContext && specContext.setExpectationBuilder) {
+			specContext.setExpectationBuilder(expectationBuilder);
+		}
 		try {
 			processFunction.apply(stepContext, stepArgs);
+			expectationBuilder.getAssertions().forEach(function (a) {
+				result.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
+			});
 		} catch (e) {
 			/* geniuine error, not assertion fail */
 			result.exception = e;
@@ -924,7 +1105,6 @@ module.exports = function StepExecutor(regexMatcher, processFunction) {
 	};
 	self.executeTableRow = function (dataRow, titleRow) {
 		var tableUtil = new TableUtil(),
-			regexUtil = new RegExUtil(),
 			stepArgs = tableUtil.cellValuesForRow(dataRow),
 			matcher = regexUtil.regexForTableDataRow(stepArgs.length),
 			result = {
@@ -947,7 +1127,7 @@ module.exports = function StepExecutor(regexMatcher, processFunction) {
 	};
 };
 
-},{"./regex-util":14,"./step-context":16,"./table-util":18}],18:[function(require,module,exports){
+},{"./assertion":6,"./regex-util":18,"./step-context":20,"./table-util":22,"daspec-matchers":4}],22:[function(require,module,exports){
 /*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
@@ -968,7 +1148,7 @@ module.exports = function TableUtil() {
 		values.pop();
 		values =  values.slice(1);
 		return values.map(function (v) {
-			return v.trim();
+			return v.trim(); //TODO: reuse regex util value cleanup
 		});
 	};
 	self.tableValuesForTitles = function (table, titles) {
@@ -1037,4 +1217,4 @@ module.exports = function TableUtil() {
 	};
 };
 
-},{"./normaliser":12,"./regex-util":14}]},{},[6]);
+},{"./normaliser":16,"./regex-util":18}]},{},[10]);

@@ -57,12 +57,21 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 			titleMatch = titleRow && titleRow.match(regexMatcher),
 			titleArgs = titleMatch && titleMatch.length > 1 && titleMatch.slice(1).map(function (item) {
 				return item.trim();
-			});
+			}),
+			expectationBuilder;
 
 		if (titleArgs) {
 			stepArgs = stepArgs.concat(titleArgs);
 		}
+		expectationBuilder = new ExpectationBuilder(stepArgs);
+		if (specContext && specContext.setExpectationBuilder) {
+			specContext.setExpectationBuilder(expectationBuilder);
+		}
+
 		processFunction.apply(stepContext, stepArgs);
+		expectationBuilder.getAssertions().forEach(function (a) {
+			result.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
+		});
 
 		return result;
 	};
