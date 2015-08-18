@@ -6,16 +6,11 @@ Release 1
 
 # Enable JS teams and their stakeholders to write markdown executable specs
 
-* ~~formatters as observers on runner~~
-* mark skipped steps
-	- ~~mark skipped lines by default by prepending `skipped`~~
-  - ~~allow skipped lines if global config has allowSkipped: true~~
-  - ~~use configured skipped line indicator in markdown config~~
+
 * optimistically convert to numbers whatever possible
 * allow assertSetEquals to work on lists (as well as arrays)
 * allow assertUnorderedTableEquals to work on simple two-dim arrays (not objects with titles)
 * flexible matcher library support (js hamcrest?)
-	* try to discover positions from expected values
 
 * concept solution for async -- just to make sure there won't be huge api changes
 * concept solution for before/after tags
@@ -39,13 +34,11 @@ Later Releases
 
 # Enable JS developers to easily install and integrate daspec
 
-* junit XML output
 * tap output
 * grunt integration
 * gulp integration
 * clean syntax for ~~step definitions~~ and assertions
 * simple syntax for async expectations
-
 
 # Enable JS developers to easily get started
 
@@ -58,6 +51,7 @@ Later Releases
 Done
 ----
 
+* ~~formatters as observers on runner~~
 * ~~support for tables~~
 * ~~web browser runner~~
 * ~~nodejs runner~~
@@ -73,3 +67,9 @@ Done
 * ~~clean build/test script using npm~~
 * ~~clean/simple pipeline for execution so people can easily understand what's going on where~~
 * ~~extract formatter module so people can make their own reporters easily~~
+* ~~junit XML output~~
+* ~~try to discover positions from expected values~~
+* mark skipped steps
+	- ~~mark skipped lines by default by prepending `skipped`~~
+  - ~~allow skipped lines if global config has allowSkipped: true~~
+  - ~~use configured skipped line indicator in markdown config~~
