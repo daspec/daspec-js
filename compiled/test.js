@@ -6,8 +6,13 @@ module.exports = function Expect(actualValue) {
 		ListUtil = require('./list-util'),
 		listUtil = new ListUtil(),
 		negated = false,
-		assertions = [],
-		addAssertion = function (didPass, expected, actual) {
+		assertions = [];
+	self.pushAssertions = function (pushedAssertions) {
+		if (pushedAssertions && pushedAssertions.length) {
+			assertions = assertions.concat(pushedAssertions);
+		}
+	};
+	self.addAssertion = function (didPass, expected, actual) {
 			var calcPassed = function (didPass) {
 					if (negated) {
 						return !didPass;
@@ -43,43 +48,43 @@ module.exports = function Expect(actualValue) {
 		return self;
 	};
 	self.toEqual = function (expected) {
-		addAssertion(self.actual === expected, expected);
+		self.addAssertion(self.actual === expected, expected);
 		return self;
 	};
 
 	self.toBeTruthy = function () {
-		addAssertion(!!self.actual);
+		self.addAssertion(!!self.actual);
 		return self;
 	};
 	self.toBeFalsy = function () {
-		addAssertion(!self.actual);
+		self.addAssertion(!self.actual);
 		return self;
 	};
 	self.toBeTrue = function () {
-		addAssertion(self.actual === true);
+		self.addAssertion(self.actual === true);
 		return self;
 	};
 	self.toBeFalse = function () {
-		addAssertion(self.actual === false);
+		self.addAssertion(self.actual === false);
 		return self;
 	};
 
 
 	self.toBeGreaterThan = function (expected) {
-		addAssertion(self.actual > expected, expected);
+		self.addAssertion(self.actual > expected, expected);
 		return self;
 	};
 	self.toBeLessThan = function (expected) {
 		self.expected = expected;
-		addAssertion(self.actual < expected, expected);
+		self.addAssertion(self.actual < expected, expected);
 		return self;
 	};
 	self.toBeGreaterThanOrEqual = function (expected) {
-		addAssertion(self.actual >= expected, expected);
+		self.addAssertion(self.actual >= expected, expected);
 		return self;
 	};
 	self.toBeLessThanOrEqual = function (expected) {
-		addAssertion(self.actual <= expected, expected);
+		self.addAssertion(self.actual <= expected, expected);
 		return self;
 	};
 	self.toBeBetween = function (range1, range2) {
@@ -92,7 +97,7 @@ module.exports = function Expect(actualValue) {
 	};
 	self.toEqualSet = function (expected) {
 		var listResult = listUtil.unorderedMatch(expected, actualValue);
-		addAssertion(listResult.matches, expected, listResult);
+		self.addAssertion(listResult.matches, expected, listResult);
 		return self;
 	};
 
@@ -100,10 +105,12 @@ module.exports = function Expect(actualValue) {
 
 },{"./list-util":3}],2:[function(require,module,exports){
 /*global module, require */
-module.exports = function (stepArgumentArray) {
+module.exports = function (stepArgumentArray, extensionsArray) {
 	'use strict';
-	var Expect = require('./expect'),
+	var self = this,
+		Expect = require('./expect'),
 		expectations = [],
+		extensions = extensionsArray || [],
 		findPosition = function (expectation) {
 			if (expectation.position !== undefined) {
 				if (expectation.position >= 0 && expectation.position < stepArgumentArray.length) {
@@ -116,12 +123,18 @@ module.exports = function (stepArgumentArray) {
 				return lastIndex;
 			}
 		};
-	this.expect = function (actual) {
-		var ex = new Expect(actual);
-		expectations.push(ex);
-		return ex;
+	self.expect = function (actual) {
+		var expect = new Expect(actual),
+			extensionName;
+		for (extensionName in extensionsArray) {
+			if (extensions.hasOwnProperty(extensionName) && typeof extensions[extensionName] === 'function') {
+				expect[extensionName] = extensions[extensionName].bind(expect);
+			}
+		}
+		expectations.push(expect);
+		return expect;
 	};
-	this.getAssertions = function () {
+	self.getAssertions = function () {
 		var assertions = [];
 		expectations.forEach(function (expectation) {
 			var results = expectation.assertions;
@@ -188,10 +201,11 @@ module.exports = function ListUtil() {
 },{}],4:[function(require,module,exports){
 /*global module, require*/
 module.exports = {
-	ExpectationBuilder: require('./expectation-builder')
+	ExpectationBuilder: require('./expectation-builder'),
+	Expect: require('./expect')
 };
 
-},{"./expectation-builder":2}],5:[function(require,module,exports){
+},{"./expect":1,"./expectation-builder":2}],5:[function(require,module,exports){
 /*global module*/
 module.exports = function AssertionCounts() {
 	'use strict';
@@ -282,7 +296,7 @@ module.exports = function Context() {
 	};
 };
 
-},{"./step-executor":20}],8:[function(require,module,exports){
+},{"./step-executor":19}],8:[function(require,module,exports){
 /*global module, require*/
 module.exports = function CountingResultListener(runner) {
 	'use strict';
@@ -321,7 +335,7 @@ global.DaSpec = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../test-data/test-steps":22,"./markdown-result-formatter":14,"./runner":18}],10:[function(require,module,exports){
+},{"../test-data/test-steps":21,"./markdown-result-formatter":14,"./runner":18}],10:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlock() {
 	'use strict';
@@ -432,7 +446,7 @@ module.exports = function ExampleBlock() {
 	};
 };
 
-},{"./normaliser":15,"./regex-util":17,"./table-util":21}],11:[function(require,module,exports){
+},{"./normaliser":15,"./regex-util":17,"./table-util":20}],11:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlocks(inputText) {
 	'use strict';
@@ -457,8 +471,42 @@ module.exports = function ExampleBlocks(inputText) {
 };
 
 },{"./example-block":10}],12:[function(require,module,exports){
-arguments[4][3][0].apply(exports,arguments)
-},{"dup":3}],13:[function(require,module,exports){
+/*global module, require*/
+module.exports = function expectationBuilderExtensions() {
+	'use strict';
+	var TableUtil = require('./table-util'),
+		tableUtil = new TableUtil(),
+		Expect = require('daspec-matchers').Expect;
+
+	return {
+		toEqualUnorderedTable: function (expected) {
+			var exp = this,
+				comparisonObject,
+				actual = exp.actual,
+				tableExpect;
+
+			if (!expected.titles) {
+				comparisonObject = actual;
+				if (actual.type === 'table' && Array.isArray(actual.items)) {
+					comparisonObject = actual.items;
+				}
+			} else {
+				if (actual.type === 'table' && Array.isArray(actual.items)) {
+					comparisonObject = tableUtil.tableValuesForTitles(actual, expected.titles);
+				}	else {
+					comparisonObject = tableUtil.objectArrayValuesForTitles(actual, expected.titles);
+				}
+			}
+			tableExpect = new Expect(comparisonObject).toEqualSet(expected.items);
+			exp.pushAssertions(tableExpect.assertions);
+			return exp;
+
+		}
+	};
+
+};
+
+},{"./table-util":20,"daspec-matchers":4}],13:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkDownFormatter() {
 	'use strict';
@@ -636,7 +684,7 @@ module.exports = function MarkDownFormatter() {
 	};
 };
 
-},{"./regex-util":17,"./table-util":21}],14:[function(require,module,exports){
+},{"./regex-util":17,"./table-util":20}],14:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 	'use strict';
@@ -705,7 +753,7 @@ module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 
 };
 
-},{"./counting-result-listener":8,"./markdown-formatter":13,"./table-util":21}],15:[function(require,module,exports){
+},{"./counting-result-listener":8,"./markdown-formatter":13,"./table-util":20}],15:[function(require,module,exports){
 /*global module*/
 module.exports = function Normaliser() {
 	'use strict';
@@ -1013,55 +1061,17 @@ module.exports = function Runner(stepFunc, config) {
 
 },{"./context":7,"./counting-result-listener":8,"./example-blocks":11,"./observable":16,"./regex-util":17}],19:[function(require,module,exports){
 /*global module, require*/
-module.exports = function StepContext(result) {
-	'use strict';
-	var self = this,
-			ListUtil = require('./list-util'),
-			TableUtil = require('./table-util'),
-			Assertion = require('./assertion'),
-			tableUtil = new TableUtil(),
-			listUtil = new ListUtil();
-	self.assertEquals = function (expected, actual, optionalOutputIndex) {
-		var	passed = expected == actual;
-		result.assertions.push(new Assertion(expected,
-					actual,
-					passed, optionalOutputIndex));
-	};
-	self.assertUnorderedTableEquals = function (expected, actual) {
-		var comparisonObject;
-		if (!expected.titles) {
-			comparisonObject = actual;
-			if (actual.type === 'table' && Array.isArray(actual.items)) {
-				comparisonObject = actual.items;
-			}
-		} else {
-			if (actual.type === 'table' && Array.isArray(actual.items)) {
-				comparisonObject = tableUtil.tableValuesForTitles(actual, expected.titles);
-			}	else {
-				comparisonObject = tableUtil.objectArrayValuesForTitles(actual, expected.titles);
-			}
-		}
-		return self.assertSetEquals(expected.items, comparisonObject);
-	};
-	self.assertSetEquals = function (expected, actual) {
-		var listResult = listUtil.unorderedMatch(expected, actual);
-		result.assertions.push(new Assertion(expected,
-					listResult,
-					listResult.matches));
-	};
-};
-
-},{"./assertion":6,"./list-util":12,"./table-util":21}],20:[function(require,module,exports){
-/*global module, require*/
 module.exports = function StepExecutor(regexMatcher, processFunction, specContext) {
 	'use strict';
 	var self = this,
-		StepContext = require('./step-context'),
 		TableUtil = require('./table-util'),
+		tableUtil = new TableUtil(),
 		RegExUtil = require('./regex-util'),
 		Assertion = require('./assertion'),
 		ExpectationBuilder = require('daspec-matchers').ExpectationBuilder,
-		regexUtil = new RegExUtil();
+		regexUtil = new RegExUtil(),
+		expectExtensions = require('./expectation-builder-extensions')();
+
 	self.match = function (stepText) {
 		if (stepText instanceof RegExp) {
 			return regexMatcher.source === stepText.source;
@@ -1076,17 +1086,16 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 				attachment: attachment,
 				assertions: []
 			},
-			stepContext = new StepContext(result),
 			expectationBuilder;
 		if (attachment) {
 			stepArgs.push(attachment);
 		}
-		expectationBuilder = new ExpectationBuilder(stepArgs);
+		expectationBuilder = new ExpectationBuilder(stepArgs, expectExtensions);
 		if (specContext && specContext.setExpectationBuilder) {
 			specContext.setExpectationBuilder(expectationBuilder);
 		}
 		try {
-			processFunction.apply(stepContext, stepArgs);
+			processFunction.apply(specContext, stepArgs);
 			expectationBuilder.getAssertions().forEach(function (a) {
 				result.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
 			});
@@ -1099,30 +1108,37 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		return result;
 	};
 	self.executeTableRow = function (dataRow, titleRow) {
-		var tableUtil = new TableUtil(),
-			stepArgs = tableUtil.cellValuesForRow(dataRow),
+		var stepArgs = tableUtil.cellValuesForRow(dataRow),
 			matcher = regexUtil.regexForTableDataRow(stepArgs.length),
 			result = {
 				matcher: matcher,
 				stepText: dataRow,
 				assertions: []
 			},
-			stepContext = new StepContext(result),
 			titleMatch = titleRow && titleRow.match(regexMatcher),
 			titleArgs = titleMatch && titleMatch.length > 1 && titleMatch.slice(1).map(function (item) {
 				return item.trim();
-			});
+			}),
+			expectationBuilder;
 
 		if (titleArgs) {
 			stepArgs = stepArgs.concat(titleArgs);
 		}
-		processFunction.apply(stepContext, stepArgs);
+		expectationBuilder = new ExpectationBuilder(stepArgs, expectExtensions);
+		if (specContext && specContext.setExpectationBuilder) {
+			specContext.setExpectationBuilder(expectationBuilder);
+		}
+
+		processFunction.apply(specContext, stepArgs);
+		expectationBuilder.getAssertions().forEach(function (a) {
+			result.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
+		});
 
 		return result;
 	};
 };
 
-},{"./assertion":6,"./regex-util":17,"./step-context":19,"./table-util":21,"daspec-matchers":4}],21:[function(require,module,exports){
+},{"./assertion":6,"./expectation-builder-extensions":12,"./regex-util":17,"./table-util":20,"daspec-matchers":4}],20:[function(require,module,exports){
 /*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
@@ -1212,31 +1228,31 @@ module.exports = function TableUtil() {
 	};
 };
 
-},{"./normaliser":15,"./regex-util":17}],22:[function(require,module,exports){
+},{"./normaliser":15,"./regex-util":17}],21:[function(require,module,exports){
 /*global module*/
 module.exports = function (ctx) {
 	'use strict';
 	ctx.defineStep(/Simple arithmetic: (\d*) plus (\d*) is (\d*)/, function (firstArg, secondArg, expectedResult) {
-		ctx.expect(firstArg + secondArg).toEqual(expectedResult);
+		this.expect(firstArg + secondArg).toEqual(expectedResult);
 	});
 	ctx.defineStep(/Simple arithmetic: (\d*) and (\d*) added is (\d*) and multiplied is (\d*)/, function (firstArg, secondArg, expectedAdd, expectedMultiply) {
-		ctx.expect(firstArg + secondArg).toEqual(expectedAdd).atPosition(2);
-		ctx.expect(firstArg * secondArg).toEqual(expectedMultiply);
+		this.expect(firstArg + secondArg).toEqual(expectedAdd).atPosition(2);
+		this.expect(firstArg * secondArg).toEqual(expectedMultiply);
 	});
 	ctx.defineStep(/Multiple Assertions (\d*) is (\d*) and (.*)/, function (num1, num2, lineStatus) {
-		ctx.expect(num1).toEqual(num2).atPosition(1);
-		ctx.expect(lineStatus === 'passes').toBeTruthy();
+		this.expect(num1).toEqual(num2).atPosition(1);
+		this.expect(lineStatus === 'passes').toBeTruthy();
 	});
 	ctx.defineStep(/Multiple Assertions line ([a-z]*) and ([a-z]*)/, function (lineStatus1, lineStatus2) {
-		ctx.expect(lineStatus1 === 'passes').toBeTruthy();
-		ctx.expect(lineStatus2 === 'passes').toBeTruthy();
+		this.expect(lineStatus1 === 'passes').toBeTruthy();
+		this.expect(lineStatus2 === 'passes').toBeTruthy();
 	});
 	ctx.defineStep(/Star Wars has the following episodes:/, function (listOfEpisodes) {
 		var episodes = [
 			'A New Hope',
 			'The Empire Strikes Back',
 			'Return of the Jedi'];
-		ctx.expect(episodes).toEqualSet(listOfEpisodes.items);
+		this.expect(episodes).toEqualSet(listOfEpisodes.items);
 	});
 	var films = {}, tables = {};
 	ctx.defineStep(/These are the ([A-Za-z ]*) Films/, function (seriesName, tableOfReleases) {
@@ -1245,15 +1261,14 @@ module.exports = function (ctx) {
 	});
 	ctx.defineStep(/In total there a (\d*) ([A-Za-z ]*) Films/, function (numberOfFilms, seriesName) {
 		var actual = (films[seriesName] && films[seriesName].length) || 0;
-		ctx.expect(actual).toEqual(numberOfFilms);
+		this.expect(actual).toEqual(numberOfFilms);
 	});
 	ctx.defineStep(/Good ([A-Za-z ]*) Films are/, function (seriesName, listOfEpisodes) {
 		var actual = films[seriesName];
-		ctx.expect(actual).toEqualSet(listOfEpisodes.items);
-		// this.assertSetEquals(listOfEpisodes.items, actual);
+		this.expect(actual).toEqualSet(listOfEpisodes.items);
 	});
 	ctx.defineStep(/Check ([A-Za-z ]*) Films/, function (seriesName, listOfEpisodes) {
-		this.assertUnorderedTableEquals(listOfEpisodes, tables[seriesName]);
+		this.expect(tables[seriesName]).toEqualUnorderedTable(listOfEpisodes);
 	});
 	ctx.defineStep(/List can contain sub lists/, function () {
 
@@ -1264,9 +1279,9 @@ module.exports = function (ctx) {
 				return film[0] === episode;
 			}),
 			actualYear = matching && matching.length > 0 && matching[0][1];
-		this.assertEquals(true, !!series);
-		this.assertEquals(true, !!matching && matching.length);
-		this.assertEquals(yearOfRelease, actualYear, 1);
+		this.expect(series).toBeTruthy();
+		this.expect(!!matching && matching.length).toBeTruthy();
+		this.expect(actualYear).toEqual(yearOfRelease);
 	});
 
 	ctx.defineStep(/\| Positional Check episodes of ([A-Za-z ]*) \| Year of release \|/, function (episode, yearOfRelease, seriesName) {
@@ -1275,8 +1290,7 @@ module.exports = function (ctx) {
 				return film[0] === episode;
 			}),
 			actualYear = matching && matching.length > 0 && matching[0][1];
-		ctx.expect(actualYear).toEqual(yearOfRelease).atPosition(1);
-		//this.assertEquals(yearOfRelease, actualYear, 1);
+		this.expect(actualYear).toEqual(yearOfRelease).atPosition(1);
 	});
 
 };

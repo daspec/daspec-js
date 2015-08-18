@@ -6,27 +6,27 @@ describe('Runner', function () {
 		runner,
 		stepFunc = function (context) {
 			context.defineStep(/this will pass/, function () {
-				this.assertEquals('expected', 'expected');
+				context.expect('expected').toEqual('expected');
 			});
 			context.defineStep(/this has no assertions/, function () {
 			});
 			context.defineStep(/this will fail/, function () {
-				this.assertEquals('expected', 'not expected');
+				context.expect('expected').toEqual('not expected');
 			});
 			context.defineStep(/equal numbers (\d*) = (\d*)/, function (first, second) {
-				this.assertEquals(second, first, 1);
+				context.expect(second).toEqual(first);
 			});
 			context.defineStep(/table of ([a-z]*)/, function (title, table) {
-				this.assertUnorderedTableEquals(table, [{name: 'yum'}]);
+				context.expect([{name: 'yum'}]).toEqualUnorderedTable(table);
 			});
 			context.defineStep(/list of ([a-z]*)/, function (title, list) {
-				this.assertSetEquals(list.items, [title]);
+				context.expect([title]).toEqualSet(list.items);
 			});
 			context.defineStep(/throw ([a-z]*)/, function (msg) {
 				throw msg;
 			});
 			context.defineStep(/\| number one \| number two \|/, function (first, second) {
-				this.assertEquals(second, first, 1);
+				context.expect(first).toEqual(second).atPosition(1);
 			});
 		},
 		config,

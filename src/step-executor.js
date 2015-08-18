@@ -2,12 +2,14 @@
 module.exports = function StepExecutor(regexMatcher, processFunction, specContext) {
 	'use strict';
 	var self = this,
-		StepContext = require('./step-context'),
 		TableUtil = require('./table-util'),
+		tableUtil = new TableUtil(),
 		RegExUtil = require('./regex-util'),
 		Assertion = require('./assertion'),
 		ExpectationBuilder = require('daspec-matchers').ExpectationBuilder,
-		regexUtil = new RegExUtil();
+		regexUtil = new RegExUtil(),
+		expectExtensions = require('./expectation-builder-extensions')();
+
 	self.match = function (stepText) {
 		if (stepText instanceof RegExp) {
 			return regexMatcher.source === stepText.source;
@@ -22,17 +24,16 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 				attachment: attachment,
 				assertions: []
 			},
-			stepContext = new StepContext(result),
 			expectationBuilder;
 		if (attachment) {
 			stepArgs.push(attachment);
 		}
-		expectationBuilder = new ExpectationBuilder(stepArgs);
+		expectationBuilder = new ExpectationBuilder(stepArgs, expectExtensions);
 		if (specContext && specContext.setExpectationBuilder) {
 			specContext.setExpectationBuilder(expectationBuilder);
 		}
 		try {
-			processFunction.apply(stepContext, stepArgs);
+			processFunction.apply(specContext, stepArgs);
 			expectationBuilder.getAssertions().forEach(function (a) {
 				result.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
 			});
@@ -45,15 +46,13 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		return result;
 	};
 	self.executeTableRow = function (dataRow, titleRow) {
-		var tableUtil = new TableUtil(),
-			stepArgs = tableUtil.cellValuesForRow(dataRow),
+		var stepArgs = tableUtil.cellValuesForRow(dataRow),
 			matcher = regexUtil.regexForTableDataRow(stepArgs.length),
 			result = {
 				matcher: matcher,
 				stepText: dataRow,
 				assertions: []
 			},
-			stepContext = new StepContext(result),
 			titleMatch = titleRow && titleRow.match(regexMatcher),
 			titleArgs = titleMatch && titleMatch.length > 1 && titleMatch.slice(1).map(function (item) {
 				return item.trim();
@@ -63,12 +62,12 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		if (titleArgs) {
 			stepArgs = stepArgs.concat(titleArgs);
 		}
-		expectationBuilder = new ExpectationBuilder(stepArgs);
+		expectationBuilder = new ExpectationBuilder(stepArgs, expectExtensions);
 		if (specContext && specContext.setExpectationBuilder) {
 			specContext.setExpectationBuilder(expectationBuilder);
 		}
 
-		processFunction.apply(stepContext, stepArgs);
+		processFunction.apply(specContext, stepArgs);
 		expectationBuilder.getAssertions().forEach(function (a) {
 			result.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
 		});
