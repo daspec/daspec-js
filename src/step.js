@@ -1,5 +1,5 @@
 /*global module, require */
-module.exports = function Step (specContext, processFunction) {
+module.exports = function Step(specContext, processFunction) {
 	'use strict';
 	var self = this,
 		ExpectationBuilder = require('./expectation-builder'),

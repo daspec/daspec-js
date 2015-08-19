@@ -105,6 +105,7 @@ module.exports = function Runner(stepFunc, config) {
 					sendLineEvent('stepResult', executor.execute(line, blockParam));
 				});
 			};
+		context.exportToGlobal();
 		standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);
 		stepFunc.apply(context, [context]);
 		self.dispatchEvent('specStarted', exampleName);
@@ -116,5 +117,6 @@ module.exports = function Runner(stepFunc, config) {
 			}
 		});
 		self.dispatchEvent('specEnded', exampleName, counts.current);
+		context.unexportFromGlobal();
 	};
 };
