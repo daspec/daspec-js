@@ -1,11 +1,11 @@
 /*global describe, beforeEach, require, expect, it*/
-describe('expectation builder extensions', function () {
+describe('table matchers', function () {
 	'use strict';
 	var underTest,
 		ExpectationBuilder = require('../src/expectation-builder'),
-		expectExtensions = require('../src/expectation-builder-extensions')();
+		tableMatcher = require('../src/matchers/table');
 	beforeEach(function () {
-		underTest = new ExpectationBuilder([], expectExtensions);
+		underTest = new ExpectationBuilder([], tableMatcher);
 	});
 	describe('toEqualUnorderedTable', function () {
 		it('compares two tables on row values, returning missing/additional/matching', function () {
