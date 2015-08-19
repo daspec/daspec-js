@@ -6,27 +6,27 @@ describe('Runner', function () {
 		runner,
 		stepFunc = function (context) {
 			context.defineStep(/this will pass/, function () {
-				context.expect('expected').toEqual('expected');
+				expect('expected').toEqual('expected');
 			});
 			context.defineStep(/this has no assertions/, function () {
 			});
 			context.defineStep(/this will fail/, function () {
-				context.expect('expected').toEqual('not expected');
+				expect('expected').toEqual('not expected');
 			});
 			context.defineStep(/equal numbers (\d*) = (\d*)/, function (first, second) {
-				context.expect(second).toEqual(first);
+				expect(second).toEqual(first);
 			});
 			context.defineStep(/table of ([a-z]*)/, function (title, table) {
-				context.expect([{name: 'yum'}]).toEqualUnorderedTable(table);
+				expect([{name: 'yum'}]).toEqualUnorderedTable(table);
 			});
 			context.defineStep(/list of ([a-z]*)/, function (title, list) {
-				context.expect([title]).toEqualSet(list.items);
+				expect([title]).toEqualSet(list.items);
 			});
 			context.defineStep(/throw ([a-z]*)/, function (msg) {
 				throw msg;
 			});
 			context.defineStep(/\| number one \| number two \|/, function (first, second) {
-				context.expect(first).toEqual(second).atPosition(1);
+				expect(first).toEqual(second).atPosition(1);
 			});
 		},
 		config,
@@ -255,19 +255,19 @@ describe('Runner', function () {
 			it('event for steps without an attachment', function () {
 				runner.execute('this will pass -- whole line', 'thespecname');
 				expect(listeners.stepResult).toHaveBeenCalledWith(
-					{
+					jasmine.objectContaining({
 						matcher: /this will pass/,
 						stepText: 'this will pass -- whole line',
 						attachment: false,
 						assertions: [new Assertion('expected', 'expected', true)]
-					},
+					}),
 					1,
 					'thespecname'
 				);
 			});
 			it('receives a simple call with an attachment', function () {
 				runner.execute('list of yum\n* yum', 'thespecname');
-				expect(listeners.stepResult).toHaveBeenCalledWith({
+				expect(listeners.stepResult).toHaveBeenCalledWith(jasmine.objectContaining({
 						matcher: /list of ([a-z]*)/,
 						stepText: 'list of yum',
 						attachment: { type: 'list', ordered: false, items: ['yum'], symbol: '* ' },
@@ -278,7 +278,7 @@ describe('Runner', function () {
 								true
 							)
 						]
-					},
+					}),
 					1,
 					'thespecname'
 				);
@@ -327,8 +327,8 @@ describe('Runner', function () {
 			it('the tableResultBlock result receives table data rows as stepResult', function () {
 				runner.execute('#comment 1\n| number one | number two |\n|------|\n| 4 | 4 |\n|--|--|\n| 4 | 5 |', 'thespecname');
 				expect(listeners.stepResult.calls.allArgs()).toEqual([
-					[{ matcher: /\|(.*)\|(.*)\|/, stepText: '| 4 | 4 |', assertions: [new Assertion('4', '4', true, 1)]}, 4, 'thespecname'],
-					[{ matcher: /\|(.*)\|(.*)\|/, stepText: '| 4 | 5 |', assertions: [new Assertion('5', '4', false, 1)]}, 6, 'thespecname']
+					[jasmine.objectContaining({ matcher: /\|(.*)\|(.*)\|/, stepText: '| 4 | 4 |', assertions: [new Assertion('4', '4', true, 1)]}), 4, 'thespecname'],
+					[jasmine.objectContaining({ matcher: /\|(.*)\|(.*)\|/, stepText: '| 4 | 5 |', assertions: [new Assertion('5', '4', false, 1)]}), 6, 'thespecname']
 				]);
 			});
 		});

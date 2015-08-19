@@ -101,7 +101,7 @@ module.exports = function Runner(stepFunc, config) {
 					sendLineEvent('stepResult', step.execute(line, blockParam));
 				});
 			};
-		standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);
+		standardMatchers.concat((config && config.matchers) || []).map(require).forEach(context.addMatchers);
 		stepFunc.apply(context, [context]);
 		self.dispatchEvent('specStarted', exampleName);
 		blocks.getBlocks().forEach(function (block) {

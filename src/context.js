@@ -1,4 +1,4 @@
-/*global module, require*/
+/*global module, require, global*/
 module.exports = function Context() {
 	'use strict';
 	var self = this,
@@ -11,9 +11,27 @@ module.exports = function Context() {
 				return step.match(stepText);
 			});
 		},
-		builder;
+		builder,
+		globalOverrides = {} ;
 	self.addMatchers = function (matcherObject) {
 		expectationMatchers.push(matcherObject);
+	};
+	self.getMatchers = function () {
+		return expectationMatchers;
+	};
+	self.overrideGlobal = function (propname, value) {
+		if (!globalOverrides[propname]) {
+			globalOverrides[propname] = global[propname];
+		}
+		global[propname] = value;
+		//TODO write tests
+	};
+	self.resetGlobal = function () {
+		var propname;
+		for (propname in globalOverrides) {
+			global[propname] = globalOverrides[propname];
+		}
+		globalOverrides = {};
 	};
 	self.setExpectationBuilder = function (builderArg) {
 		builder = builderArg;

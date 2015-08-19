@@ -5,10 +5,8 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		TableUtil = require('./table-util'),
 		tableUtil = new TableUtil(),
 		RegExUtil = require('./regex-util'),
-		Assertion = require('./assertion'),
-		ExpectationBuilder = require('./expectation-builder'),
-		regexUtil = new RegExUtil(),
-		expectExtensions = require('./matchers/table');
+		Step = require('./step'),
+		regexUtil = new RegExUtil();
 
 	self.match = function (stepText) {
 		if (stepText instanceof RegExp) {
@@ -17,61 +15,30 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		return regexMatcher.test(stepText);
 	};
 	self.execute = function (stepText, attachment) {
-		var stepArgs = regexUtil.getMatchedArguments(regexMatcher, stepText),
-			result = {
-				matcher: regexMatcher,
-				stepText: stepText,
-				attachment: attachment,
-				assertions: []
-			},
-			expectationBuilder;
+		var step = new Step(specContext, processFunction);
+		step.stepArgs = regexUtil.getMatchedArguments(regexMatcher, stepText);
+		step.matcher = regexMatcher;
+		step.stepText = stepText;
+		step.attachment = attachment;
 		if (attachment) {
-			stepArgs.push(attachment);
+			step.stepArgs.push(attachment);
 		}
-		expectationBuilder = new ExpectationBuilder(stepArgs, expectExtensions);
-		if (specContext && specContext.setExpectationBuilder) {
-			specContext.setExpectationBuilder(expectationBuilder);
-		}
-		try {
-			processFunction.apply(specContext, stepArgs);
-			expectationBuilder.getAssertions().forEach(function (a) {
-				result.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
-			});
-		} catch (e) {
-			/* geniuine error, not assertion fail */
-			result.exception = e;
-		}
-
-
-		return result;
+		step.execute();
+		return step;
 	};
 	self.executeTableRow = function (dataRow, titleRow) {
-		var stepArgs = tableUtil.cellValuesForRow(dataRow),
-			matcher = regexUtil.regexForTableDataRow(stepArgs.length),
-			result = {
-				matcher: matcher,
-				stepText: dataRow,
-				assertions: []
-			},
-			titleMatch = titleRow && titleRow.match(regexMatcher),
+		var titleMatch = titleRow && titleRow.match(regexMatcher),
 			titleArgs = titleMatch && titleMatch.length > 1 && titleMatch.slice(1).map(function (item) {
 				return item.trim();
 			}),
-			expectationBuilder;
-
+			step = new Step(specContext, processFunction);
+		step.stepArgs = tableUtil.cellValuesForRow(dataRow);
+		step.matcher = regexUtil.regexForTableDataRow(step.stepArgs.length);
+		step.stepText = dataRow;
 		if (titleArgs) {
-			stepArgs = stepArgs.concat(titleArgs);
+			step.stepArgs = step.stepArgs.concat(titleArgs);
 		}
-		expectationBuilder = new ExpectationBuilder(stepArgs, expectExtensions);
-		if (specContext && specContext.setExpectationBuilder) {
-			specContext.setExpectationBuilder(expectationBuilder);
-		}
-
-		processFunction.apply(specContext, stepArgs);
-		expectationBuilder.getAssertions().forEach(function (a) {
-			result.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
-		});
-
-		return result;
+		step.execute();
+		return step;
 	};
 };
