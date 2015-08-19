@@ -3,7 +3,7 @@ module.exports = function expectationBuilderExtensions() {
 	'use strict';
 	var TableUtil = require('./table-util'),
 		tableUtil = new TableUtil(),
-		Expect = require('daspec-matchers').Expect;
+		Expect = require('./expect');
 
 	return {
 		toEqualUnorderedTable: function (expected) {

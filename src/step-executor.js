@@ -6,7 +6,7 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		tableUtil = new TableUtil(),
 		RegExUtil = require('./regex-util'),
 		Assertion = require('./assertion'),
-		ExpectationBuilder = require('daspec-matchers').ExpectationBuilder,
+		ExpectationBuilder = require('./expectation-builder'),
 		regexUtil = new RegExUtil(),
 		expectExtensions = require('./expectation-builder-extensions')();
 

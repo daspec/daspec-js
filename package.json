@@ -32,7 +32,6 @@
   "main": "./src/daspec-npm-main.js",
   "devDependencies": {
     "browserify": "^11.0.0",
-    "daspec-matchers": "file:../daspec-js-matchers",
     "jasmine": "^2.3.1",
     "jasmine-spec-reporter": "^2.4.0",
     "jshint": "^2.8.0"

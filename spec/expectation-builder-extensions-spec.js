@@ -2,7 +2,7 @@
 describe('expectation builder extensions', function () {
 	'use strict';
 	var underTest,
-		ExpectationBuilder = require('daspec-matchers').ExpectationBuilder,
+		ExpectationBuilder = require('../src/expectation-builder'),
 		expectExtensions = require('../src/expectation-builder-extensions')();
 	beforeEach(function () {
 		underTest = new ExpectationBuilder([], expectExtensions);
