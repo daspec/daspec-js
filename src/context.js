@@ -1,5 +1,5 @@
 /*global module, global*/
-module.exports = function Context(globalObject) {
+module.exports = function Context() {
 	'use strict';
 	var self = this,
 		steps = [],
@@ -8,7 +8,10 @@ module.exports = function Context(globalObject) {
 			if (stepText instanceof RegExp) {
 				return stepDefinition.matcher.source === stepText.source;
 			}
-			return stepDefinition.matcher.test(stepText); // TODO: make sure re-entrant
+			if (!stepText) {
+				return false;
+			}
+			return !!stepText.match(stepDefinition.matcher);
 		},
 		matchingSteps = function (stepText) {
 			return steps.filter(function (stepDefinition) {
@@ -19,20 +22,17 @@ module.exports = function Context(globalObject) {
 		exportedOverrides = {},
 		overrideGlobal = function (map, propname, value) {
 			if (!map[propname]) {
-				map[propname] = globalObject[propname];
+				map[propname] = global[propname];
 			}
-			globalObject[propname] = value;
-			//TODO write tests
+			global[propname] = value;
 		},
 		resetGlobal = function (map) {
 			var propname;
 			for (propname in map) {
-				globalObject[propname] = map[propname];
+				global[propname] = map[propname];
 				delete map[propname];
 			}
 		};
-
-	globalObject = globalObject || global;
 	self.exportToGlobal = function () {
 		overrideGlobal(exportedOverrides, 'defineStep',  self.defineStep);
 		overrideGlobal(exportedOverrides, 'addMatchers',  self.addMatchers);

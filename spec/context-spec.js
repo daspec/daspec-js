@@ -1,4 +1,4 @@
-/*global require, describe, it, expect, beforeEach, jasmine */
+/*global require, describe, it, expect, beforeEach, jasmine, global */
 
 describe('Context', function () {
 	'use strict';
@@ -7,6 +7,10 @@ describe('Context', function () {
 		processor,
 		processorTwo;
 	beforeEach(function () {
+		global.defineStep = 'old-global-definestep';
+		global.addMatchers = 'old-global-addmatchers';
+		global.key = 'old-global-key';
+		global.subkey =  'old-global-subkey';
 		underTest = new Context();
 		processor = jasmine.createSpy('processor');
 		processorTwo = jasmine.createSpy('processorTwo');
@@ -18,6 +22,72 @@ describe('Context', function () {
 			expect(underTest.getMatchers()).toEqual(['x', 'y']);
 		});
 	});
+	describe('exportToGlobal', function () {
+		it('replaces defineStep and addMatchers in global', function () {
+			underTest.exportToGlobal();
+			expect(global.defineStep).toBe(underTest.defineStep);
+			expect(global.addMatchers).toBe(underTest.addMatchers);
+		});
+	});
+	describe('unexportFromGlobal', function () {
+		it('reverts an export to global', function () {
+			underTest.exportToGlobal();
+			underTest.unexportFromGlobal();
+			expect(global.defineStep).toEqual('old-global-definestep');
+			expect(global.addMatchers).toBe('old-global-addmatchers');
+		});
+		it('works even if export called several times in sequence', function () {
+			underTest.exportToGlobal();
+			underTest.exportToGlobal();
+			underTest.unexportFromGlobal();
+			expect(global.defineStep).toEqual('old-global-definestep');
+			expect(global.addMatchers).toBe('old-global-addmatchers');
+		});
+	});
+	describe('overrideGlobal', function () {
+		it('replaces a named property in global', function () {
+			underTest.overrideGlobal('subkey', 'new one');
+			expect(global.subkey).toEqual('new one');
+		});
+		it('can be called multiple times for different properties', function () {
+			underTest.overrideGlobal('subkey', 'new one');
+			underTest.overrideGlobal('key', 'new key');
+			expect(global.subkey).toEqual('new one');
+			expect(global.key).toEqual('new key');
+		});
+		it('can be called multiple times for the same property', function () {
+			underTest.overrideGlobal('subkey', 'new one');
+			underTest.overrideGlobal('subkey', 'new key');
+			expect(global.subkey).toEqual('new key');
+		});
+	});
+	describe('resetGlobal', function () {
+		it('reverts an override in global', function () {
+			underTest.overrideGlobal('subkey', 'new one');
+			underTest.resetGlobal();
+			expect(global.subkey).toEqual('old-global-subkey');
+		});
+		it('reverts multiple properties', function () {
+			underTest.overrideGlobal('subkey', 'new one');
+			underTest.overrideGlobal('key', 'new key');
+			underTest.resetGlobal();
+			expect(global.subkey).toEqual('old-global-subkey');
+			expect(global.key).toEqual('old-global-key');
+		});
+		it('reverts correctly even if the same property reset several times', function () {
+			underTest.overrideGlobal('subkey', 'new one');
+			underTest.overrideGlobal('subkey', 'new new one');
+			underTest.resetGlobal();
+			expect(global.subkey).toEqual('old-global-subkey');
+		});
+		it('does not revert exported properties', function () {
+			underTest.exportToGlobal();
+			underTest.resetGlobal();
+			expect(global.defineStep).toBe(underTest.defineStep);
+			expect(global.addMatchers).toBe(underTest.addMatchers);
+		});
+	});
+
 	describe('defineStep', function () {
 
 		it('adds a processor function for a regular expression', function () {
@@ -44,6 +114,13 @@ describe('Context', function () {
 		});
 	});
 	describe('getStepDefinitionForLine', function () {
+		it('can be called multiple times for sub-matched regex searches', function () {
+			underTest.defineStep(/guest/gi, processor);
+
+			var first = underTest.getStepDefinitionForLine('guest001'),
+				second = underTest.getStepDefinitionForLine('guest001');
+			expect(first).toEqual(second);
+		});
 		it('retrieves a step matching the line by regex', function () {
 			underTest.defineStep(/Who is (.*)/, processor);
 			underTest.defineStep(/Who was (.*)/, processorTwo);
