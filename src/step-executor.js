@@ -8,7 +8,7 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		Assertion = require('./assertion'),
 		ExpectationBuilder = require('./expectation-builder'),
 		regexUtil = new RegExUtil(),
-		expectExtensions = require('./expectation-builder-extensions')();
+		expectExtensions = require('./matchers/table');
 
 	self.match = function (stepText) {
 		if (stepText instanceof RegExp) {
