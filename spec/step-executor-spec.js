@@ -14,7 +14,7 @@ describe('StepExecutor', function () {
 		regexMatcher = /this is a (.*)/;
 		specContext = new SpecContext();
 		processFunction = jasmine.createSpy('processFunction');
-		underTest = new StepExecutor(regexMatcher, processFunction, specContext);
+		underTest = new StepExecutor({matcher:regexMatcher, processFunction:processFunction}, specContext);
 	});
 	describe('executeTableRow', function () {
 		it('should pass the the cell values to the process function as parameters - ' +
@@ -23,28 +23,17 @@ describe('StepExecutor', function () {
 			expect(processFunction).toHaveBeenCalledWith('one', 'two', 'three');
 		});
 	});
-	describe('match', function () {
-		it('returns true if the step regex matches the given string', function () {
-			expect(underTest.match('this is a ball')).toBeTruthy();
-			expect(underTest.match('this is not a ball')).toBeFalsy();
-		});
-		it('returns true if the step regex source equals the given regex', function () {
-			expect(underTest.match(/this is a (.*)/)).toBeTruthy();
-			expect(underTest.match(/this is a ball/)).toBeFalsy();
-		});
-
-	});
 	describe('execute', function () {
 		var equalNumberStep;
 		beforeEach(function () {
-			equalNumberStep = new StepExecutor(/equal numbers (\d*) = (\d*)/, function (first, second) {
+			equalNumberStep = new StepExecutor({matcher: /equal numbers (\d*) = (\d*)/, processFunction: function (first, second) {
 				expect(first).toEqual(second);
-			}, specContext);
+			}}, specContext);
 		});
 		it('should return result for non-positional, without an assertion index', function () {
-			underTest = new StepExecutor(/this will pass/, function () {
+			underTest = new StepExecutor({matcher:/this will pass/, processFunction: function () {
 				expect('expected').toEqual('expected');
-			}, specContext);
+			}}, specContext);
 			var result = underTest.execute('this will pass -- whole line', false);
 			expect(result).toEqual(
 				jasmine.objectContaining({
@@ -66,9 +55,9 @@ describe('StepExecutor', function () {
 			}));
 		});
 		it('should return result for non-positional failure', function () {
-			underTest = new StepExecutor(/this will fail/, function () {
+			underTest = new StepExecutor({matcher: /this will fail/, processFunction: function () {
 				expect('not expected').toEqual('expected');
-			}, specContext);
+			}}, specContext);
 			var result = underTest.execute('this will fail -- whole line', false);
 			expect(result).toEqual(jasmine.objectContaining({
 				matcher: /this will fail/,
@@ -87,9 +76,9 @@ describe('StepExecutor', function () {
 			}));
 		});
 		it('should return result for exceptions, with an exception in the step result', function () {
-			underTest = new StepExecutor(/throw ([a-z]*)/, function (msg) {
+			underTest = new StepExecutor({matcher: /throw ([a-z]*)/, processFunction: function (msg) {
 				throw msg;
-			}, specContext);
+			}}, specContext);
 			var result = underTest.execute('throw blabla', false);
 			expect(result).toEqual(jasmine.objectContaining({
 				matcher: /throw ([a-z]*)/,
@@ -101,9 +90,9 @@ describe('StepExecutor', function () {
 		});
 
 		it('receives a simple call for a list attachment', function () {
-			underTest = new StepExecutor(/list of ([a-z]*)/, function (title, list) {
+			underTest = new StepExecutor({matcher: /list of ([a-z]*)/, processFunction: function (title, list) {
 					expect([title]).toEqualSet(list.items);
-				}, specContext);
+				}}, specContext);
 			var result = underTest.execute('list of yum', { type: 'list', ordered: false, items: ['yum'], symbol: '* ' });
 			expect(result).toEqual(jasmine.objectContaining({
 				matcher: /list of ([a-z]*)/,
@@ -120,9 +109,9 @@ describe('StepExecutor', function () {
 		});
 		it('receives a simple call for a table attachment', function () {
 			specContext.addMatchers(tableMatcher);
-			underTest = new StepExecutor(/table of ([a-z]*)/, function (title, table) {
+			underTest = new StepExecutor({matcher: /table of ([a-z]*)/, processFunction: function (title, table) {
 				expect([{name: 'yum'}]).toEqualUnorderedTable(table);
-			}, specContext);
+			}}, specContext);
 			var result = underTest.execute('table of yum', { type: 'table', titles: ['name'], items: [['yum']]});
 			expect(result).toEqual(jasmine.objectContaining({
 				matcher: /table of ([a-z]*)/,

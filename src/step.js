@@ -9,6 +9,7 @@ module.exports = function Step (specContext, processFunction) {
 		throw new Error('invalid intialisation');
 	}
 	self.execute = function () {
+		//TODO: tests
 		if (!self.stepArgs) {
 			throw new Error('Step args not defined');
 		}

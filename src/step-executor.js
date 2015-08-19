@@ -1,5 +1,5 @@
 /*global module, require*/
-module.exports = function StepExecutor(regexMatcher, processFunction, specContext) {
+module.exports = function StepExecutor(stepDefinition, specContext) {
 	'use strict';
 	var self = this,
 		TableUtil = require('./table-util'),
@@ -7,17 +7,10 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		RegExUtil = require('./regex-util'),
 		Step = require('./step'),
 		regexUtil = new RegExUtil();
-
-	self.match = function (stepText) {
-		if (stepText instanceof RegExp) {
-			return regexMatcher.source === stepText.source;
-		}
-		return regexMatcher.test(stepText);
-	};
 	self.execute = function (stepText, attachment) {
-		var step = new Step(specContext, processFunction);
-		step.stepArgs = regexUtil.getMatchedArguments(regexMatcher, stepText);
-		step.matcher = regexMatcher;
+		var step = new Step(specContext, stepDefinition.processFunction);
+		step.stepArgs = regexUtil.getMatchedArguments(stepDefinition.matcher, stepText);
+		step.matcher = stepDefinition.matcher;
 		step.stepText = stepText;
 		step.attachment = attachment;
 		if (attachment) {
@@ -27,11 +20,11 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		return step;
 	};
 	self.executeTableRow = function (dataRow, titleRow) {
-		var titleMatch = titleRow && titleRow.match(regexMatcher),
+		var titleMatch = titleRow && titleRow.match(stepDefinition.matcher),
 			titleArgs = titleMatch && titleMatch.length > 1 && titleMatch.slice(1).map(function (item) {
 				return item.trim();
 			}),
-			step = new Step(specContext, processFunction);
+			step = new Step(specContext, stepDefinition.processFunction);
 		step.stepArgs = tableUtil.cellValuesForRow(dataRow);
 		step.matcher = regexUtil.regexForTableDataRow(step.stepArgs.length);
 		step.stepText = dataRow;

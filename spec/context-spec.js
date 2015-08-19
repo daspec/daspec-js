@@ -13,44 +13,18 @@ describe('Context', function () {
 	});
 	describe('addMatchers', function () {
 		it('makes matchers available to steps', function () {
-			var result;
-			underTest.addMatchers({
-				toFoo: function () {
-					this.addAssertion(this.actual === 'foo', 'foo');
-					return this;
-				}
-			});
-			result = underTest.expect('Mike').toFoo();
-			expect(result.assertions.length).toBe(1);
-			expect(result.assertions[0]).toEqual(jasmine.objectContaining({expected: 'foo', actual: 'Mike', passed: false}));
-		});
-		it('can be called multiple times', function () {
-			var result;
-			underTest.addMatchers({
-				toFoo: function () {
-					this.addAssertion(this.actual === 'foo', 'foo');
-					return this;
-				}
-			});
-			underTest.addMatchers({
-				toBar: function () {
-					this.addAssertion(this.actual === 'bar', 'bar');
-					return this;
-				}
-			});
-			result = underTest.expect('Mike').toFoo().toBar();
-			expect(result.assertions.length).toBe(2);
-			expect(result.assertions[0]).toEqual(jasmine.objectContaining({expected: 'foo', actual: 'Mike', passed: false}));
-			expect(result.assertions[1]).toEqual(jasmine.objectContaining({expected: 'bar', actual: 'Mike', passed: false}));
+			underTest.addMatchers('x');
+			underTest.addMatchers('y');
+			expect(underTest.getMatchers()).toEqual(['x', 'y']);
 		});
 	});
 	describe('defineStep', function () {
 
 		it('adds a processor function for a regular expression', function () {
 			underTest.defineStep(/Who is (.*)/, processor);
-			var executor = underTest.getStepForLine('Who is Mike');
-			executor.execute('Who is Mike');
-			expect(processor).toHaveBeenCalledWith('Mike');
+			var executor = underTest.getStepDefinitionForLine('Who is Mike');
+			expect(executor.matcher.test('Who is Mike')).toBeTruthy();
+			expect(executor.processFunction).toEqual(processor);
 		});
 		it('throws an error if a step for the same regex is already defined', function () {
 			underTest.defineStep(/Who is (.*)/, processor);
@@ -69,28 +43,26 @@ describe('Context', function () {
 			}).toThrowError(Error, 'Empty matchers are not supported');
 		});
 	});
-	describe('getStepForLine', function () {
+	describe('getStepDefinitionForLine', function () {
 		it('retrieves a step matching the line by regex', function () {
 			underTest.defineStep(/Who is (.*)/, processor);
 			underTest.defineStep(/Who was (.*)/, processorTwo);
 
-			var executor = underTest.getStepForLine('Who was Mike');
-			executor.execute('Who was Mike');
-			expect(processorTwo).toHaveBeenCalledWith('Mike');
-			expect(processor).not.toHaveBeenCalled();
+			var executor = underTest.getStepDefinitionForLine('Who was Mike');
+			expect(executor.processFunction).toBe(processorTwo);
 		});
 		it('throws an error if multiple steps match the line', function () {
 			underTest.defineStep(/Who is (.*)/, processor);
 			underTest.defineStep(/Who .s (.*)/, processorTwo);
 
 			expect(function () {
-				underTest.getStepForLine('Who is Mike');
+				underTest.getStepDefinitionForLine('Who is Mike');
 			}).toThrowError(Error, 'multiple steps match line Who is Mike');
 		});
 		it('returns false if nothing matches', function () {
 			underTest.defineStep(/Who is (.*)/, processor);
 
-			expect(underTest.getStepForLine('Who was Mike')).toBeFalsy();
+			expect(underTest.getStepDefinitionForLine('Who was Mike')).toBeFalsy();
 		});
 	});
 

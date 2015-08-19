@@ -4,6 +4,7 @@ module.exports = function Runner(stepFunc, config) {
 	var Context = require('./context'),
 		CountingResultListener = require('./counting-result-listener'),
 		RegexUtil = require('./regex-util'),
+		StepExecutor = require('./step-executor'),
 		observable = require('./observable'),
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),
@@ -48,24 +49,24 @@ module.exports = function Runner(stepFunc, config) {
 			},
 			processTableBlock = function (block) {
 				var blockLines = block.getMatchText(),
-					step,
+					stepDefinition,
+					executor,
 					headerLine,
 					// tableResultBlock,
 					startNewTable = function (line) {
-						step = context.getStepForLine(line);
-						if (!step) {
+						stepDefinition = context.getStepDefinitionForLine(line);
+						if (!stepDefinition) {
 							sendLineEvent('skippedLine', line);
 						} else {
 							headerLine = line;
 							sendLineEvent('tableStarted');
 							sendLineEvent('nonAssertionLine', line);
-
 						}
 					},
 					endCurrentTable = function () {
-						if (step) {
+						if (stepDefinition) {
 							sendLineEvent('tableEnded');
-							step = false;
+							stepDefinition = false;
 						}
 					};
 				blockLines.forEach(function (line) {
@@ -73,10 +74,11 @@ module.exports = function Runner(stepFunc, config) {
 					if (!regexUtil.isTableItem(line)) {
 						endCurrentTable();
 						sendLineEvent('nonAssertionLine', line);
-					} else if (!step) {
+					} else if (!stepDefinition) {
 						startNewTable(line);
 					} else if (regexUtil.isTableDataRow(line)) {
-						sendLineEvent('stepResult', step.executeTableRow(line, headerLine));
+						executor = new StepExecutor(stepDefinition, context);
+						sendLineEvent('stepResult', executor.executeTableRow(line, headerLine));
 					} else {
 						sendLineEvent('nonAssertionLine', line);
 					}
@@ -85,7 +87,8 @@ module.exports = function Runner(stepFunc, config) {
 			},
 			processBlock = function (block) {
 				var blockLines = block.getMatchText(),
-					blockParam = block.getAttachment();
+					blockParam = block.getAttachment(),
+					executor;
 				blockLines.forEach(function (line) {
 					lineNumber++;
 					if (!regexUtil.assertionLine(line)) { //Move to block?
@@ -93,12 +96,13 @@ module.exports = function Runner(stepFunc, config) {
 						return;
 					}
 
-					var step = context.getStepForLine(line);
-					if (!step) {
+					var stepDefinition = context.getStepDefinitionForLine(line);
+					if (!stepDefinition) {
 						sendLineEvent('skippedLine', line);
 						return;
 					}
-					sendLineEvent('stepResult', step.execute(line, blockParam));
+					executor = new StepExecutor(stepDefinition, context);
+					sendLineEvent('stepResult', executor.execute(line, blockParam));
 				});
 			};
 		standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);
