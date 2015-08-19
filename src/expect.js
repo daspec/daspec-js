@@ -1,11 +1,22 @@
-/*global module, require */
-module.exports = function Expect(actualValue) {
+/*global module */
+module.exports = function Expect(actualValue, matchersArray) {
 	'use strict';
 	var self = this,
-		ListUtil = require('./list-util'),
-		listUtil = new ListUtil(),
 		negated = false,
-		assertions = [];
+		assertions = [],
+		addMatchers = function (matchers) {
+			var matcherName;
+			for (matcherName in matchers) {
+				if (matchers.hasOwnProperty(matcherName) && typeof matchers[matcherName] === 'function') {
+					self[matcherName] = matchers[matcherName].bind(self);
+				}
+			}
+		};
+	if (Array.isArray(matchersArray)) {
+		matchersArray.forEach(addMatchers);
+	} else if (matchersArray) {
+		addMatchers(matchersArray);
+	}
 	self.pushAssertions = function (pushedAssertions) {
 		if (pushedAssertions && pushedAssertions.length) {
 			assertions = assertions.concat(pushedAssertions);
@@ -92,11 +103,6 @@ module.exports = function Expect(actualValue) {
 	};
 	self.toBeWithin = function (range1, range2) {
 		self.toBeGreaterThan(Math.min(range1, range2)).toBeLessThan(Math.max(range1, range2));
-		return self;
-	};
-	self.toEqualSet = function (expected) {
-		var listResult = listUtil.unorderedMatch(expected, actualValue);
-		self.addAssertion(listResult.matches, expected, listResult);
 		return self;
 	};
 

@@ -4,6 +4,7 @@ module.exports = {
 		'use strict';
 		var TableUtil = require('../table-util'),
 			tableUtil = new TableUtil(),
+			listMatchers = require('./list'),
 			Expect = require('../expect'),
 			exp = this,
 			comparisonObject,
@@ -22,7 +23,8 @@ module.exports = {
 				comparisonObject = tableUtil.objectArrayValuesForTitles(actual, expected.titles);
 			}
 		}
-		tableExpect = new Expect(comparisonObject).toEqualSet(expected.items);
+		tableExpect = new Expect(comparisonObject, listMatchers);
+		tableExpect.toEqualSet(expected.items);
 		exp.pushAssertions(tableExpect.assertions);
 		return exp;
 	}

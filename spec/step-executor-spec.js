@@ -6,6 +6,7 @@ describe('StepExecutor', function () {
 		SpecContext = require('../src/context'),
 		Assertion = require('../src/assertion'),
 		tableMatcher = require('../src/matchers/table'),
+		listMatcher = require('../src/matchers/list'),
 		underTest,
 		regexMatcher,
 		processFunction,
@@ -13,6 +14,8 @@ describe('StepExecutor', function () {
 	beforeEach(function () {
 		regexMatcher = /this is a (.*)/;
 		specContext = new SpecContext();
+		specContext.addMatchers(tableMatcher);
+		specContext.addMatchers(listMatcher);
 		processFunction = jasmine.createSpy('processFunction');
 		underTest = new StepExecutor({matcher:regexMatcher, processFunction:processFunction}, specContext);
 	});
@@ -108,7 +111,7 @@ describe('StepExecutor', function () {
 			}));
 		});
 		it('receives a simple call for a table attachment', function () {
-			specContext.addMatchers(tableMatcher);
+
 			underTest = new StepExecutor({matcher: /table of ([a-z]*)/, processFunction: function (title, table) {
 				expect([{name: 'yum'}]).toEqualUnorderedTable(table);
 			}}, specContext);

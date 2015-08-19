@@ -17,20 +17,7 @@ module.exports = function ExpectationBuilder(stepArgumentArray, matchersArray) {
 			}
 		};
 	self.expect = function (actual) {
-		var expect = new Expect(actual),
-			addMatcher = function (matchers) {
-				var matcherName;
-				for (matcherName in matchers) {
-					if (matchers.hasOwnProperty(matcherName) && typeof matchers[matcherName] === 'function') {
-						expect[matcherName] = matchers[matcherName].bind(expect);
-					}
-				}
-			};
-		if (Array.isArray(matchersArray)) {
-			matchersArray.forEach(addMatcher);
-		} else if (matchersArray) {
-			addMatcher(matchersArray);
-		}
+		var expect = new Expect(actual, matchersArray);
 		expectations.push(expect);
 		return expect;
 	};
