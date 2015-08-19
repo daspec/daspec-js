@@ -1,5 +1,5 @@
 /*global module, require, global*/
-module.exports = function Context() {
+module.exports = function Context(globalObject) {
 	'use strict';
 	var self = this,
 		StepExecutor =  require('./step-executor'),
@@ -12,7 +12,8 @@ module.exports = function Context() {
 			});
 		},
 		builder,
-		globalOverrides = {} ;
+		globalOverrides = {};
+	globalObject = globalObject || global;
 	self.addMatchers = function (matcherObject) {
 		expectationMatchers.push(matcherObject);
 	};
@@ -21,15 +22,15 @@ module.exports = function Context() {
 	};
 	self.overrideGlobal = function (propname, value) {
 		if (!globalOverrides[propname]) {
-			globalOverrides[propname] = global[propname];
+			globalOverrides[propname] = globalObject[propname];
 		}
-		global[propname] = value;
+		globalObject[propname] = value;
 		//TODO write tests
 	};
 	self.resetGlobal = function () {
 		var propname;
 		for (propname in globalOverrides) {
-			global[propname] = globalOverrides[propname];
+			globalObject[propname] = globalOverrides[propname];
 		}
 		globalOverrides = {};
 	};

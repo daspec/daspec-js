@@ -8,7 +8,7 @@ module.exports = function Runner(stepFunc, config) {
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),
 		self = observable(this),
-		standardMatchers = ['./matchers/table'];
+		standardMatchers = [require('./matchers/table')];
 	self.executeSuite = function (suite) {
 		var counts = new CountingResultListener(self),
 			executeSpecs = true;
@@ -101,7 +101,7 @@ module.exports = function Runner(stepFunc, config) {
 					sendLineEvent('stepResult', step.execute(line, blockParam));
 				});
 			};
-		standardMatchers.concat((config && config.matchers) || []).map(require).forEach(context.addMatchers);
+		standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);
 		stepFunc.apply(context, [context]);
 		self.dispatchEvent('specStarted', exampleName);
 		blocks.getBlocks().forEach(function (block) {
