@@ -48,22 +48,48 @@ module.exports = function Assertion(expected, actual, passed, outputIndex) {
 
 },{}],3:[function(require,module,exports){
 (function (global){
-/*global module, require, global*/
+/*global module, global*/
 module.exports = function Context(globalObject) {
 	'use strict';
 	var self = this,
-		StepExecutor =  require('./step-executor'),
-		ExpectationBuilder =  require('./expectation-builder'),
 		steps = [],
 		expectationMatchers = [],
+		stepMatch = function (stepDefinition, stepText) {
+			if (stepText instanceof RegExp) {
+				return stepDefinition.matcher.source === stepText.source;
+			}
+			return stepDefinition.matcher.test(stepText); // TODO: make sure re-entrant
+		},
 		matchingSteps = function (stepText) {
-			return steps.filter(function (step) {
-				return step.match(stepText);
+			return steps.filter(function (stepDefinition) {
+				return stepMatch(stepDefinition, stepText);
 			});
 		},
-		builder,
-		globalOverrides = {};
+		globalOverrides = {},
+		exportedOverrides = {},
+		overrideGlobal = function (map, propname, value) {
+			if (!map[propname]) {
+				map[propname] = globalObject[propname];
+			}
+			globalObject[propname] = value;
+			//TODO write tests
+		},
+		resetGlobal = function (map) {
+			var propname;
+			for (propname in map) {
+				globalObject[propname] = map[propname];
+				delete map[propname];
+			}
+		};
+
 	globalObject = globalObject || global;
+	self.exportToGlobal = function () {
+		overrideGlobal(exportedOverrides, 'defineStep',  self.defineStep);
+		overrideGlobal(exportedOverrides, 'addMatchers',  self.addMatchers);
+	};
+	self.unexportFromGlobal = function () {
+		resetGlobal(exportedOverrides);
+	};
 	self.addMatchers = function (matcherObject) {
 		expectationMatchers.push(matcherObject);
 	};
@@ -71,27 +97,10 @@ module.exports = function Context(globalObject) {
 		return expectationMatchers;
 	};
 	self.overrideGlobal = function (propname, value) {
-		if (!globalOverrides[propname]) {
-			globalOverrides[propname] = globalObject[propname];
-		}
-		globalObject[propname] = value;
-		//TODO write tests
+		overrideGlobal(globalOverrides, propname, value);
 	};
 	self.resetGlobal = function () {
-		var propname;
-		for (propname in globalOverrides) {
-			globalObject[propname] = globalOverrides[propname];
-		}
-		globalOverrides = {};
-	};
-	self.setExpectationBuilder = function (builderArg) {
-		builder = builderArg;
-	};
-	self.expect = function (actual) {
-		if (!builder) {
-			builder = new ExpectationBuilder([], expectationMatchers);
-		}
-		return builder.expect(actual);
+		resetGlobal(globalOverrides);
 	};
 	self.defineStep = function (regexMatcher, processFunction) {
 		if (!regexMatcher) {
@@ -104,9 +113,9 @@ module.exports = function Context(globalObject) {
 		if (matching.length > 0) {
 			throw new Error('The matching step is already defined');
 		}
-		steps.push(new StepExecutor(regexMatcher, processFunction, self));
+		steps.push({matcher: regexMatcher, processFunction: processFunction});
 	};
-	self.getStepForLine = function (stepText) {
+	self.getStepDefinitionForLine = function (stepText) {
 		var matching = matchingSteps(stepText);
 		if (matching.length === 0) {
 			return false;
@@ -118,7 +127,7 @@ module.exports = function Context(globalObject) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./expectation-builder":10,"./step-executor":19}],4:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /*global module, require*/
 module.exports = function CountingResultListener(runner) {
 	'use strict';
@@ -155,7 +164,7 @@ module.exports = {
 	TableUtil: require('./table-util')
 };
 
-},{"./counting-result-listener":4,"./markdown-result-formatter":13,"./runner":18,"./table-util":21}],6:[function(require,module,exports){
+},{"./counting-result-listener":4,"./markdown-result-formatter":13,"./runner":19,"./table-util":22}],6:[function(require,module,exports){
 (function (global){
 /*global require, global*/
 
@@ -273,7 +282,7 @@ module.exports = function ExampleBlock() {
 	};
 };
 
-},{"./normaliser":15,"./regex-util":17,"./table-util":21}],8:[function(require,module,exports){
+},{"./normaliser":16,"./regex-util":18,"./table-util":22}],8:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlocks(inputText) {
 	'use strict';
@@ -298,14 +307,25 @@ module.exports = function ExampleBlocks(inputText) {
 };
 
 },{"./example-block":7}],9:[function(require,module,exports){
-/*global module, require */
-module.exports = function Expect(actualValue) {
+/*global module */
+module.exports = function Expect(actualValue, matchersArray) {
 	'use strict';
 	var self = this,
-		ListUtil = require('./list-util'),
-		listUtil = new ListUtil(),
 		negated = false,
-		assertions = [];
+		assertions = [],
+		addMatchers = function (matchers) {
+			var matcherName;
+			for (matcherName in matchers) {
+				if (matchers.hasOwnProperty(matcherName) && typeof matchers[matcherName] === 'function') {
+					self[matcherName] = matchers[matcherName].bind(self);
+				}
+			}
+		};
+	if (Array.isArray(matchersArray)) {
+		matchersArray.forEach(addMatchers);
+	} else if (matchersArray) {
+		addMatchers(matchersArray);
+	}
 	self.pushAssertions = function (pushedAssertions) {
 		if (pushedAssertions && pushedAssertions.length) {
 			assertions = assertions.concat(pushedAssertions);
@@ -394,15 +414,10 @@ module.exports = function Expect(actualValue) {
 		self.toBeGreaterThan(Math.min(range1, range2)).toBeLessThan(Math.max(range1, range2));
 		return self;
 	};
-	self.toEqualSet = function (expected) {
-		var listResult = listUtil.unorderedMatch(expected, actualValue);
-		self.addAssertion(listResult.matches, expected, listResult);
-		return self;
-	};
 
 };
 
-},{"./list-util":11}],10:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /*global module, require */
 module.exports = function ExpectationBuilder(stepArgumentArray, matchersArray) {
 	'use strict';
@@ -422,20 +437,7 @@ module.exports = function ExpectationBuilder(stepArgumentArray, matchersArray) {
 			}
 		};
 	self.expect = function (actual) {
-		var expect = new Expect(actual),
-			addMatcher = function (matchers) {
-				var matcherName;
-				for (matcherName in matchers) {
-					if (matchers.hasOwnProperty(matcherName) && typeof matchers[matcherName] === 'function') {
-						expect[matcherName] = matchers[matcherName].bind(expect);
-					}
-				}
-			};
-		if (Array.isArray(matchersArray)) {
-			matchersArray.forEach(addMatcher);
-		} else if (matchersArray) {
-			addMatcher(matchersArray);
-		}
+		var expect = new Expect(actual, matchersArray);
 		expectations.push(expect);
 		return expect;
 	};
@@ -681,7 +683,7 @@ module.exports = function MarkDownFormatter() {
 	};
 };
 
-},{"./regex-util":17,"./table-util":21}],13:[function(require,module,exports){
+},{"./regex-util":18,"./table-util":22}],13:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 	'use strict';
@@ -750,13 +752,27 @@ module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 
 };
 
-},{"./counting-result-listener":4,"./markdown-formatter":12,"./table-util":21}],14:[function(require,module,exports){
+},{"./counting-result-listener":4,"./markdown-formatter":12,"./table-util":22}],14:[function(require,module,exports){
+/*global module, require*/
+module.exports = {
+	toEqualSet: function (expected) {
+		'use strict';
+		var	ListUtil = require('../list-util'),
+			listUtil = new ListUtil(),
+			listResult = listUtil.unorderedMatch(expected, this.actual);
+		this.addAssertion(listResult.matches, expected, listResult);
+		return this;
+	}
+};
+
+},{"../list-util":11}],15:[function(require,module,exports){
 /*global module, require*/
 module.exports = {
 	toEqualUnorderedTable: function (expected) {
 		'use strict';
 		var TableUtil = require('../table-util'),
 			tableUtil = new TableUtil(),
+			listMatchers = require('./list'),
 			Expect = require('../expect'),
 			exp = this,
 			comparisonObject,
@@ -775,13 +791,14 @@ module.exports = {
 				comparisonObject = tableUtil.objectArrayValuesForTitles(actual, expected.titles);
 			}
 		}
-		tableExpect = new Expect(comparisonObject).toEqualSet(expected.items);
+		tableExpect = new Expect(comparisonObject, listMatchers);
+		tableExpect.toEqualSet(expected.items);
 		exp.pushAssertions(tableExpect.assertions);
 		return exp;
 	}
 };
 
-},{"../expect":9,"../table-util":21}],15:[function(require,module,exports){
+},{"../expect":9,"../table-util":22,"./list":14}],16:[function(require,module,exports){
 /*global module*/
 module.exports = function Normaliser() {
 	'use strict';
@@ -813,7 +830,7 @@ module.exports = function Normaliser() {
 	};
 };
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /*global module, console*/
 /*jshint unused:false */
 module.exports = function observable(base) {
@@ -862,7 +879,7 @@ module.exports = function observable(base) {
 	return base;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /*global module*/
 module.exports = function RegexUtil() {
 	'use strict';
@@ -970,18 +987,19 @@ module.exports = function RegexUtil() {
 	};
 };
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /*global module, require*/
 module.exports = function Runner(stepFunc, config) {
 	'use strict';
 	var Context = require('./context'),
 		CountingResultListener = require('./counting-result-listener'),
 		RegexUtil = require('./regex-util'),
+		StepExecutor = require('./step-executor'),
 		observable = require('./observable'),
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),
 		self = observable(this),
-		standardMatchers = [require('./matchers/table')];
+		standardMatchers = [require('./matchers/table'), require('./matchers/list')];
 	self.executeSuite = function (suite) {
 		var counts = new CountingResultListener(self),
 			executeSpecs = true;
@@ -1021,24 +1039,24 @@ module.exports = function Runner(stepFunc, config) {
 			},
 			processTableBlock = function (block) {
 				var blockLines = block.getMatchText(),
-					step,
+					stepDefinition,
+					executor,
 					headerLine,
 					// tableResultBlock,
 					startNewTable = function (line) {
-						step = context.getStepForLine(line);
-						if (!step) {
+						stepDefinition = context.getStepDefinitionForLine(line);
+						if (!stepDefinition) {
 							sendLineEvent('skippedLine', line);
 						} else {
 							headerLine = line;
 							sendLineEvent('tableStarted');
 							sendLineEvent('nonAssertionLine', line);
-
 						}
 					},
 					endCurrentTable = function () {
-						if (step) {
+						if (stepDefinition) {
 							sendLineEvent('tableEnded');
-							step = false;
+							stepDefinition = false;
 						}
 					};
 				blockLines.forEach(function (line) {
@@ -1046,10 +1064,11 @@ module.exports = function Runner(stepFunc, config) {
 					if (!regexUtil.isTableItem(line)) {
 						endCurrentTable();
 						sendLineEvent('nonAssertionLine', line);
-					} else if (!step) {
+					} else if (!stepDefinition) {
 						startNewTable(line);
 					} else if (regexUtil.isTableDataRow(line)) {
-						sendLineEvent('stepResult', step.executeTableRow(line, headerLine));
+						executor = new StepExecutor(stepDefinition, context);
+						sendLineEvent('stepResult', executor.executeTableRow(line, headerLine));
 					} else {
 						sendLineEvent('nonAssertionLine', line);
 					}
@@ -1058,7 +1077,8 @@ module.exports = function Runner(stepFunc, config) {
 			},
 			processBlock = function (block) {
 				var blockLines = block.getMatchText(),
-					blockParam = block.getAttachment();
+					blockParam = block.getAttachment(),
+					executor;
 				blockLines.forEach(function (line) {
 					lineNumber++;
 					if (!regexUtil.assertionLine(line)) { //Move to block?
@@ -1066,14 +1086,16 @@ module.exports = function Runner(stepFunc, config) {
 						return;
 					}
 
-					var step = context.getStepForLine(line);
-					if (!step) {
+					var stepDefinition = context.getStepDefinitionForLine(line);
+					if (!stepDefinition) {
 						sendLineEvent('skippedLine', line);
 						return;
 					}
-					sendLineEvent('stepResult', step.execute(line, blockParam));
+					executor = new StepExecutor(stepDefinition, context);
+					sendLineEvent('stepResult', executor.execute(line, blockParam));
 				});
 			};
+		context.exportToGlobal();
 		standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);
 		stepFunc.apply(context, [context]);
 		self.dispatchEvent('specStarted', exampleName);
@@ -1085,12 +1107,13 @@ module.exports = function Runner(stepFunc, config) {
 			}
 		});
 		self.dispatchEvent('specEnded', exampleName, counts.current);
+		context.unexportFromGlobal();
 	};
 };
 
-},{"./context":3,"./counting-result-listener":4,"./example-blocks":8,"./matchers/table":14,"./observable":16,"./regex-util":17}],19:[function(require,module,exports){
+},{"./context":3,"./counting-result-listener":4,"./example-blocks":8,"./matchers/list":14,"./matchers/table":15,"./observable":17,"./regex-util":18,"./step-executor":20}],20:[function(require,module,exports){
 /*global module, require*/
-module.exports = function StepExecutor(regexMatcher, processFunction, specContext) {
+module.exports = function StepExecutor(stepDefinition, specContext) {
 	'use strict';
 	var self = this,
 		TableUtil = require('./table-util'),
@@ -1098,17 +1121,10 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		RegExUtil = require('./regex-util'),
 		Step = require('./step'),
 		regexUtil = new RegExUtil();
-
-	self.match = function (stepText) {
-		if (stepText instanceof RegExp) {
-			return regexMatcher.source === stepText.source;
-		}
-		return regexMatcher.test(stepText);
-	};
 	self.execute = function (stepText, attachment) {
-		var step = new Step(specContext, processFunction);
-		step.stepArgs = regexUtil.getMatchedArguments(regexMatcher, stepText);
-		step.matcher = regexMatcher;
+		var step = new Step(specContext, stepDefinition.processFunction);
+		step.stepArgs = regexUtil.getMatchedArguments(stepDefinition.matcher, stepText);
+		step.matcher = stepDefinition.matcher;
 		step.stepText = stepText;
 		step.attachment = attachment;
 		if (attachment) {
@@ -1118,11 +1134,11 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 		return step;
 	};
 	self.executeTableRow = function (dataRow, titleRow) {
-		var titleMatch = titleRow && titleRow.match(regexMatcher),
+		var titleMatch = titleRow && titleRow.match(stepDefinition.matcher),
 			titleArgs = titleMatch && titleMatch.length > 1 && titleMatch.slice(1).map(function (item) {
 				return item.trim();
 			}),
-			step = new Step(specContext, processFunction);
+			step = new Step(specContext, stepDefinition.processFunction);
 		step.stepArgs = tableUtil.cellValuesForRow(dataRow);
 		step.matcher = regexUtil.regexForTableDataRow(step.stepArgs.length);
 		step.stepText = dataRow;
@@ -1134,9 +1150,9 @@ module.exports = function StepExecutor(regexMatcher, processFunction, specContex
 	};
 };
 
-},{"./regex-util":17,"./step":20,"./table-util":21}],20:[function(require,module,exports){
+},{"./regex-util":18,"./step":21,"./table-util":22}],21:[function(require,module,exports){
 /*global module, require */
-module.exports = function Step (specContext, processFunction) {
+module.exports = function Step(specContext, processFunction) {
 	'use strict';
 	var self = this,
 		ExpectationBuilder = require('./expectation-builder'),
@@ -1146,6 +1162,7 @@ module.exports = function Step (specContext, processFunction) {
 		throw new Error('invalid intialisation');
 	}
 	self.execute = function () {
+		//TODO: tests
 		if (!self.stepArgs) {
 			throw new Error('Step args not defined');
 		}
@@ -1166,7 +1183,7 @@ module.exports = function Step (specContext, processFunction) {
 	};
 };
 
-},{"./assertion":2,"./expectation-builder":10}],21:[function(require,module,exports){
+},{"./assertion":2,"./expectation-builder":10}],22:[function(require,module,exports){
 /*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
@@ -1256,4 +1273,4 @@ module.exports = function TableUtil() {
 	};
 };
 
-},{"./normaliser":15,"./regex-util":17}]},{},[6]);
+},{"./normaliser":16,"./regex-util":18}]},{},[6]);
