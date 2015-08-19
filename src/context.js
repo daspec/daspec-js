@@ -3,17 +3,25 @@ module.exports = function Context() {
 	'use strict';
 	var self = this,
 		StepExecutor =  require('./step-executor'),
+		ExpectationBuilder =  require('./expectation-builder'),
 		steps = [],
+		expectationMatchers = [],
 		matchingSteps = function (stepText) {
 			return steps.filter(function (step) {
 				return step.match(stepText);
 			});
 		},
 		builder;
+	self.addMatchers = function (matcherObject) {
+		expectationMatchers.push(matcherObject);
+	};
 	self.setExpectationBuilder = function (builderArg) {
 		builder = builderArg;
 	};
 	self.expect = function (actual) {
+		if (!builder) {
+			builder = new ExpectationBuilder([], expectationMatchers);
+		}
 		return builder.expect(actual);
 	};
 	self.defineStep = function (regexMatcher, processFunction) {

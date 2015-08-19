@@ -1,10 +1,9 @@
 /*global module, require */
-module.exports = function (stepArgumentArray, extensionsArray) {
+module.exports = function ExpectationBuilder(stepArgumentArray, matchersArray) {
 	'use strict';
 	var self = this,
 		Expect = require('./expect'),
 		expectations = [],
-		extensions = extensionsArray || [],
 		findPosition = function (expectation) {
 			if (expectation.position !== undefined) {
 				if (expectation.position >= 0 && expectation.position < stepArgumentArray.length) {
@@ -19,11 +18,18 @@ module.exports = function (stepArgumentArray, extensionsArray) {
 		};
 	self.expect = function (actual) {
 		var expect = new Expect(actual),
-			extensionName;
-		for (extensionName in extensionsArray) {
-			if (extensions.hasOwnProperty(extensionName) && typeof extensions[extensionName] === 'function') {
-				expect[extensionName] = extensions[extensionName].bind(expect);
-			}
+			addMatcher = function (matchers) {
+				var matcherName;
+				for (matcherName in matchers) {
+					if (matchers.hasOwnProperty(matcherName) && typeof matchers[matcherName] === 'function') {
+						expect[matcherName] = matchers[matcherName].bind(expect);
+					}
+				}
+			};
+		if (Array.isArray(matchersArray)) {
+			matchersArray.forEach(addMatcher);
+		} else if (matchersArray) {
+			addMatcher(matchersArray);
 		}
 		expectations.push(expect);
 		return expect;

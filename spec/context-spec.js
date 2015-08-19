@@ -11,6 +11,39 @@ describe('Context', function () {
 		processor = jasmine.createSpy('processor');
 		processorTwo = jasmine.createSpy('processorTwo');
 	});
+	describe('addMatchers', function () {
+		it('makes matchers available to steps', function () {
+			var result;
+			underTest.addMatchers({
+				toFoo: function () {
+					this.addAssertion(this.actual === 'foo', 'foo');
+					return this;
+				}
+			});
+			result = underTest.expect('Mike').toFoo();
+			expect(result.assertions.length).toBe(1);
+			expect(result.assertions[0]).toEqual(jasmine.objectContaining({expected: 'foo', actual: 'Mike', passed: false}));
+		});
+		it('can be called multiple times', function () {
+			var result;
+			underTest.addMatchers({
+				toFoo: function () {
+					this.addAssertion(this.actual === 'foo', 'foo');
+					return this;
+				}
+			});
+			underTest.addMatchers({
+				toBar: function () {
+					this.addAssertion(this.actual === 'bar', 'bar');
+					return this;
+				}
+			});
+			result = underTest.expect('Mike').toFoo().toBar();
+			expect(result.assertions.length).toBe(2);
+			expect(result.assertions[0]).toEqual(jasmine.objectContaining({expected: 'foo', actual: 'Mike', passed: false}));
+			expect(result.assertions[1]).toEqual(jasmine.objectContaining({expected: 'bar', actual: 'Mike', passed: false}));
+		});
+	});
 	describe('defineStep', function () {
 
 		it('adds a processor function for a regular expression', function () {
