@@ -72,24 +72,37 @@ module.exports = function ExampleBlock() {
 		if (lines.length === 0) {
 			return true;
 		}
-		var topline = lines[0],
-			basicAssertionLine = function (theLine) {
-				return regexUtil.assertionLine(theLine) && !regexUtil.isTableItem(theLine) && !regexUtil.isListItem(theLine);
-			};
+		var lineType = function (theLine) {
+				if (regexUtil.isListItem(theLine)) {
+					return 'list';
+				} else if (regexUtil.isTableItem(theLine)) {
+					return 'table';
+				} else if (regexUtil.assertionLine(theLine)) {
+					return 'assertion';
+				} else if (regexUtil.isEmpty(theLine)) {
+					return 'empty';
+				} else {
+					return 'comment';
+				}
+			},
+			topline = lines[0],
+			newLineType = lineType(line),
+			topLineType = lineType(topline);
 
-		if (basicAssertionLine(topline)) {
+		if (topLineType == 'assertion') {
 			return false;
 		}
 
-		if (regexUtil.isListItem(line)) {
-			return regexUtil.isListItem(topline);
-		} else if (regexUtil.isTableItem(line)) {
-			return regexUtil.isTableItem(topline);
-		} else if (regexUtil.assertionLine(line) || regexUtil.isEmpty(line)) {
-			return regexUtil.isListItem(topline) || regexUtil.isTableItem(topline) || regexUtil.isEmpty(topline);
-		} else {
-			return !regexUtil.isEmpty(topline) && !regexUtil.assertionLine(topline);
+		switch (newLineType) {
+			case 'list':
+			case 'table':
+			case 'comment':
+				return topLineType === newLineType;
+			case 'assertion':
+			case 'empty':
+				return ['table', 'list', 'empty'].indexOf(topLineType) >= 0;
 		}
+		return false;
 	};
 	self.isTableBlock = function () {
 		var tableLines = lines.filter(regexUtil.isTableItem),
