@@ -190,68 +190,83 @@ module.exports = function ExampleBlock() {
 			result.items = toItems(tableItems);
 			return result;
 		},
-		getAttachmentTable = function () {
-			if (lines.length === 0) {
+
+		getAttachmentTable = function (tableLines) {
+			if (!regexUtil.isTableItem(tableLines[0])) {
 				return false;
 			}
-			var topLine = lines[0],
-				tableLines = lines.filter(regexUtil.isTableItem);
-			if (tableLines.length === 0) {
-				return false;
-			}
-			if (!regexUtil.isTableItem(topLine) && regexUtil.assertionLine(topLine)) {
-				return toTable(tableLines);
-			}
-			return false;
+			return toTable(tableLines);
 		},
-		getAttachmentList = function () {
-			//TODO: support nested lists
-			if (lines.length === 0) {
+		getAttachmentList = function (listLines) {
+			if (!regexUtil.isListItem(listLines[0])) {
 				return false;
 			}
-			var topLine = lines[0],
-				listLines = lines.filter(regexUtil.isListItem),
-				listSymbol;
-			if (listLines.length === 0) {
-				return false;
-			}
-			listSymbol = regexUtil.getListSymbol(listLines[0]);
-			if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
-				return {type: 'list',
-					ordered: !isNaN(parseFloat(listSymbol)),
-					items: listLines.map(regexUtil.lineItemContent),
-					symbol: listSymbol
-				};
-			}
-			return false;
+			var listSymbol = regexUtil.getListSymbol(listLines[0]);
+			return {type: 'list',
+				ordered: !isNaN(parseFloat(listSymbol)),
+				items: listLines.map(regexUtil.lineItemContent),
+				symbol: listSymbol
+			};
 		};
 	self.addLine = function (lineText) {
 		lines.unshift(lineText);
 	};
-	self.isComplete = function () {
-		if (lines.length === 0) {
-			return false;
-		}
-		if (regexUtil.isListItem(lines[0]) || regexUtil.isTableItem(lines[0]) || lines[0].trim().length === 0) {
-			return false;
-		}
-		return true;
-	};
 	self.getAttachment = function () {
-		return getAttachmentList() || getAttachmentTable();
+		var attachmentLines = self.getAttachmentLines().filter(regexUtil.assertionLine);
+
+		if (attachmentLines.length === 0) {
+			return false;
+		}
+		return getAttachmentList(attachmentLines) || getAttachmentTable(attachmentLines);
+	};
+	self.getAttachmentLines = function () {
+		if (lines.length === 0) {
+			return [];
+		}
+		var topLine = lines[0],
+			isAttachmentLine = function (line) {
+				return regexUtil.isTableItem(line) || regexUtil.isListItem(line);
+			};
+		if (!regexUtil.assertionLine(topLine) || regexUtil.isTableItem(topLine) || regexUtil.isListItem(topLine)) {
+			return [];
+		}
+		return lines.filter(isAttachmentLine);
 	};
 	self.canAddLine = function (line) {
 		if (lines.length === 0) {
 			return true;
 		}
+		var lineType = function (theLine) {
+				if (regexUtil.isListItem(theLine)) {
+					return 'list';
+				} else if (regexUtil.isTableItem(theLine)) {
+					return 'table';
+				} else if (regexUtil.assertionLine(theLine)) {
+					return 'assertion';
+				} else if (regexUtil.isEmpty(theLine)) {
+					return 'empty';
+				} else {
+					return 'comment';
+				}
+			},
+			topline = lines[0],
+			newLineType = lineType(line),
+			topLineType = lineType(topline);
 
-		if (regexUtil.isListItem(line)) {
-			return regexUtil.isListItem(lines[0]);
-		} else if (regexUtil.isTableItem(line)) {
-			return regexUtil.isTableItem(lines[0]);
+		if (topLineType == 'assertion') {
+			return false;
 		}
-		return true;
 
+		switch (newLineType) {
+			case 'list':
+			case 'table':
+			case 'comment':
+				return topLineType === newLineType;
+			case 'assertion':
+			case 'empty':
+				return ['table', 'list', 'empty'].indexOf(topLineType) >= 0;
+		}
+		return false;
 	};
 	self.isTableBlock = function () {
 		var tableLines = lines.filter(regexUtil.isTableItem),
@@ -292,21 +307,14 @@ module.exports = function ExampleBlocks(inputText) {
 	self.getBlocks = function () {
 		var lines = inputText && inputText.split('\n').reverse(),
 			current = new ExampleBlock(),
-			blocks = [];
+			blocks = [current];
 		lines.forEach(function (line) {
 			if (!current.canAddLine(line)) {
-				blocks.push(current);
 				current = new ExampleBlock();
+				blocks.push(current);
 			}
 			current.addLine(line);
-			if (current.isComplete()) {
-				blocks.push(current);
-				current = new ExampleBlock();
-			}
 		});
-		if (current.getMatchText().length > 0) {
-			blocks.push(current);
-		}
 		return blocks.reverse();
 	};
 };
@@ -642,7 +650,7 @@ module.exports = function MarkDownFormatter() {
 						} else if (notEmpty(passedListAssertions)) {
 							values = self.formatListResult({matching: stepResult.attachment.items});
 						}
-						return '\n' + symbol + values.join('\n' + symbol);
+						return '\n\n' + symbol + values.join('\n' + symbol);
 					},
 					formatTableItem = function (item) {
 						return '|' + item.join('|') + '|';
@@ -674,7 +682,7 @@ module.exports = function MarkDownFormatter() {
 							}).join('') + '|');
 						}
 						resultRows = resultRows.concat(values.map(formatTableItem));
-						return '\n' + tableUtil.justifyTable(resultRows).join('\n');
+						return '\n\n' + tableUtil.justifyTable(resultRows).join('\n');
 					};
 				return formatList() || formatTable();
 			},
@@ -1111,21 +1119,32 @@ module.exports = function Runner(stepFunc, config) {
 			processBlock = function (block) {
 				var blockLines = block.getMatchText(),
 					blockParam = block.getAttachment(),
+					attachmentLines = block.getAttachmentLines(),
 					executor;
 				blockLines.forEach(function (line) {
 					lineNumber++;
 					if (!regexUtil.assertionLine(line)) { //Move to block?
-						sendLineEvent('nonAssertionLine', line);
+						if (!blockParam) {
+							sendLineEvent('nonAssertionLine', line);
+						}
 						return;
 					}
 
 					var stepDefinition = context.getStepDefinitionForLine(line);
 					if (!stepDefinition) {
 						sendLineEvent('skippedLine', line);
+						if (attachmentLines.length) {
+							sendLineEvent('nonAssertionLine', '');
+							attachmentLines.forEach(function (attachmentLine) {
+								lineNumber++;
+								sendLineEvent('nonAssertionLine', attachmentLine);
+							});
+						}
 						return;
 					}
 					executor = new StepExecutor(stepDefinition, context);
 					sendLineEvent('stepResult', executor.execute(line, blockParam));
+					lineNumber += attachmentLines.length;
 				});
 			};
 		context.exportToGlobal();
@@ -1194,7 +1213,6 @@ module.exports = function Step(specContext, processFunction) {
 		throw new Error('invalid intialisation');
 	}
 	self.execute = function () {
-		//TODO: tests
 		if (!self.stepArgs) {
 			throw new Error('Step args not defined');
 		}
@@ -1203,11 +1221,7 @@ module.exports = function Step(specContext, processFunction) {
 		specContext.overrideGlobal('expect', expectationBuilder.expect);
 		try {
 			processFunction.apply({}, self.stepArgs);
-			// TODO: remove assertion class, check where value is used and rename to actual (formatters)
 			self.assertions = self.assertions.concat(expectationBuilder.getAssertions());
-			// expectationBuilder.getAssertions().forEach(function (a) {
-			// 	self.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
-			// });
 		} catch (e) {
 			/* geniuine error, not assertion fail */
 			self.exception = e;
@@ -1241,6 +1255,9 @@ module.exports = function TableUtil() {
 	self.tableValuesForTitles = function (table, titles) {
 		if (!titles || titles.length === 0) {
 			return false;
+		}
+		if (!table.titles) {
+			return table.items;
 		}
 		var pickItems = function (tableRow) {
 				return columnIndexes.map(function (val) {
