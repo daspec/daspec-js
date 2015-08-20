@@ -27,4 +27,23 @@ module.exports = function Normaliser() {
 		}
 		return false;
 	};
+	self.normaliseValue = function (value) {
+		var trim = function (val) {
+				if (typeof val === 'string') {
+					return val.trim();
+				}
+				return val;
+			},
+			toNum = function (val) {
+				if (isNaN(val)) {
+					return val;
+				}
+				var result = parseFloat(val);
+				if (isNaN(result)) {
+					return val;
+				}
+				return result;
+			};
+		return toNum(trim(value));
+	};
 };

@@ -187,11 +187,12 @@ describe('ExampleBlock', function () {
 				expect(underTest.getAttachment().type).toEqual('table');
 				expect(underTest.getAttachment().items).toEqual([['a table item'], ['another table item']]);
 			});
-			it('trims cell values', function () {
+			it('normalises cell values', function () {
+				underTest.addLine('|is2.1 |      is2.2 |');
 				underTest.addLine('|2.1 |      2.2 |');
-				underTest.addLine('|1.1\t \t|\t 1.2|');
+				underTest.addLine('|is1.1\t \t|\t is1.2|');
 				underTest.addLine('not a table item');
-				expect(underTest.getAttachment().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
+				expect(underTest.getAttachment().items).toEqual([['is1.1', 'is1.2'], [2.1, 2.2], ['is2.1', 'is2.2']]);
 			});
 			it('gets the table with a header row', function () {
 				underTest.addLine('|2.1|2.2|');
@@ -202,7 +203,7 @@ describe('ExampleBlock', function () {
 
 				expect(underTest.getAttachment().type).toEqual('table');
 				expect(underTest.getAttachment().titles).toEqual(['H1', 'H2']);
-				expect(underTest.getAttachment().items).toEqual([['1.1', '1.2'], ['2.1', '2.2']]);
+				expect(underTest.getAttachment().items).toEqual([[1.1, 1.2], [2.1, 2.2]]);
 			});
 			describe('preventing non-deterministic results', function () {
 				it('reports an error when a table has a heading and multiple columns with the same normalised name', function () {

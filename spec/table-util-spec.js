@@ -58,7 +58,7 @@ describe('TableUtil', function () {
 	});
 	describe('cellValuesForRow', function () {
 		it('should return the values as an array', function () {
-			expect(underTest.cellValuesForRow('|a|b|c|')).toEqual(['a', 'b', 'c']);
+			expect(underTest.cellValuesForRow('|a|1|2.3|')).toEqual(['a', 1, 2.3]);
 		});
 		it('should trim the values', function () {
 			expect(underTest.cellValuesForRow('  | a |\tb  |\tc\t|  ')).toEqual(['a', 'b', 'c']);

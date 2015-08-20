@@ -7,8 +7,8 @@ Release 1
 # Enable JS teams and their stakeholders to write markdown executable specs
 
 
-* optimistically convert to numbers whatever possible
-  - make sure conversion in tables works as well
+* ~~optimistically convert to numbers whatever possible~~
+  - ~~make sure conversion in tables works as well~~
 * ~~allow expect().toEqualSet to work on lists (as well as arrays)~~
 * allow expect().toEqualUnorderedTable to work on simple two-dim arrays (not objects with titles)
 * flexible matcher library support (js hamcrest?)

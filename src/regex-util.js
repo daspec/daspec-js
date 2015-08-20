@@ -1,8 +1,10 @@
-/*global module*/
+/*global module, require*/
 module.exports = function RegexUtil() {
 	'use strict';
 	var self = this,
-			listSymbolRegex = /^\s*[^\s]+\s+/;
+		listSymbolRegex = /^\s*[^\s]+\s+/,
+		Normaliser = require('./normaliser'),
+		normaliser = new Normaliser();
 	this.replaceMatchGroup = function (string, regex, overrides) {
 		var everythingInMatchGroups = new RegExp('(' + regex.source.replace(/([^\\]?)[()]/g, '$1)(') + ')'),
 				allMatches = string.match(everythingInMatchGroups),
@@ -88,18 +90,9 @@ module.exports = function RegexUtil() {
 		return new RegExp(regexTemplate);
 	};
 	this.getMatchedArguments = function (regex, text) {
-		var match = text.match(regex),
-			trim = function (val) {
-				return val.trim();
-			},
-			toNum = function (val) {
-				if (isNaN(val)) {
-					return val;
-				}
-				return parseFloat(val);
-			};
+		var match = text.match(regex);
 		if (match) {
-			return match.slice(1).map(trim).map(toNum);
+			return match.slice(1).map(normaliser.normaliseValue);
 		}
 		return [];
 	};

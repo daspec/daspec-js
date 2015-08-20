@@ -17,9 +17,7 @@ module.exports = function TableUtil() {
 		}
 		values.pop();
 		values =  values.slice(1);
-		return values.map(function (v) {
-			return v.trim(); //TODO: reuse regex util value cleanup
-		});
+		return values.map(normaliser.normaliseValue);
 	};
 	self.tableValuesForTitles = function (table, titles) {
 		if (!titles || titles.length === 0) {
@@ -55,7 +53,7 @@ module.exports = function TableUtil() {
 					return maxSoFar;
 				}
 				var currentLengths = tableRow.map(function (s) {
-					return s.length;
+					return String(s).length;
 				});
 				if (!maxSoFar) {
 					return currentLengths;
@@ -76,7 +74,7 @@ module.exports = function TableUtil() {
 					if (dividerRows[rowIndex]) {
 						return padding(2 + columnLengths[index], '-');
 					} else {
-						return ' '  + cellVal + padding(1 + columnLengths[index] - cellVal.length, ' ');
+						return ' '  + cellVal + padding(1 + columnLengths[index] - String(cellVal).length, ' ');
 					}
 				});
 			},

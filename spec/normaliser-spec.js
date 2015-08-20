@@ -44,4 +44,27 @@ describe('Normaliser', function () {
 			expect(underTest.containsDuplicates([])).toBeFalsy();
 		});
 	});
+	describe('normaliseValue', function () {
+		it('trims strings', function () {
+			expect(underTest.normaliseValue(' a ')).toEqual('a');
+			expect(underTest.normaliseValue('  ')).toEqual('');
+			expect(underTest.normaliseValue('')).toEqual('');
+			expect(underTest.normaliseValue(' 10b ')).toEqual('10b');
+			expect(underTest.normaliseValue('\tc10\t')).toEqual('c10');
+		});
+		it('optimistically parsed numbers into floats', function () {
+			expect(underTest.normaliseValue(' 10.001 ')).toEqual(10.001);
+			expect(underTest.normaliseValue('\t10\t')).toEqual(10);
+		});
+		it('returns undefined is passed nothing', function () {
+			expect(underTest.normaliseValue()).toBeUndefined();
+		});
+		it('returns non string values untouched', function () {
+			expect(underTest.normaliseValue({foo:1})).toEqual({foo:1});
+			expect(underTest.normaliseValue(10.1)).toEqual(10.1);
+			expect(underTest.normaliseValue(false)).toBe(false);
+			expect(underTest.normaliseValue(NaN)).toBeNaN();
+		});
+
+	});
 });

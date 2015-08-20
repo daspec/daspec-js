@@ -329,8 +329,8 @@ describe('Runner', function () {
 				// expect(listeners.stepResult.calls.allArgs()).toEqual([
 					[jasmine.objectContaining({ matcher: /\|(.*)\|(.*)\|/, stepText: '| 4 | 4 |', assertions: [
 						{
-							expected: '4',
-							actual: '4',
+							expected: 4,
+							actual: 4,
 							passed: true,
 							position: 1
 						}]}), 4, 'thespecname'
@@ -341,7 +341,7 @@ describe('Runner', function () {
 						{
 							matcher: /\|(.*)\|(.*)\|/,
 							stepText: '| 4 | 5 |',
-							assertions: [{expected: '5', actual: '4', passed: false, position: 1}]
+							assertions: [{expected: 5, actual: 4, passed: false, position: 1}]
 						}),
 					6,
 					'thespecname'
