@@ -21,7 +21,7 @@ module.exports = function () {
 			'A New Hope',
 			'The Empire Strikes Back',
 			'Return of the Jedi'];
-		expect(episodes).toEqualSet(listOfEpisodes.items);
+		expect(episodes).toEqualSet(listOfEpisodes);
 	});
 	var films = {}, tables = {};
 	defineStep(/These are the ([A-Za-z ]*) Films/, function (seriesName, tableOfReleases) {

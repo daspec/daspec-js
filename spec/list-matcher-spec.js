@@ -34,4 +34,18 @@ describe('toEqualsSet', function () {
 			]);
 
 	});
+	it('should match the items property of an object if passed', function () {
+		expect(underTest.toEqualSet({ordered: true, items: [2, 3, 1]}).assertions).toEqual([
+			{
+				actual: {
+					matches: true,
+					additional: [],
+					missing: [],
+					matching: [2, 3, 1]
+				},
+				expected: [2, 3, 1],
+				passed: true}
+			]);
+
+	});
 });
