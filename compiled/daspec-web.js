@@ -240,7 +240,19 @@ module.exports = function ExampleBlock() {
 	self.getAttachment = function () {
 		return getAttachmentList() || getAttachmentTable();
 	};
+	self.canAddLine = function (line) {
+		if (lines.length === 0) {
+			return true;
+		}
 
+		if (regexUtil.isListItem(line)) {
+			return regexUtil.isListItem(lines[0]);
+		} else if (regexUtil.isTableItem(line)) {
+			return regexUtil.isTableItem(lines[0]);
+		}
+		return true;
+
+	};
 	self.isTableBlock = function () {
 		var tableLines = lines.filter(regexUtil.isTableItem),
 			nonTableAssertionLine = function (line) {
@@ -282,6 +294,10 @@ module.exports = function ExampleBlocks(inputText) {
 			current = new ExampleBlock(),
 			blocks = [];
 		lines.forEach(function (line) {
+			if (!current.canAddLine(line)) {
+				blocks.push(current);
+				current = new ExampleBlock();
+			}
 			current.addLine(line);
 			if (current.isComplete()) {
 				blocks.push(current);
@@ -527,7 +543,7 @@ module.exports = function MarkDownFormatter() {
 			}
 		};
 		return {
-			index: assertion.index,
+			position: assertion.position,
 			actual: formattedValue()
 		};
 	};
@@ -559,11 +575,11 @@ module.exports = function MarkDownFormatter() {
 
 	};
 	self.markResult = function (stepResult) {
-		var withoutIndex = function (assertion) {
-				return !assertion.index && assertion.index !== 0;
+		var withoutPosition = function (assertion) {
+				return !assertion.position && assertion.position !== 0;
 			},
-			withIndex = function (assertion) {
-				return assertion.index;
+			withPosition = function (assertion) {
+				return assertion.position;
 			},
 			failed = function (assertion) {
 				return !assertion.passed;
@@ -582,7 +598,7 @@ module.exports = function MarkDownFormatter() {
 				if (stepResult.exception) {
 					return crossValue(stepResult.stepText);
 				}
-				var noIndexAssertions = stepResult.assertions.filter(withoutIndex);
+				var noIndexAssertions = stepResult.assertions.filter(withoutPosition);
 				if (noIndexAssertions.length === 0) {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
@@ -596,7 +612,7 @@ module.exports = function MarkDownFormatter() {
 					}
 				}
 				if (stepResult.assertions.some(failed)) {
-					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.filter(withIndex).map(self.formatPrimitiveResult));
+					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.filter(withPosition).map(self.formatPrimitiveResult));
 				}
 				if (stepResult.assertions.length) {
 					if (regexUtil.isListItem(stepResult.stepText)) {
@@ -746,10 +762,23 @@ module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 module.exports = {
 	toEqualSet: function (expected) {
 		'use strict';
-		var	ListUtil = require('../list-util'),
+
+		var	parseExpected = function () {
+				if (!expected) {
+					return [];
+				}
+				if (Array.isArray(expected)) {
+					return expected;
+				}
+				if (expected.items && Array.isArray(expected.items)) {
+					return expected.items;
+				}
+				return [];
+			},
+			ListUtil = require('../list-util'),
 			listUtil = new ListUtil(),
-			listResult = listUtil.unorderedMatch(expected, this.actual);
-		this.addAssertion(listResult.matches, expected, listResult);
+			listResult = listUtil.unorderedMatch(parseExpected(), this.actual);
+		this.addAssertion(listResult.matches, parseExpected(), listResult);
 		return this;
 	}
 };
@@ -796,6 +825,9 @@ module.exports = function Normaliser() {
 		return string.toLocaleLowerCase().replace(/\s/g, '');
 	};
 	self.normaliseObject = function (object) {
+		if (Array.isArray(object)) {
+			return object;
+		}
 		var result = {};
 		Object.keys(object).forEach(function (key) {
 			result[self.normaliseString(key)] = object[key];
@@ -816,6 +848,25 @@ module.exports = function Normaliser() {
 			}
 		}
 		return false;
+	};
+	self.normaliseValue = function (value) {
+		var trim = function (val) {
+				if (typeof val === 'string') {
+					return val.trim();
+				}
+				return val;
+			},
+			toNum = function (val) {
+				if (isNaN(val)) {
+					return val;
+				}
+				var result = parseFloat(val);
+				if (isNaN(result)) {
+					return val;
+				}
+				return result;
+			};
+		return toNum(trim(value));
 	};
 };
 
@@ -869,11 +920,13 @@ module.exports = function observable(base) {
 };
 
 },{}],17:[function(require,module,exports){
-/*global module*/
+/*global module, require*/
 module.exports = function RegexUtil() {
 	'use strict';
 	var self = this,
-			listSymbolRegex = /^\s*[^\s]+\s+/;
+		listSymbolRegex = /^\s*[^\s]+\s+/,
+		Normaliser = require('./normaliser'),
+		normaliser = new Normaliser();
 	this.replaceMatchGroup = function (string, regex, overrides) {
 		var everythingInMatchGroups = new RegExp('(' + regex.source.replace(/([^\\]?)[()]/g, '$1)(') + ')'),
 				allMatches = string.match(everythingInMatchGroups),
@@ -881,9 +934,9 @@ module.exports = function RegexUtil() {
 				trailing = string.substring(allMatches.index + allMatches[0].length),
 				values = allMatches.slice(1);
 		overrides.forEach(function (replacement) {
-			var findIndex = replacement.index * 2 + 1;
-			if (replacement.index >= 0 && findIndex < (values.length - 1)) {
-				values[findIndex] = replacement.actual;
+			var findPosition = replacement.position * 2 + 1;
+			if (replacement.position >= 0 && findPosition < (values.length - 1)) {
+				values[findPosition] = replacement.actual;
 			}
 		});
 		return initial + values.join('') + trailing;
@@ -959,24 +1012,15 @@ module.exports = function RegexUtil() {
 		return new RegExp(regexTemplate);
 	};
 	this.getMatchedArguments = function (regex, text) {
-		var match = text.match(regex),
-			trim = function (val) {
-				return val.trim();
-			},
-			toNum = function (val) {
-				if (isNaN(val)) {
-					return val;
-				}
-				return parseFloat(val);
-			};
+		var match = text.match(regex);
 		if (match) {
-			return match.slice(1).map(trim).map(toNum);
+			return match.slice(1).map(normaliser.normaliseValue);
 		}
 		return [];
 	};
 };
 
-},{}],18:[function(require,module,exports){
+},{"./normaliser":15}],18:[function(require,module,exports){
 /*global module, require*/
 module.exports = function Runner(stepFunc, config) {
 	'use strict';
@@ -1192,9 +1236,7 @@ module.exports = function TableUtil() {
 		}
 		values.pop();
 		values =  values.slice(1);
-		return values.map(function (v) {
-			return v.trim(); //TODO: reuse regex util value cleanup
-		});
+		return values.map(normaliser.normaliseValue);
 	};
 	self.tableValuesForTitles = function (table, titles) {
 		if (!titles || titles.length === 0) {
@@ -1218,6 +1260,9 @@ module.exports = function TableUtil() {
 		}
 		var normalisedTitles = titles.map(normaliser.normaliseString),
 			pickItems = function (item) {
+				if (Array.isArray(item)) {
+					return item;
+				}
 				return normalisedTitles.map(function (title) {
 					return item[title];
 				});
@@ -1230,7 +1275,7 @@ module.exports = function TableUtil() {
 					return maxSoFar;
 				}
 				var currentLengths = tableRow.map(function (s) {
-					return s.length;
+					return String(s).length;
 				});
 				if (!maxSoFar) {
 					return currentLengths;
@@ -1251,7 +1296,7 @@ module.exports = function TableUtil() {
 					if (dividerRows[rowIndex]) {
 						return padding(2 + columnLengths[index], '-');
 					} else {
-						return ' '  + cellVal + padding(1 + columnLengths[index] - cellVal.length, ' ');
+						return ' '  + cellVal + padding(1 + columnLengths[index] - String(cellVal).length, ' ');
 					}
 				});
 			},

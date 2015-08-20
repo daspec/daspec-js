@@ -65,19 +65,32 @@ module.exports = function ExampleBlock() {
 	self.addLine = function (lineText) {
 		lines.unshift(lineText);
 	};
-	self.isComplete = function () {
-		if (lines.length === 0) {
-			return false;
-		}
-		if (regexUtil.isListItem(lines[0]) || regexUtil.isTableItem(lines[0]) || lines[0].trim().length === 0) {
-			return false;
-		}
-		return true;
-	};
 	self.getAttachment = function () {
 		return getAttachmentList() || getAttachmentTable();
 	};
+	self.canAddLine = function (line) {
+		if (lines.length === 0) {
+			return true;
+		}
+		var topline = lines[0],
+			basicAssertionLine = function (theLine) {
+				return regexUtil.assertionLine(theLine) && !regexUtil.isTableItem(theLine) && !regexUtil.isListItem(theLine);
+			};
 
+		if (basicAssertionLine(topline)) {
+			return false;
+		}
+
+		if (regexUtil.isListItem(line)) {
+			return regexUtil.isListItem(topline);
+		} else if (regexUtil.isTableItem(line)) {
+			return regexUtil.isTableItem(topline);
+		} else if (regexUtil.assertionLine(line) || regexUtil.isEmpty(line)) {
+			return regexUtil.isListItem(topline) || regexUtil.isTableItem(topline) || regexUtil.isEmpty(topline);
+		} else {
+			return !regexUtil.isEmpty(topline) && !regexUtil.assertionLine(topline);
+		}
+	};
 	self.isTableBlock = function () {
 		var tableLines = lines.filter(regexUtil.isTableItem),
 			nonTableAssertionLine = function (line) {

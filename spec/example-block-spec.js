@@ -7,44 +7,43 @@ describe('ExampleBlock', function () {
 
 		underTest = new ExampleBlock();
 	});
-	describe('isComplete', function () {
-		it('is false when the block is empty', function () {
-			expect(underTest.isComplete()).toBeFalsy();
+	describe('canAddLine', function () {
+		var lineMap = {
+				table: '|a|',
+				list: '* a list item',
+				assertion: 'this should be processed',
+				blank: '',
+				empty: ' \t ',
+				comment: '> this is a comment'
+			},
+			matrix = [
+				['Previous line',	'table',	'list',	'assertion',	'comment',	'blank',	'none',	'empty'],
+				//when adding a line
+				['table',			true,		false,	false,			false,		false,		true,	false],
+				['list',			false,		true,	false,			false,		false,		true,	false],
+				['assertion',		true,		true,	false,			false,		true,		true,	true],
+				['comment',			false,		false,	false,			true,		false,		true,	false],
+				['blank',			true,		true,	false,			false,		true,		true,	true]
+			],
+			previousLines = matrix[0].slice(1),
+			cases = matrix.slice(1);
+		cases.forEach(function (caseInfo) {
+			var lineType = caseInfo[0];
+			describe('when adding a ' + lineType +  ' line', function () {
+				var newLine = lineMap[lineType],
+					results = caseInfo.slice(1);
+				previousLines.forEach(function (previousLineType, index) {
+					var previousLine = lineMap[previousLineType],
+						expectedResult = results[index];
+					it('should return ' + expectedResult + ' when previous line is a ' + previousLineType + ' line', function () {
+						if (previousLine !== undefined) {
+							underTest.addLine(previousLine);
+						}
+						expect(underTest.canAddLine(newLine)).toBe(expectedResult);
+					});
+				});
+			});
 		});
-		it('is false when the most recent line is a list item', function () {
-			underTest.addLine('* list item');
-			expect(underTest.isComplete()).toBeFalsy();
-		});
-		it('is true when the only line is a non list item', function () {
-			underTest.addLine('not a list item');
-			expect(underTest.isComplete()).toBeTruthy();
-		});
-		it('is true when the most recent line is a non list item', function () {
-			underTest.addLine('* another list item');
-			underTest.addLine('* a list item');
-			underTest.addLine('not a list item');
-			expect(underTest.isComplete()).toBeTruthy();
-		});
-		it('is false when the most recent line is a table item', function () {
-			underTest.addLine('| table item |');
-			expect(underTest.isComplete()).toBeFalsy();
-		});
-		it('is false when the last line is blank', function () {
-			underTest.addLine('* a list item');
-			underTest.addLine('');
-			expect(underTest.isComplete()).toBeFalsy();
-		});
-		it('is false when the last line is space-only', function () {
-			underTest.addLine('* a list item');
-			underTest.addLine('  ');
-			expect(underTest.isComplete()).toBeFalsy();
-		});
-		it('is false when the last line is tab-only', function () {
-			underTest.addLine('* a list item');
-			underTest.addLine('\t');
-			expect(underTest.isComplete()).toBeFalsy();
-		});
-		/*TODO: complete a block if a list switches to a table or a table switches to a list */
 	});
 	describe('isTableBlock', function () {
 		it('returns true when the block is just a table', function () {

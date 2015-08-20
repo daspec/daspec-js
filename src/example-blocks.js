@@ -6,17 +6,14 @@ module.exports = function ExampleBlocks(inputText) {
 	self.getBlocks = function () {
 		var lines = inputText && inputText.split('\n').reverse(),
 			current = new ExampleBlock(),
-			blocks = [];
+			blocks = [current];
 		lines.forEach(function (line) {
-			current.addLine(line);
-			if (current.isComplete()) {
-				blocks.push(current);
+			if (!current.canAddLine(line)) {
 				current = new ExampleBlock();
+				blocks.push(current);
 			}
+			current.addLine(line);
 		});
-		if (current.getMatchText().length > 0) {
-			blocks.push(current);
-		}
 		return blocks.reverse();
 	};
 };

@@ -13,7 +13,7 @@ Release 1
 * ~~allow expect().toEqualUnorderedTable to work on simple two-dim arrays (not objects with titles)~~
 
 * concept solution for async -- just to make sure there won't be huge api changes
-* concept solution for before/after tags
+* ~~concept solution for before/after tags~~
 * go through TODO items
 * markdown formatter config
 	- template for the header line

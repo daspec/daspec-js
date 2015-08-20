@@ -23,6 +23,9 @@ module.exports = function TableUtil() {
 		if (!titles || titles.length === 0) {
 			return false;
 		}
+		if (!table.titles) {
+			return table.items;
+		}
 		var pickItems = function (tableRow) {
 				return columnIndexes.map(function (val) {
 					return tableRow[val];
