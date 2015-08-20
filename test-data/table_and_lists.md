@@ -53,6 +53,7 @@ Check Star Wars Films are:
 # Table and lists in the same spec
 
 These are the Star Wars Films:
+
 | A New Hope              | 1976 |
 | The Empire Strikes Back | 1979 |
 | The Return of the Jedi  | 1983 |
@@ -62,6 +63,7 @@ These are the Star Wars Films:
 * Simple arithmetic: 3 plus 3 is **~~5~~ [6]**
 
 **Star Wars has the following episodes:**
+
 * [✓] A New Hope
 * [✓] The Empire Strikes Back
 * [✓] Return of the Jedi
@@ -73,6 +75,7 @@ These are the Star Wars Films:
 | The Return of the Jedi                 | **~~1990~~ [1983]** |
 
 **Star Wars has the following episodes:**
+
 * [✓] A New Hope
 * [✓] The Empire Strikes Back
 * [✓] Return of the Jedi
@@ -82,11 +85,13 @@ These are the Star Wars Films:
 * Simple arithmetic: 3 plus 3 is **~~5~~ [6]**
 
 These are the Star Wars Films:
+
 | A New Hope              | 1976 |
 | The Empire Strikes Back | 1979 |
 | The Return of the Jedi  | 1983 |
 
 **~~Check Star Wars Films are:~~**
+
 | ? | Title                       | Year         |
 |---|-----------------------------|--------------|
 | ✓ | A New Hope                  | 1976         |

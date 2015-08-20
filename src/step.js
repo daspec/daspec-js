@@ -8,7 +8,6 @@ module.exports = function Step(specContext, processFunction) {
 		throw new Error('invalid intialisation');
 	}
 	self.execute = function () {
-		//TODO: tests
 		if (!self.stepArgs) {
 			throw new Error('Step args not defined');
 		}
@@ -17,11 +16,7 @@ module.exports = function Step(specContext, processFunction) {
 		specContext.overrideGlobal('expect', expectationBuilder.expect);
 		try {
 			processFunction.apply({}, self.stepArgs);
-			// TODO: remove assertion class, check where value is used and rename to actual (formatters)
 			self.assertions = self.assertions.concat(expectationBuilder.getAssertions());
-			// expectationBuilder.getAssertions().forEach(function (a) {
-			// 	self.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
-			// });
 		} catch (e) {
 			/* geniuine error, not assertion fail */
 			self.exception = e;

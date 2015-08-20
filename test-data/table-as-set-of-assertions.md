@@ -52,6 +52,7 @@ These are the Star Wars Films:
 #Tables as a set of assertions
 
 These are the Star Wars Films:
+
 | Title                   | Year |
 |-------------------------|------|
 | A New Hope              | 1976 |

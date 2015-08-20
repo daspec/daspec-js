@@ -14,11 +14,7 @@ Release 1
 
 * concept solution for async -- just to make sure there won't be huge api changes
 * ~~concept solution for before/after tags~~
-* go through TODO items
-* markdown formatter config
-	- template for the header line
-	- ~~template for skipped marker~~
-	- template for attachment markers (tick, question...)
+* ~~go through TODO items~~
 * doc web site examples for table matching / various options -< show we can do lists, two-dim tables,
 * doc web site examples for list matching / various options
 
@@ -28,10 +24,15 @@ Later Releases
 * file/line number reporting on failed assertions
 * file/line number reporting on exceptions in parsing
 * increment numerical lists in output
-* whitespace before step and attachment
+* ~~whitespace before step and attachment~~
 * beforeEach/All, afterEach/All - technical steps
 * beforeEach/All, afterEach/All - business steps (eg a file pattern)
 * flexible matcher library support (js hamcrest?)
+* support nested lists
+* markdown formatter config
+	- template for the header line
+	- ~~template for skipped marker~~
+	- template for attachment markers (tick, question...)
 
 # Enable JS developers to easily install and integrate daspec
 

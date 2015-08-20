@@ -27,46 +27,47 @@ module.exports = function ExampleBlock() {
 			result.items = toItems(tableItems);
 			return result;
 		},
-		getAttachmentTable = function () {
-			if (lines.length === 0) {
+
+		getAttachmentTable = function (tableLines) {
+			if (!regexUtil.isTableItem(tableLines[0])) {
 				return false;
 			}
-			var topLine = lines[0],
-				tableLines = lines.filter(regexUtil.isTableItem);
-			if (tableLines.length === 0) {
-				return false;
-			}
-			if (!regexUtil.isTableItem(topLine) && regexUtil.assertionLine(topLine)) {
-				return toTable(tableLines);
-			}
-			return false;
+			return toTable(tableLines);
 		},
-		getAttachmentList = function () {
-			//TODO: support nested lists
-			if (lines.length === 0) {
+		getAttachmentList = function (listLines) {
+			if (!regexUtil.isListItem(listLines[0])) {
 				return false;
 			}
-			var topLine = lines[0],
-				listLines = lines.filter(regexUtil.isListItem),
-				listSymbol;
-			if (listLines.length === 0) {
-				return false;
-			}
-			listSymbol = regexUtil.getListSymbol(listLines[0]);
-			if (!regexUtil.isListItem(topLine) && regexUtil.assertionLine(topLine)) {
-				return {type: 'list',
-					ordered: !isNaN(parseFloat(listSymbol)),
-					items: listLines.map(regexUtil.lineItemContent),
-					symbol: listSymbol
-				};
-			}
-			return false;
+			var listSymbol = regexUtil.getListSymbol(listLines[0]);
+			return {type: 'list',
+				ordered: !isNaN(parseFloat(listSymbol)),
+				items: listLines.map(regexUtil.lineItemContent),
+				symbol: listSymbol
+			};
 		};
 	self.addLine = function (lineText) {
 		lines.unshift(lineText);
 	};
 	self.getAttachment = function () {
-		return getAttachmentList() || getAttachmentTable();
+		var attachmentLines = self.getAttachmentLines().filter(regexUtil.assertionLine);
+
+		if (attachmentLines.length === 0) {
+			return false;
+		}
+		return getAttachmentList(attachmentLines) || getAttachmentTable(attachmentLines);
+	};
+	self.getAttachmentLines = function () {
+		if (lines.length === 0) {
+			return [];
+		}
+		var topLine = lines[0],
+			isAttachmentLine = function (line) {
+				return regexUtil.isTableItem(line) || regexUtil.isListItem(line);
+			};
+		if (!regexUtil.assertionLine(topLine) || regexUtil.isTableItem(topLine) || regexUtil.isListItem(topLine)) {
+			return [];
+		}
+		return lines.filter(isAttachmentLine);
 	};
 	self.canAddLine = function (line) {
 		if (lines.length === 0) {

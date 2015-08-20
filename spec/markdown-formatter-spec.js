@@ -108,7 +108,7 @@ describe('MarkDownFormatter', function () {
 						matcher: /.* (\d)/,
 						assertions: [{passed: true}]
 					})).toEqual(
-						'**Before list**\n' +
+						'**Before list**\n\n' +
 						'* A\n' +
 						'* B'
 					);
@@ -121,7 +121,7 @@ describe('MarkDownFormatter', function () {
 						matcher: /.* (\d)/,
 						assertions: [{passed: false, expected: list, actual: {additional: ['f', 'g'] }}]
 					})).toEqual(
-						'**~~Before list~~**\n' +
+						'**~~Before list~~**\n\n' +
 						'* **[+] f**\n' +
 						'* **[+] g**'
 					);
@@ -134,7 +134,7 @@ describe('MarkDownFormatter', function () {
 						matcher: /.* (\d)/,
 						assertions: [{passed: false, expected: list, actual: {additional: ['f', 'g'] }}]
 					})).toEqual(
-						'**~~Before list~~**\n' +
+						'**~~Before list~~**\n\n' +
 						' 1. **[+] f**\n' +
 						' 1. **[+] g**'
 					);
@@ -147,7 +147,7 @@ describe('MarkDownFormatter', function () {
 						matcher: /.* (\d)/,
 						assertions: [{passed: true, expected: list.items}]
 					})).toEqual(
-						'**Before list**\n' +
+						'**Before list**\n\n' +
 						'* [' + tick + '] A\n' +
 						'* [' + tick + '] B'
 					);
@@ -160,7 +160,7 @@ describe('MarkDownFormatter', function () {
 						matcher: /.* (\d)/,
 						assertions: [{passed: false, expected: list, actual: {additional: ['f', 'g'] }}, {passed: true, expected: list.items}]
 					})).toEqual(
-						'**~~Before list~~**\n' +
+						'**~~Before list~~**\n\n' +
 						'* **[+] f**\n' +
 						'* **[+] g**'
 					);
@@ -175,7 +175,7 @@ describe('MarkDownFormatter', function () {
 							matcher: /.* (\d)/,
 							assertions: [{passed: true}]
 						})).toEqual(
-							'**Before table**\n' +
+							'**Before table**\n\n' +
 							'| A | B |\n' +
 							'|---|---|\n' +
 							'| 1 | 2 |');
@@ -188,7 +188,7 @@ describe('MarkDownFormatter', function () {
 							matcher: /.* (\d)/,
 							assertions: [{passed: false, expected: attachment, actual: {additional: [['f', 'g']]}}]
 						})).toEqual(
-							'**~~Before table~~**\n' +
+							'**~~Before table~~**\n\n' +
 							'| ? | A     | B     |\n' +
 							'|---|-------|-------|\n' +
 							'| + | **f** | **g** |'
@@ -202,7 +202,7 @@ describe('MarkDownFormatter', function () {
 							matcher: /.* (\d)/,
 							assertions: [{passed: true, expected: attachment}]
 						})).toEqual(
-							'**Before table**\n' +
+							'**Before table**\n\n' +
 							'| ? | A | B |\n' +
 							'|---|---|---|\n' +
 							'| ' + tick + ' | 1 | 2 |'
@@ -216,7 +216,7 @@ describe('MarkDownFormatter', function () {
 							matcher: /.* (\d)/,
 							assertions: [{passed: true, expected: attachment}, {passed: false, expected: attachment, actual: {additional: [['f', 'g']]}}]
 						})).toEqual(
-							'**~~Before table~~**\n' +
+							'**~~Before table~~**\n\n' +
 							'| ? | A     | B     |\n' +
 							'|---|-------|-------|\n' +
 							'| + | **f** | **g** |'
@@ -229,7 +229,7 @@ describe('MarkDownFormatter', function () {
 							matcher: /.* (\d)/,
 							assertions: [{passed: true}]
 						})).toEqual(
-							'**Before table**\n' +
+							'**Before table**\n\n' +
 							'| 1 | 2 |');
 
 					});

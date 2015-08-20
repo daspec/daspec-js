@@ -18,6 +18,7 @@ Star Wars has the following episodes:
 #Numeric Lists can be a parameter for a step
 
 **Star Wars has the following episodes:**
+
 1. [✓] A New Hope
 1. [✓] The Empire Strikes Back
 1. [✓] Return of the Jedi
@@ -25,6 +26,7 @@ Star Wars has the following episodes:
 > Example of failure
 
 **~~Star Wars has the following episodes:~~**
+
 1. [✓] A New Hope
 1. [✓] Return of the Jedi
 1. **[–] ~~Revenge of the Sith~~**

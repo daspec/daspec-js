@@ -87,9 +87,6 @@ describe('MarkdownResultFormatter', function () {
 				expect(underTest.formattedResults()).toEqual('sline');
 			});
 		});
-		it('copies the attached lines', function () {
-			//TODO
-		});
 	});
 	describe('table formatting', function () {
 		beforeEach(function () {

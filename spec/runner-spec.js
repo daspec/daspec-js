@@ -246,9 +246,11 @@ describe('Runner', function () {
 			expect(listeners.nonAssertionLine).toHaveBeenCalledWith('# header 2', 2, 'thespecname');
 		});
 		it('skippedLine event for things that are expected to match steps, but no matching steps found', function () {
-			runner.execute('text line 1 non matching steps\ntext line 2 non matching steps', 'thespecname');
+			runner.execute('text line 1 non matching steps\ntext line 2 non matching steps\n|a|\n|b|', 'thespecname');
 			expect(listeners.skippedLine).toHaveBeenCalledWith('text line 1 non matching steps', 1, 'thespecname');
 			expect(listeners.skippedLine).toHaveBeenCalledWith('text line 2 non matching steps', 2, 'thespecname');
+			expect(listeners.nonAssertionLine).toHaveBeenCalledWith('|a|', 3, 'thespecname');
+			expect(listeners.nonAssertionLine).toHaveBeenCalledWith('|b|', 4, 'thespecname');
 		});
 		describe('stepResult', function () {
 			it('event for steps without an attachment', function () {
@@ -265,7 +267,7 @@ describe('Runner', function () {
 				);
 			});
 			it('receives a simple call with an attachment', function () {
-				runner.execute('list of yum\n* yum', 'thespecname');
+				runner.execute('list of yum\n\n* yum\n> comment', 'thespecname');
 				expect(listeners.stepResult).toHaveBeenCalledWith(jasmine.objectContaining({
 						matcher: /list of ([a-z]*)/,
 						stepText: 'list of yum',
@@ -281,6 +283,7 @@ describe('Runner', function () {
 					1,
 					'thespecname'
 				);
+				expect(listeners.nonAssertionLine).toHaveBeenCalledWith('> comment', 4, 'thespecname');
 			});
 		});
 		describe('table handling', function () {

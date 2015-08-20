@@ -129,7 +129,7 @@ module.exports = function MarkDownFormatter() {
 						} else if (notEmpty(passedListAssertions)) {
 							values = self.formatListResult({matching: stepResult.attachment.items});
 						}
-						return '\n' + symbol + values.join('\n' + symbol);
+						return '\n\n' + symbol + values.join('\n' + symbol);
 					},
 					formatTableItem = function (item) {
 						return '|' + item.join('|') + '|';
@@ -161,7 +161,7 @@ module.exports = function MarkDownFormatter() {
 							}).join('') + '|');
 						}
 						resultRows = resultRows.concat(values.map(formatTableItem));
-						return '\n' + tableUtil.justifyTable(resultRows).join('\n');
+						return '\n\n' + tableUtil.justifyTable(resultRows).join('\n');
 					};
 				return formatList() || formatTable();
 			},

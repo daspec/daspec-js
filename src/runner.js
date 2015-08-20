@@ -88,21 +88,32 @@ module.exports = function Runner(stepFunc, config) {
 			processBlock = function (block) {
 				var blockLines = block.getMatchText(),
 					blockParam = block.getAttachment(),
+					attachmentLines = block.getAttachmentLines(),
 					executor;
 				blockLines.forEach(function (line) {
 					lineNumber++;
 					if (!regexUtil.assertionLine(line)) { //Move to block?
-						sendLineEvent('nonAssertionLine', line);
+						if (!blockParam) {
+							sendLineEvent('nonAssertionLine', line);
+						}
 						return;
 					}
 
 					var stepDefinition = context.getStepDefinitionForLine(line);
 					if (!stepDefinition) {
 						sendLineEvent('skippedLine', line);
+						if (attachmentLines.length) {
+							sendLineEvent('nonAssertionLine', '');
+							attachmentLines.forEach(function (attachmentLine) {
+								lineNumber++;
+								sendLineEvent('nonAssertionLine', attachmentLine);
+							});
+						}
 						return;
 					}
 					executor = new StepExecutor(stepDefinition, context);
 					sendLineEvent('stepResult', executor.execute(line, blockParam));
+					lineNumber += attachmentLines.length;
 				});
 			};
 		context.exportToGlobal();
