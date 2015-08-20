@@ -36,6 +36,14 @@ module.exports = function () {
 		var actual = films[seriesName];
 		expect(actual).toEqualSet(listOfEpisodes.items);
 	});
+
+	defineStep(/Years of ([A-Za-z ]*) Films are/, function (seriesName, listOfEpisodes) {
+		var actual = films[seriesName].map(function (film) {
+			return [film[1]];
+		});
+		expect(actual).toEqualUnorderedTable(listOfEpisodes);
+	});
+
 	defineStep(/Check ([A-Za-z ]*) Films/, function (seriesName, listOfEpisodes) {
 		expect(tables[seriesName]).toEqualUnorderedTable(listOfEpisodes);
 	});

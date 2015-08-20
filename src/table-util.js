@@ -41,6 +41,9 @@ module.exports = function TableUtil() {
 		}
 		var normalisedTitles = titles.map(normaliser.normaliseString),
 			pickItems = function (item) {
+				if (Array.isArray(item)) {
+					return item;
+				}
 				return normalisedTitles.map(function (title) {
 					return item[title];
 				});

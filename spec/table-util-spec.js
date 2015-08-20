@@ -109,6 +109,9 @@ describe('TableUtil', function () {
 			expect(underTest.objectArrayValuesForTitles(list, [])).toBeFalsy();
 			expect(underTest.objectArrayValuesForTitles(list)).toBeFalsy();
 		});
+		it('returns original array if an item in the list is an array rather than an object with properties', function () {
+			expect(underTest.objectArrayValuesForTitles([[1, 2], {'COST OF ACTION': 3, proFit: 4}, [5, 6]], ['profit', 'cost of action'])).toEqual([[1, 2], [4, 3], [5, 6]]);
+		});
 
 	});
 });

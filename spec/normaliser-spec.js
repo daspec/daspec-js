@@ -26,6 +26,9 @@ describe('Normaliser', function () {
 			underTest.normaliseObject(o);
 			expect(o).toEqual({'Cost of Action': 1, 'PROFIT': 2, costOfInaction: 'XXX'});
 		});
+		it('should return an array unchanged', function () {
+			expect(underTest.normaliseObject([1, 2, 3])).toEqual([1, 2, 3]);
+		});
 	});
 	describe('containsDuplicates', function () {
 		it('returns true if an array of strings contains equivalent strings when normalised', function () {

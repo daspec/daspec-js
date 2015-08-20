@@ -10,8 +10,7 @@ Release 1
 * ~~optimistically convert to numbers whatever possible~~
   - ~~make sure conversion in tables works as well~~
 * ~~allow expect().toEqualSet to work on lists (as well as arrays)~~
-* allow expect().toEqualUnorderedTable to work on simple two-dim arrays (not objects with titles)
-* flexible matcher library support (js hamcrest?)
+* ~~allow expect().toEqualUnorderedTable to work on simple two-dim arrays (not objects with titles)~~
 
 * concept solution for async -- just to make sure there won't be huge api changes
 * concept solution for before/after tags
@@ -32,13 +31,14 @@ Later Releases
 * whitespace before step and attachment
 * beforeEach/All, afterEach/All - technical steps
 * beforeEach/All, afterEach/All - business steps (eg a file pattern)
+* flexible matcher library support (js hamcrest?)
 
 # Enable JS developers to easily install and integrate daspec
 
 * tap output
 * grunt integration
 * gulp integration
-* clean syntax for ~~step definitions~~ and assertions
+* ~~clean syntax for ~~step definitions~~ and assertions~~
 * simple syntax for async expectations
 
 # Enable JS developers to easily get started

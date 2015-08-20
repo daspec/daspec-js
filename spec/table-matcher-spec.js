@@ -12,6 +12,7 @@ describe('table matchers', function () {
 			var result = underTest.expect({type: 'table', items: [[4, 2], [1, 2]]}).toEqualUnorderedTable({type: 'table', items: [[1, 2], [3, 4]]});
 			expect(result.assertions.length).toBe(1);
 			expect(result.assertions[0].passed).toBe(false);
+			expect(result.assertions[0].expected).toEqual([[1, 2], [3, 4]]);
 			expect(result.assertions[0].actual).toEqual({matches: false, missing: [[3, 4]], additional: [[4, 2]], matching: [[1, 2]]});
 		});
 		it('uses table column titles to match rows, if titles are provided', function () {
@@ -26,6 +27,21 @@ describe('table matchers', function () {
 			expect(result.assertions[0].passed).toBe(false);
 			expect(result.assertions[0].actual).toEqual({matches: false, missing: [[3, 4]], additional: [[4, 2], [undefined, 4]], matching: [[1, 2]]});
 		});
+		it('should compare 2 dimentional array to table', function () {
+			var result = underTest.expect([[4, 2], [1, 2]]).toEqualUnorderedTable({type: 'table', items: [[1, 2], [3, 4]]});
+			expect(result.assertions.length).toBe(1);
+			expect(result.assertions[0].passed).toBe(false);
+			expect(result.assertions[0].expected).toEqual([[1, 2], [3, 4]]);
+			expect(result.assertions[0].actual).toEqual({matches: false, missing: [[3, 4]], additional: [[4, 2]], matching: [[1, 2]]});
 
+		});
+		it('should compare 2 dimentional array to table with titles', function () {
+			var result = underTest.expect([[4, 2], [1, 2]]).toEqualUnorderedTable({type: 'table', titles: ['cost', 'benefit'], items: [[1, 2], [3, 4]]});
+			expect(result.assertions.length).toBe(1);
+			expect(result.assertions[0].passed).toBe(false);
+			expect(result.assertions[0].expected).toEqual([[1, 2], [3, 4]]);
+			expect(result.assertions[0].actual).toEqual({matches: false, missing: [[3, 4]], additional: [[4, 2]], matching: [[1, 2]]});
+
+		});
 	});
 });

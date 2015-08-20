@@ -6,6 +6,9 @@ module.exports = function Normaliser() {
 		return string.toLocaleLowerCase().replace(/\s/g, '');
 	};
 	self.normaliseObject = function (object) {
+		if (Array.isArray(object)) {
+			return object;
+		}
 		var result = {};
 		Object.keys(object).forEach(function (key) {
 			result[self.normaliseString(key)] = object[key];
