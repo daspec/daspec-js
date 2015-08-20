@@ -1,6 +1,6 @@
 {
   "name": "daspec-core",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "description": "Official DaSpec core package for Node.js projects.",
   "license": "MIT",
   "repository": {
