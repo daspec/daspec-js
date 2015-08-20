@@ -2,7 +2,6 @@
 describe('Runner', function () {
 	'use strict';
 	var Runner = require('../src/runner'),
-		Assertion = require('../src/assertion'),
 		runner,
 		stepFunc = function (context) {
 			context.defineStep(/this will pass/, function () {
@@ -259,7 +258,7 @@ describe('Runner', function () {
 						matcher: /this will pass/,
 						stepText: 'this will pass -- whole line',
 						attachment: false,
-						assertions: [new Assertion('expected', 'expected', true)]
+						assertions: [{expected: 'expected', actual: 'expected', passed: true}]
 					}),
 					1,
 					'thespecname'
@@ -272,11 +271,11 @@ describe('Runner', function () {
 						stepText: 'list of yum',
 						attachment: { type: 'list', ordered: false, items: ['yum'], symbol: '* ' },
 						assertions: [
-							new Assertion(
-								['yum'],
-								{ matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
-								true
-							)
+							{
+								expected: ['yum'],
+								actual: { matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
+								passed: true
+							}
 						]
 					}),
 					1,
@@ -326,10 +325,28 @@ describe('Runner', function () {
 
 			it('the tableResultBlock result receives table data rows as stepResult', function () {
 				runner.execute('#comment 1\n| number one | number two |\n|------|\n| 4 | 4 |\n|--|--|\n| 4 | 5 |', 'thespecname');
-				expect(listeners.stepResult.calls.allArgs()).toEqual([
-					[jasmine.objectContaining({ matcher: /\|(.*)\|(.*)\|/, stepText: '| 4 | 4 |', assertions: [new Assertion('4', '4', true, 1)]}), 4, 'thespecname'],
-					[jasmine.objectContaining({ matcher: /\|(.*)\|(.*)\|/, stepText: '| 4 | 5 |', assertions: [new Assertion('5', '4', false, 1)]}), 6, 'thespecname']
+				expect(listeners.stepResult.calls.argsFor(0)).toEqual(
+				// expect(listeners.stepResult.calls.allArgs()).toEqual([
+					[jasmine.objectContaining({ matcher: /\|(.*)\|(.*)\|/, stepText: '| 4 | 4 |', assertions: [
+						{
+							expected: '4',
+							actual: '4',
+							passed: true,
+							position: 1
+						}]}), 4, 'thespecname'
+					]);
+					// [
+				expect(listeners.stepResult.calls.argsFor(1)).toEqual([
+					jasmine.objectContaining(
+						{
+							matcher: /\|(.*)\|(.*)\|/,
+							stepText: '| 4 | 5 |',
+							assertions: [{expected: '5', actual: '4', passed: false, position: 1}]
+						}),
+					6,
+					'thespecname'
 				]);
+				// ]);
 			});
 		});
 		it('sends specStarted and specEnded events', function () {

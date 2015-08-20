@@ -36,20 +36,9 @@ module.exports = function AssertionCounts() {
 };
 
 },{}],2:[function(require,module,exports){
-/*global module*/
-module.exports = function Assertion(expected, actual, passed, outputIndex) {
-	'use strict';
-	var self = this;
-	self.value = actual;
-	self.index = outputIndex;
-	self.passed = passed;
-	self.expected = expected;
-};
-
-},{}],3:[function(require,module,exports){
 (function (global){
 /*global module, global*/
-module.exports = function Context(globalObject) {
+module.exports = function Context() {
 	'use strict';
 	var self = this,
 		steps = [],
@@ -58,7 +47,10 @@ module.exports = function Context(globalObject) {
 			if (stepText instanceof RegExp) {
 				return stepDefinition.matcher.source === stepText.source;
 			}
-			return stepDefinition.matcher.test(stepText); // TODO: make sure re-entrant
+			if (!stepText) {
+				return false;
+			}
+			return !!stepText.match(stepDefinition.matcher);
 		},
 		matchingSteps = function (stepText) {
 			return steps.filter(function (stepDefinition) {
@@ -69,20 +61,17 @@ module.exports = function Context(globalObject) {
 		exportedOverrides = {},
 		overrideGlobal = function (map, propname, value) {
 			if (!map[propname]) {
-				map[propname] = globalObject[propname];
+				map[propname] = global[propname];
 			}
-			globalObject[propname] = value;
-			//TODO write tests
+			global[propname] = value;
 		},
 		resetGlobal = function (map) {
 			var propname;
 			for (propname in map) {
-				globalObject[propname] = map[propname];
+				global[propname] = map[propname];
 				delete map[propname];
 			}
 		};
-
-	globalObject = globalObject || global;
 	self.exportToGlobal = function () {
 		overrideGlobal(exportedOverrides, 'defineStep',  self.defineStep);
 		overrideGlobal(exportedOverrides, 'addMatchers',  self.addMatchers);
@@ -127,7 +116,7 @@ module.exports = function Context(globalObject) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 /*global module, require*/
 module.exports = function CountingResultListener(runner) {
 	'use strict';
@@ -155,7 +144,7 @@ module.exports = function CountingResultListener(runner) {
 	});
 };
 
-},{"./assertion-counts":1}],5:[function(require,module,exports){
+},{"./assertion-counts":1}],4:[function(require,module,exports){
 (function (global){
 /*global require, global*/
 
@@ -166,7 +155,7 @@ global.DaSpec = {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../test-data/test-steps":22,"./markdown-result-formatter":12,"./runner":18}],6:[function(require,module,exports){
+},{"../test-data/test-steps":21,"./markdown-result-formatter":11,"./runner":17}],5:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlock() {
 	'use strict';
@@ -277,7 +266,7 @@ module.exports = function ExampleBlock() {
 	};
 };
 
-},{"./normaliser":15,"./regex-util":17,"./table-util":21}],7:[function(require,module,exports){
+},{"./normaliser":14,"./regex-util":16,"./table-util":20}],6:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlocks(inputText) {
 	'use strict';
@@ -301,7 +290,7 @@ module.exports = function ExampleBlocks(inputText) {
 	};
 };
 
-},{"./example-block":6}],8:[function(require,module,exports){
+},{"./example-block":5}],7:[function(require,module,exports){
 /*global module */
 module.exports = function Expect(actualValue, matchersArray) {
 	'use strict';
@@ -412,7 +401,7 @@ module.exports = function Expect(actualValue, matchersArray) {
 
 };
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /*global module, require */
 module.exports = function ExpectationBuilder(stepArgumentArray, matchersArray) {
 	'use strict';
@@ -455,7 +444,7 @@ module.exports = function ExpectationBuilder(stepArgumentArray, matchersArray) {
 	};
 };
 
-},{"./expect":8}],10:[function(require,module,exports){
+},{"./expect":7}],9:[function(require,module,exports){
 /*global module*/
 module.exports = function ListUtil() {
 	'use strict';
@@ -500,7 +489,7 @@ module.exports = function ListUtil() {
 	};
 };
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkDownFormatter() {
 	'use strict';
@@ -529,12 +518,12 @@ module.exports = function MarkDownFormatter() {
 			if (assertion.passed) {
 				return boldValue(assertion.expected);
 			} else {
-				return crossValueAndExpected(assertion.expected, assertion.value);
+				return crossValueAndExpected(assertion.expected, assertion.actual);
 			}
 		};
 		return {
 			index: assertion.index,
-			value: formattedValue()
+			actual: formattedValue()
 		};
 	};
 	self.formatListResult = function (listResult) {
@@ -628,7 +617,7 @@ module.exports = function MarkDownFormatter() {
 							values = stepResult.attachment.items,
 							symbol = stepResult.attachment.symbol || '* ';
 						if (notEmpty(failedListAssertions)) {
-							values = self.formatListResult(failedListAssertions[0].value);
+							values = self.formatListResult(failedListAssertions[0].actual);
 						} else if (notEmpty(passedListAssertions)) {
 							values = self.formatListResult({matching: stepResult.attachment.items});
 						}
@@ -650,7 +639,7 @@ module.exports = function MarkDownFormatter() {
 							if (resultTitles) {
 								resultTitles.unshift('?');
 							}
-							values = self.getTableResult(failedTableAssertions[0].value);
+							values = self.getTableResult(failedTableAssertions[0].actual);
 						} else if (notEmpty(passedTableAssertions)) {
 							if (resultTitles) {
 								resultTitles.unshift('?');
@@ -678,7 +667,7 @@ module.exports = function MarkDownFormatter() {
 	};
 };
 
-},{"./regex-util":17,"./table-util":21}],12:[function(require,module,exports){
+},{"./regex-util":16,"./table-util":20}],11:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 	'use strict';
@@ -747,7 +736,7 @@ module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 
 };
 
-},{"./counting-result-listener":4,"./markdown-formatter":11,"./table-util":21}],13:[function(require,module,exports){
+},{"./counting-result-listener":3,"./markdown-formatter":10,"./table-util":20}],12:[function(require,module,exports){
 /*global module, require*/
 module.exports = {
 	toEqualSet: function (expected) {
@@ -760,7 +749,7 @@ module.exports = {
 	}
 };
 
-},{"../list-util":10}],14:[function(require,module,exports){
+},{"../list-util":9}],13:[function(require,module,exports){
 /*global module, require*/
 module.exports = {
 	toEqualUnorderedTable: function (expected) {
@@ -793,7 +782,7 @@ module.exports = {
 	}
 };
 
-},{"../expect":8,"../table-util":21,"./list":13}],15:[function(require,module,exports){
+},{"../expect":7,"../table-util":20,"./list":12}],14:[function(require,module,exports){
 /*global module*/
 module.exports = function Normaliser() {
 	'use strict';
@@ -825,7 +814,7 @@ module.exports = function Normaliser() {
 	};
 };
 
-},{}],16:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /*global module, console*/
 /*jshint unused:false */
 module.exports = function observable(base) {
@@ -874,7 +863,7 @@ module.exports = function observable(base) {
 	return base;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /*global module*/
 module.exports = function RegexUtil() {
 	'use strict';
@@ -889,7 +878,7 @@ module.exports = function RegexUtil() {
 		overrides.forEach(function (replacement) {
 			var findIndex = replacement.index * 2 + 1;
 			if (replacement.index >= 0 && findIndex < (values.length - 1)) {
-				values[findIndex] = replacement.value;
+				values[findIndex] = replacement.actual;
 			}
 		});
 		return initial + values.join('') + trailing;
@@ -982,7 +971,7 @@ module.exports = function RegexUtil() {
 	};
 };
 
-},{}],18:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /*global module, require*/
 module.exports = function Runner(stepFunc, config) {
 	'use strict';
@@ -1106,7 +1095,7 @@ module.exports = function Runner(stepFunc, config) {
 	};
 };
 
-},{"./context":3,"./counting-result-listener":4,"./example-blocks":7,"./matchers/list":13,"./matchers/table":14,"./observable":16,"./regex-util":17,"./step-executor":19}],19:[function(require,module,exports){
+},{"./context":2,"./counting-result-listener":3,"./example-blocks":6,"./matchers/list":12,"./matchers/table":13,"./observable":15,"./regex-util":16,"./step-executor":18}],18:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepExecutor(stepDefinition, specContext) {
 	'use strict';
@@ -1145,13 +1134,12 @@ module.exports = function StepExecutor(stepDefinition, specContext) {
 	};
 };
 
-},{"./regex-util":17,"./step":20,"./table-util":21}],20:[function(require,module,exports){
+},{"./regex-util":16,"./step":19,"./table-util":20}],19:[function(require,module,exports){
 /*global module, require */
 module.exports = function Step(specContext, processFunction) {
 	'use strict';
 	var self = this,
-		ExpectationBuilder = require('./expectation-builder'),
-		Assertion = require('./assertion');
+		ExpectationBuilder = require('./expectation-builder');
 	self.assertions = [];
 	if (!specContext || !processFunction) {
 		throw new Error('invalid intialisation');
@@ -1167,9 +1155,10 @@ module.exports = function Step(specContext, processFunction) {
 		try {
 			processFunction.apply({}, self.stepArgs);
 			// TODO: remove assertion class, check where value is used and rename to actual (formatters)
-			expectationBuilder.getAssertions().forEach(function (a) {
-				self.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
-			});
+			self.assertions = self.assertions.concat(expectationBuilder.getAssertions());
+			// expectationBuilder.getAssertions().forEach(function (a) {
+			// 	self.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
+			// });
 		} catch (e) {
 			/* geniuine error, not assertion fail */
 			self.exception = e;
@@ -1178,7 +1167,7 @@ module.exports = function Step(specContext, processFunction) {
 	};
 };
 
-},{"./assertion":2,"./expectation-builder":9}],21:[function(require,module,exports){
+},{"./expectation-builder":8}],20:[function(require,module,exports){
 /*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
@@ -1268,7 +1257,7 @@ module.exports = function TableUtil() {
 	};
 };
 
-},{"./normaliser":15,"./regex-util":17}],22:[function(require,module,exports){
+},{"./normaliser":14,"./regex-util":16}],21:[function(require,module,exports){
 /*global module, expect, defineStep*/
 module.exports = function () {
 	'use strict';
@@ -1335,4 +1324,4 @@ module.exports = function () {
 
 };
 
-},{}]},{},[5]);
+},{}]},{},[4]);

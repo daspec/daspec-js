@@ -4,7 +4,6 @@ describe('StepExecutor', function () {
 	'use strict';
 	var StepExecutor = require('../src/step-executor'),
 		SpecContext = require('../src/context'),
-		Assertion = require('../src/assertion'),
 		tableMatcher = require('../src/matchers/table'),
 		listMatcher = require('../src/matchers/list'),
 		underTest,
@@ -43,7 +42,7 @@ describe('StepExecutor', function () {
 					matcher: /this will pass/,
 					stepText: 'this will pass -- whole line',
 					attachment: false,
-					assertions: [new Assertion('expected', 'expected', true)]
+					assertions: [{expected: 'expected', actual: 'expected', passed: true}]
 				})
 			);
 		});
@@ -54,7 +53,7 @@ describe('StepExecutor', function () {
 				matcher: /equal numbers (\d*) = (\d*)/,
 				stepText: 'equal numbers 5 = 5',
 				attachment: false,
-				assertions: [new Assertion(5, 5, true, 1)]
+				assertions: [{expected: 5, actual: 5, passed: true, position: 1}]
 			}));
 		});
 		it('should return result for non-positional failure', function () {
@@ -66,7 +65,7 @@ describe('StepExecutor', function () {
 				matcher: /this will fail/,
 				stepText: 'this will fail -- whole line',
 				attachment: false,
-				assertions: [new Assertion('expected', 'not expected', false)]
+				assertions: [{expected: 'expected', actual:'not expected', passed: false}]
 			}));
 		});
 		it('should return result for positional failures, with an index', function () {
@@ -75,7 +74,7 @@ describe('StepExecutor', function () {
 				matcher: /equal numbers (\d*) = (\d*)/,
 				stepText: 'equal numbers 5 = 6',
 				attachment: false,
-				assertions: [new Assertion(6, 5, false, 1)]
+				assertions: [{expected: 6, actual: 5, passed: false, position: 1}]
 			}));
 		});
 		it('should return result for exceptions, with an exception in the step result', function () {
@@ -102,11 +101,11 @@ describe('StepExecutor', function () {
 				stepText: 'list of yum',
 				attachment: { type: 'list', ordered: false, items: ['yum'], symbol: '* ' },
 				assertions: [
-					new Assertion(
-						['yum'],
-						{ matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
-						true
-					)
+					{
+						expected: ['yum'],
+						actual: { matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
+						passed: true
+					}
 				]
 			}));
 		});
@@ -120,10 +119,12 @@ describe('StepExecutor', function () {
 				matcher: /table of ([a-z]*)/,
 				stepText: 'table of yum',
 				attachment: { type: 'table', titles: ['name'], items: [['yum']]},
-				assertions: [new Assertion(
-					[['yum']],
-					{ matches: true, missing: [], additional: [], matching: [['yum']]},
-					true)
+				assertions: [
+					{
+						expected: [['yum']],
+						actual: { matches: true, missing: [], additional: [], matching: [['yum']]},
+						passed: true
+					}
 				]
 			}));
 		});

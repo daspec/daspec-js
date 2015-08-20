@@ -26,12 +26,12 @@ module.exports = function MarkDownFormatter() {
 			if (assertion.passed) {
 				return boldValue(assertion.expected);
 			} else {
-				return crossValueAndExpected(assertion.expected, assertion.value);
+				return crossValueAndExpected(assertion.expected, assertion.actual);
 			}
 		};
 		return {
-			index: assertion.index,
-			value: formattedValue()
+			position: assertion.position,
+			actual: formattedValue()
 		};
 	};
 	self.formatListResult = function (listResult) {
@@ -62,11 +62,11 @@ module.exports = function MarkDownFormatter() {
 
 	};
 	self.markResult = function (stepResult) {
-		var withoutIndex = function (assertion) {
-				return !assertion.index && assertion.index !== 0;
+		var withoutPosition = function (assertion) {
+				return !assertion.position && assertion.position !== 0;
 			},
-			withIndex = function (assertion) {
-				return assertion.index;
+			withPosition = function (assertion) {
+				return assertion.position;
 			},
 			failed = function (assertion) {
 				return !assertion.passed;
@@ -85,7 +85,7 @@ module.exports = function MarkDownFormatter() {
 				if (stepResult.exception) {
 					return crossValue(stepResult.stepText);
 				}
-				var noIndexAssertions = stepResult.assertions.filter(withoutIndex);
+				var noIndexAssertions = stepResult.assertions.filter(withoutPosition);
 				if (noIndexAssertions.length === 0) {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
@@ -99,7 +99,7 @@ module.exports = function MarkDownFormatter() {
 					}
 				}
 				if (stepResult.assertions.some(failed)) {
-					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.filter(withIndex).map(self.formatPrimitiveResult));
+					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.filter(withPosition).map(self.formatPrimitiveResult));
 				}
 				if (stepResult.assertions.length) {
 					if (regexUtil.isListItem(stepResult.stepText)) {
@@ -125,7 +125,7 @@ module.exports = function MarkDownFormatter() {
 							values = stepResult.attachment.items,
 							symbol = stepResult.attachment.symbol || '* ';
 						if (notEmpty(failedListAssertions)) {
-							values = self.formatListResult(failedListAssertions[0].value);
+							values = self.formatListResult(failedListAssertions[0].actual);
 						} else if (notEmpty(passedListAssertions)) {
 							values = self.formatListResult({matching: stepResult.attachment.items});
 						}
@@ -147,7 +147,7 @@ module.exports = function MarkDownFormatter() {
 							if (resultTitles) {
 								resultTitles.unshift('?');
 							}
-							values = self.getTableResult(failedTableAssertions[0].value);
+							values = self.getTableResult(failedTableAssertions[0].actual);
 						} else if (notEmpty(passedTableAssertions)) {
 							if (resultTitles) {
 								resultTitles.unshift('?');

@@ -11,38 +11,38 @@ describe('MarkDownFormatter', function () {
 	});
 	describe('formatPrimitiveResult', function () {
 		it('bolds the expected result if passed', function () {
-			expect(underTest.formatPrimitiveResult({expected: 3, value: 6, passed:true, index: 5})).toEqual({index:5, value:'**3**'});
+			expect(underTest.formatPrimitiveResult({expected: 3, actual: 6, passed:true, position: 5})).toEqual({position:5, actual:'**3**'});
 		});
 		it('crosses out and bolds the expected and bolds actual result if failed', function () {
-			expect(underTest.formatPrimitiveResult({expected:3, value:6, passed:false, index: 1})).toEqual({index:1, value:'**~~3~~ [6]**'});
+			expect(underTest.formatPrimitiveResult({expected:3, actual:6, passed:false, position: 1})).toEqual({position:1, actual:'**~~3~~ [6]**'});
 		});
 	});
 	describe('markResult', function () {
 		it('marks a single indexed assertion as failed within a string if there are no unindexed failures', function () {
-			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/, assertions: [{expected: 4, index: 0, passed: false, value: 3}]})).toEqual('The number is **~~4~~ [3]**');
+			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/, assertions: [{expected: 4, position: 0, passed: false, actual: 3}]})).toEqual('The number is **~~4~~ [3]**');
 		});
 		it('marks a single indexed success as bold within a string if there are no unindexed failures', function () {
 			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/,
-				assertions: [{expected: 4, index: 0, passed: true, value: 3}]})).toEqual('The number is **4**');
+				assertions: [{expected: 4, position: 0, passed: true, actual: 3}]})).toEqual('The number is **4**');
 		});
 		it('does not mark indexed successes if there is a non-indexed failure', function () {
 			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/,
 				assertions: [
-					{expected: 4, index: 0, passed: true, value: 3},
+					{expected: 4, position: 0, passed: true, actual: 3},
 					{passed: false}
 				]})).toEqual('**~~The number is 4~~**');
 		});
 		it('does not mark indexed failures if there is a non-indexed failure', function () {
 			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/,
 				assertions: [
-					{expected: 4, index: 0, passed: false, value: 3},
+					{expected: 4, position: 0, passed: false, actual: 3},
 					{passed: false}
 				]})).toEqual('**~~The number is 4~~**');
 		});
 		it('does not mark indexed successes if there is a non-indexed success', function () {
 			expect(underTest.markResult({stepText: 'The number is 4', matcher: /.* (\d)/,
 				assertions: [
-					{expected: 4, index: 0, passed: true, value: 3},
+					{expected: 4, position: 0, passed: true, actual: 3},
 					{passed: true}
 				]})).toEqual('**The number is 4**');
 		});
@@ -80,7 +80,7 @@ describe('MarkDownFormatter', function () {
 					stepText: 'The number is 4', matcher: /.* (\d)/,
 					exception: 'Problem!',
 					assertions: [
-						{expected: 4, index: 0, passed: true, value: 3}
+						{expected: 4, index: 0, passed: true, actual: 3}
 					]})).toEqual('**~~The number is 4~~**\n<!--\nProblem!\n-->');
 			});
 			it('does not mark indexed failures if there is an exception', function () {
@@ -88,7 +88,7 @@ describe('MarkDownFormatter', function () {
 					stepText: 'The number is 4', matcher: /.* (\d)/,
 					exception: 'Problem!',
 					assertions: [
-						{expected: 4, index: 0, passed: false, value: 3}
+						{expected: 4, index: 0, passed: false, actual: 3}
 					]})).toEqual('**~~The number is 4~~**\n<!--\nProblem!\n-->');
 			});
 			it('does not mark non-indexed successes if there is an exception', function () {
@@ -119,7 +119,7 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						assertions: [{passed: false, expected: list, value: {additional: ['f', 'g'] }}]
+						assertions: [{passed: false, expected: list, actual: {additional: ['f', 'g'] }}]
 					})).toEqual(
 						'**~~Before list~~**\n' +
 						'* **[+] f**\n' +
@@ -132,7 +132,7 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						assertions: [{passed: false, expected: list, value: {additional: ['f', 'g'] }}]
+						assertions: [{passed: false, expected: list, actual: {additional: ['f', 'g'] }}]
 					})).toEqual(
 						'**~~Before list~~**\n' +
 						' 1. **[+] f**\n' +
@@ -158,7 +158,7 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						assertions: [{passed: false, expected: list, value: {additional: ['f', 'g'] }}, {passed: true, expected: list.items}]
+						assertions: [{passed: false, expected: list, actual: {additional: ['f', 'g'] }}, {passed: true, expected: list.items}]
 					})).toEqual(
 						'**~~Before list~~**\n' +
 						'* **[+] f**\n' +
@@ -186,7 +186,7 @@ describe('MarkDownFormatter', function () {
 							stepText: 'Before table',
 							attachment: attachment,
 							matcher: /.* (\d)/,
-							assertions: [{passed: false, expected: attachment, value: {additional: [['f', 'g']]}}]
+							assertions: [{passed: false, expected: attachment, actual: {additional: [['f', 'g']]}}]
 						})).toEqual(
 							'**~~Before table~~**\n' +
 							'| ? | A     | B     |\n' +
@@ -214,7 +214,7 @@ describe('MarkDownFormatter', function () {
 							stepText: 'Before table',
 							attachment: attachment,
 							matcher: /.* (\d)/,
-							assertions: [{passed: true, expected: attachment}, {passed: false, expected: attachment, value: {additional: [['f', 'g']]}}]
+							assertions: [{passed: true, expected: attachment}, {passed: false, expected: attachment, actual: {additional: [['f', 'g']]}}]
 						})).toEqual(
 							'**~~Before table~~**\n' +
 							'| ? | A     | B     |\n' +

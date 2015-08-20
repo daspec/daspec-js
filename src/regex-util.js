@@ -10,9 +10,9 @@ module.exports = function RegexUtil() {
 				trailing = string.substring(allMatches.index + allMatches[0].length),
 				values = allMatches.slice(1);
 		overrides.forEach(function (replacement) {
-			var findIndex = replacement.index * 2 + 1;
-			if (replacement.index >= 0 && findIndex < (values.length - 1)) {
-				values[findIndex] = replacement.value;
+			var findPosition = replacement.position * 2 + 1;
+			if (replacement.position >= 0 && findPosition < (values.length - 1)) {
+				values[findPosition] = replacement.actual;
 			}
 		});
 		return initial + values.join('') + trailing;

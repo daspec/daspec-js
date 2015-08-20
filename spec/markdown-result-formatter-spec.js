@@ -3,7 +3,6 @@
 describe('MarkdownResultFormatter', function () {
 	'use strict';
 	var MarkdownResultFormatter = require('../src/markdown-result-formatter'),
-		Assertion = require('../src/assertion'),
 		observable = require('../src/observable'),
 		underTest,
 		runner,
@@ -35,7 +34,7 @@ describe('MarkdownResultFormatter', function () {
 		it('appends the execution result and adds to passed/executed all passed assertions', function () {
 			dispatch('stepResult', {
 				stepText:'This will pass',
-				assertions: [new Assertion('a', 'a', true)]
+				assertions: [{expected: 'a', actual:'a', passed: true}]
 			});
 
 			expect(underTest.formattedResults()).toEqual('**This will pass**');
@@ -100,11 +99,11 @@ describe('MarkdownResultFormatter', function () {
 			it('should create a markdown formatted table lines', function () {
 				dispatch('stepResult', {
 					stepText:'|a|b|',
-					assertions: [new Assertion('a', 'a', true)]
+					assertions: [{expected: 'a', actual: 'a', passed: true}]
 				});
 				dispatch('stepResult', {
 					stepText:'|c|d|',
-					assertions: [new Assertion('a', 'a', true)]
+					assertions: [{expected: 'a', actual: 'a', passed: true}]
 				});
 				dispatch('tableEnded');
 				var results = underTest.formattedResults();
@@ -144,11 +143,11 @@ describe('MarkdownResultFormatter', function () {
 		it('specEnded appends multiple lines together, and adds counts', function () {
 			dispatch('stepResult', {
 				stepText:'This will pass',
-				assertions: [new Assertion('a', 'a', true)]
+				assertions: [{expected: 'a', actual: 'a', passed: true}]
 			});
 			dispatch('stepResult', {
 				stepText:'This will fail',
-				assertions: [new Assertion('a', 'a', false)]
+				assertions: [{expected:'a', actual: 'a', passed: false}]
 			});
 			dispatch('specEnded');
 			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 2, passed: 1, failed: 1\n\n**This will pass**\n**~~This will fail~~**');
@@ -156,13 +155,13 @@ describe('MarkdownResultFormatter', function () {
 		it('specStarted clears out the buffer', function () {
 			dispatch('stepResult', {
 				stepText:'This will pass',
-				assertions: [new Assertion('a', 'a', true)]
+				assertions: [{expected: 'a', actual: 'a', passed: true}]
 			});
 			dispatch('specEnded');
 			dispatch('specStarted');
 			dispatch('stepResult', {
 				stepText:'This will fail',
-				assertions: [new Assertion('a', 'a', false)]
+				assertions: [{expected: 'a', actual: 'a', passed: false}]
 			});
 			dispatch('specEnded');
 			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 1, failed: 1\n\n**~~This will fail~~**');

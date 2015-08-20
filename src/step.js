@@ -2,8 +2,7 @@
 module.exports = function Step(specContext, processFunction) {
 	'use strict';
 	var self = this,
-		ExpectationBuilder = require('./expectation-builder'),
-		Assertion = require('./assertion');
+		ExpectationBuilder = require('./expectation-builder');
 	self.assertions = [];
 	if (!specContext || !processFunction) {
 		throw new Error('invalid intialisation');
@@ -19,9 +18,10 @@ module.exports = function Step(specContext, processFunction) {
 		try {
 			processFunction.apply({}, self.stepArgs);
 			// TODO: remove assertion class, check where value is used and rename to actual (formatters)
-			expectationBuilder.getAssertions().forEach(function (a) {
-				self.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
-			});
+			self.assertions = self.assertions.concat(expectationBuilder.getAssertions());
+			// expectationBuilder.getAssertions().forEach(function (a) {
+			// 	self.assertions.push(new Assertion(a.expected, a.actual, a.passed, a.position));
+			// });
 		} catch (e) {
 			/* geniuine error, not assertion fail */
 			self.exception = e;
