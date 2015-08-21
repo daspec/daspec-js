@@ -339,14 +339,17 @@ module.exports = function Expect(actualValue, matchersArray) {
 			assertions = assertions.concat(pushedAssertions);
 		}
 	};
-	self.addAssertion = function (didPass, expected, actual) {
+	self.addAssertion = function (didPass, expected, detail) {
 			var calcPassed = function (didPass) {
 					if (negated) {
 						return !didPass;
 					}
 					return didPass;
 				},
-				assertion = {actual: actual || actualValue, passed: calcPassed(didPass)};
+				assertion = {actual: self.actual, passed: calcPassed(didPass)};
+			if (detail) {
+				assertion.detail = detail;
+			}
 			if (expected) {
 				assertion.expected = expected;
 			}
@@ -578,11 +581,14 @@ module.exports = function MarkDownFormatter() {
 
 	};
 	self.markResult = function (stepResult) {
-		var withoutPosition = function (assertion) {
-				return !assertion.position && assertion.position !== 0;
+		var forAttachment = function (assertion) {
+				return stepResult.attachment && (assertion.position === stepResult.stepArgs.length - 1);
+			},
+			withoutPosition = function (assertion) {
+				return forAttachment(assertion) || (!assertion.position && assertion.position !== 0);
 			},
 			withPosition = function (assertion) {
-				return assertion.position;
+				return assertion.position && !forAttachment(assertion);
 			},
 			failed = function (assertion) {
 				return !assertion.passed;
@@ -592,10 +598,6 @@ module.exports = function MarkDownFormatter() {
 			},
 			notEmpty = function (array) {
 				return array && array.length;
-			},
-			forAttachment = function (assertion) {
-				return stepResult.attachment && stepResult.attachment.items && stepResult.attachment.items.length > 0 &&
-					(assertion.expected === stepResult.attachment.items || assertion.expected == stepResult.attachment);
 			},
 			headingLine = function () {
 				if (stepResult.exception) {
@@ -641,7 +643,7 @@ module.exports = function MarkDownFormatter() {
 							values = stepResult.attachment.items,
 							symbol = stepResult.attachment.symbol || '* ';
 						if (notEmpty(failedListAssertions)) {
-							values = self.formatListResult(failedListAssertions[0].actual);
+							values = self.formatListResult(failedListAssertions[0].detail);
 						} else if (notEmpty(passedListAssertions)) {
 							values = self.formatListResult({matching: stepResult.attachment.items});
 						}
@@ -663,7 +665,7 @@ module.exports = function MarkDownFormatter() {
 							if (resultTitles) {
 								resultTitles.unshift('?');
 							}
-							values = self.getTableResult(failedTableAssertions[0].actual);
+							values = self.getTableResult(failedTableAssertions[0].detail);
 						} else if (notEmpty(passedTableAssertions)) {
 							if (resultTitles) {
 								resultTitles.unshift('?');
@@ -781,7 +783,7 @@ module.exports = {
 			ListUtil = require('../list-util'),
 			listUtil = new ListUtil(),
 			listResult = listUtil.unorderedMatch(parseExpected(), this.actual);
-		this.addAssertion(listResult.matches, parseExpected(), listResult);
+		this.addAssertion(listResult.matches, expected, listResult);
 		return this;
 	}
 };
@@ -793,12 +795,11 @@ module.exports = {
 		'use strict';
 		var TableUtil = require('../table-util'),
 			tableUtil = new TableUtil(),
-			listMatchers = require('./list'),
-			Expect = require('../expect'),
-			exp = this,
+			ListUtil = require('../list-util'),
+			listUtil = new ListUtil(),
+			actual = this.actual,
 			comparisonObject,
-			actual = exp.actual,
-			tableExpect;
+			listResult;
 
 		if (!expected.titles) {
 			comparisonObject = actual;
@@ -812,14 +813,13 @@ module.exports = {
 				comparisonObject = tableUtil.objectArrayValuesForTitles(actual, expected.titles);
 			}
 		}
-		tableExpect = new Expect(comparisonObject, listMatchers);
-		tableExpect.toEqualSet(expected.items);
-		exp.pushAssertions(tableExpect.assertions);
-		return exp;
+		listResult = listUtil.unorderedMatch(expected.items, comparisonObject);
+		this.addAssertion(listResult.matches, expected, listResult);
+		return this;
 	}
 };
 
-},{"../expect":7,"../table-util":20,"./list":12}],14:[function(require,module,exports){
+},{"../list-util":9,"../table-util":20}],14:[function(require,module,exports){
 /*global module*/
 module.exports = function Normaliser() {
 	'use strict';
@@ -1356,7 +1356,7 @@ module.exports = function () {
 	});
 	defineStep(/Good ([A-Za-z ]*) Films are/, function (seriesName, listOfEpisodes) {
 		var actual = films[seriesName];
-		expect(actual).toEqualSet(listOfEpisodes.items);
+		expect(actual).toEqualSet(listOfEpisodes.items).atPosition(1); // check we can override positions for custom attachment assertions
 	});
 
 	defineStep(/Years of ([A-Za-z ]*) Films are/, function (seriesName, listOfEpisodes) {

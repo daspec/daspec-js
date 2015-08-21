@@ -6,15 +6,6 @@ Release 1
 
 # Enable JS teams and their stakeholders to write markdown executable specs
 
-
-* ~~optimistically convert to numbers whatever possible~~
-  - ~~make sure conversion in tables works as well~~
-* ~~allow expect().toEqualSet to work on lists (as well as arrays)~~
-* ~~allow expect().toEqualUnorderedTable to work on simple two-dim arrays (not objects with titles)~~
-
-* concept solution for async -- just to make sure there won't be huge api changes
-* ~~concept solution for before/after tags~~
-* ~~go through TODO items~~
 * doc web site examples for table matching / various options -< show we can do lists, two-dim tables,
 * doc web site examples for list matching / various options
 
@@ -75,3 +66,10 @@ Done
 	- ~~mark skipped lines by default by prepending `skipped`~~
   - ~~allow skipped lines if global config has allowSkipped: true~~
   - ~~use configured skipped line indicator in markdown config~~
+* ~~optimistically convert to numbers whatever possible~~
+  - ~~make sure conversion in tables works as well~~
+* ~~allow expect().toEqualSet to work on lists (as well as arrays)~~
+* ~~allow expect().toEqualUnorderedTable to work on simple two-dim arrays (not objects with titles)~~
+* ~~concept solution for async -- just to make sure there won't be huge api changes~~
+* ~~concept solution for before/after tags~~
+* ~~go through TODO items~~
