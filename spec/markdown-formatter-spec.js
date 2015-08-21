@@ -102,12 +102,13 @@ describe('MarkDownFormatter', function () {
 		describe('attachment formatting', function () {
 			describe('lists', function () {
 				it('copies a list if there are no failed attachment assertions', function () {
+					var list = {type: 'list', items: ['A', 'B']};
 					expect(underTest.markResult({
 						stepText: 'Before list',
-						attachment: {type: 'list', items: ['A', 'B']},
+						attachment: list,
 						matcher: /.* (\d)/,
 						assertions: [{passed: true}],
-						position: 1
+						stepArgs: [1, list]
 					})).toEqual(
 						'**Before list**\n\n' +
 						'* A\n' +
@@ -120,10 +121,24 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						assertions: [{passed: false, expected: list, detail: {additional: ['f', 'g'] }}],
-						position: 1
+						assertions: [{passed: false, expected: list, detail: {additional: ['f', 'g'] }, position: 1}],
+						stepArgs: [1, list]
 					})).toEqual(
 						'**~~Before list~~**\n\n' +
+						'* **[+] f**\n' +
+						'* **[+] g**'
+					);
+				});
+				it('uses the assertion position to discover attachment assertions if the expected differs from the attachment', function () {
+					var list = {type: 'list', items: ['A', 'B']};
+					expect(underTest.markResult({
+						stepText: 'Before list 1',
+						stepArgs: [1, list],
+						attachment: list,
+						matcher: /.* (\d)/,
+						assertions: [{passed: false, detail: {additional: ['f', 'g'] }, position: 1}]
+					})).toEqual(
+						'**~~Before list 1~~**\n\n' +
 						'* **[+] f**\n' +
 						'* **[+] g**'
 					);
@@ -134,8 +149,8 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						position: 1,
-						assertions: [{passed: false, expected: list, detail: {additional: ['f', 'g'] }}]
+						stepArgs: [1, list],
+						assertions: [{passed: false, expected: list, detail: {additional: ['f', 'g'] }, position: 1}]
 					})).toEqual(
 						'**~~Before list~~**\n\n' +
 						' 1. **[+] f**\n' +
@@ -148,8 +163,8 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						position: 1,
-						assertions: [{passed: true, expected: list}]
+						stepArgs: [1, list],
+						assertions: [{passed: true, expected: list, position: 1}]
 					})).toEqual(
 						'**Before list**\n\n' +
 						'* [' + tick + '] A\n' +
@@ -162,8 +177,8 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						position: 1,
-						assertions: [{passed: false, expected: list, detail: {additional: ['f', 'g'] }}, {passed: true, expected: list.items}]
+						stepArgs: [1, list],
+						assertions: [{passed: false, expected: list, detail: {additional: ['f', 'g'] }, position: 1}, {passed: true, expected: list, position: 1}]
 					})).toEqual(
 						'**~~Before list~~**\n\n' +
 						'* **[+] f**\n' +
@@ -174,12 +189,13 @@ describe('MarkDownFormatter', function () {
 			describe('tables', function () {
 				describe('table formatting', function () {
 					it('copies a table if there are no failed attachment assertions', function () {
+						var table = {type: 'table', titles: ['A', 'B'], items: [[1, 2]]};
 						expect(underTest.markResult({
 							stepText: 'Before table',
-							attachment: {type: 'table', titles: ['A', 'B'], items: [[1, 2]]},
+							attachment: table,
 							matcher: /.* (\d)/,
 							assertions: [{passed: true}],
-							position: 1
+							stepArgs: [1, table]
 						})).toEqual(
 							'**Before table**\n\n' +
 							'| A | B |\n' +
@@ -192,8 +208,8 @@ describe('MarkDownFormatter', function () {
 							stepText: 'Before table',
 							attachment: attachment,
 							matcher: /.* (\d)/,
-							position: 1,
-							assertions: [{passed: false, expected: attachment, detail: {additional: [['f', 'g']]}}]
+							stepArgs: [1, attachment],
+							assertions: [{passed: false, expected: attachment, position: 1, detail: {additional: [['f', 'g']]}}]
 						})).toEqual(
 							'**~~Before table~~**\n\n' +
 							'| ? | A     | B     |\n' +
@@ -207,8 +223,8 @@ describe('MarkDownFormatter', function () {
 							stepText: 'Before table',
 							attachment: attachment,
 							matcher: /.* (\d)/,
-							position: 1,
-							assertions: [{passed: true, expected: attachment}]
+							stepArgs: [1, attachment],
+							assertions: [{passed: true, expected: attachment, position: 1}]
 						})).toEqual(
 							'**Before table**\n\n' +
 							'| ? | A | B |\n' +
@@ -222,8 +238,8 @@ describe('MarkDownFormatter', function () {
 							stepText: 'Before table',
 							attachment: attachment,
 							matcher: /.* (\d)/,
-							position: 1,
-							assertions: [{passed: true, expected: attachment}, {passed: false, expected: attachment, detail: {additional: [['f', 'g']]}}]
+							stepArgs: [1, attachment],
+							assertions: [{passed: true, expected: attachment, position: 1}, {passed: false, position: 1, expected: attachment, detail: {additional: [['f', 'g']]}}]
 						})).toEqual(
 							'**~~Before table~~**\n\n' +
 							'| ? | A     | B     |\n' +
@@ -232,12 +248,13 @@ describe('MarkDownFormatter', function () {
 						);
 					});
 					it('contains no table header if the origin table did not have a header', function () {
+						var table = {type: 'table', items: [[1, 2]]};
 						expect(underTest.markResult({
 							stepText: 'Before table',
-							attachment: {type: 'table', items: [[1, 2]]},
+							attachment: table,
 							matcher: /.* (\d)/,
-							position: 1,
-							assertions: [{passed: true}]
+							assertions: [{passed: true}],
+							stepArgs: [1, table]
 						})).toEqual(
 							'**Before table**\n\n' +
 							'| 1 | 2 |');

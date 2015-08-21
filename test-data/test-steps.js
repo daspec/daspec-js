@@ -34,7 +34,7 @@ module.exports = function () {
 	});
 	defineStep(/Good ([A-Za-z ]*) Films are/, function (seriesName, listOfEpisodes) {
 		var actual = films[seriesName];
-		expect(actual).toEqualSet(listOfEpisodes);
+		expect(actual).toEqualSet(listOfEpisodes.items).atPosition(1); // check we can override positions for custom attachment assertions
 	});
 
 	defineStep(/Years of ([A-Za-z ]*) Films are/, function (seriesName, listOfEpisodes) {

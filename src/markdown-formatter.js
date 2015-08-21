@@ -63,7 +63,7 @@ module.exports = function MarkDownFormatter() {
 	};
 	self.markResult = function (stepResult) {
 		var forAttachment = function (assertion) {
-				return stepResult.attachment && assertion.expected === stepResult.attachment;
+				return stepResult.attachment && (assertion.position === stepResult.stepArgs.length - 1);
 			},
 			withoutPosition = function (assertion) {
 				return forAttachment(assertion) || (!assertion.position && assertion.position !== 0);
