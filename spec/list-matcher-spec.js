@@ -37,7 +37,8 @@ describe('toEqualsSet', function () {
 
 	});
 	it('should match the items property of an object if passed', function () {
-		expect(underTest.toEqualSet({ordered: true, items: [2, 3, 1]}).assertions).toEqual([
+		var expected = {ordered: true, items: [2, 3, 1]};
+		expect(underTest.toEqualSet(expected).assertions).toEqual([
 			{
 				actual: [1, 2, 3],
 				detail: {
@@ -46,7 +47,7 @@ describe('toEqualsSet', function () {
 					missing: [],
 					matching: [2, 3, 1]
 				},
-				expected: [2, 3, 1],
+				expected: expected,
 				passed: true}
 			]);
 

@@ -62,11 +62,14 @@ module.exports = function MarkDownFormatter() {
 
 	};
 	self.markResult = function (stepResult) {
-		var withoutPosition = function (assertion) {
-				return !assertion.position && assertion.position !== 0;
+		var forAttachment = function (assertion) {
+				return stepResult.attachment && assertion.expected === stepResult.attachment;
+			},
+			withoutPosition = function (assertion) {
+				return forAttachment(assertion) || (!assertion.position && assertion.position !== 0);
 			},
 			withPosition = function (assertion) {
-				return assertion.position;
+				return assertion.position && !forAttachment(assertion);
 			},
 			failed = function (assertion) {
 				return !assertion.passed;
@@ -76,10 +79,6 @@ module.exports = function MarkDownFormatter() {
 			},
 			notEmpty = function (array) {
 				return array && array.length;
-			},
-			forAttachment = function (assertion) {
-				return stepResult.attachment && stepResult.attachment.items && stepResult.attachment.items.length > 0 &&
-					(assertion.expected === stepResult.attachment.items || assertion.expected == stepResult.attachment);
 			},
 			headingLine = function () {
 				if (stepResult.exception) {

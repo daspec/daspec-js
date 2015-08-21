@@ -18,7 +18,7 @@ module.exports = {
 			ListUtil = require('../list-util'),
 			listUtil = new ListUtil(),
 			listResult = listUtil.unorderedMatch(parseExpected(), this.actual);
-		this.addAssertion(listResult.matches, parseExpected(), /* TODO: clean up after markdown formatter*/ listResult);
+		this.addAssertion(listResult.matches, expected, listResult);
 		return this;
 	}
 };

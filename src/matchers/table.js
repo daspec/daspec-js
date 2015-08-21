@@ -23,7 +23,7 @@ module.exports = {
 			}
 		}
 		listResult = listUtil.unorderedMatch(expected.items, comparisonObject);
-		this.addAssertion(listResult.matches, expected.items, /*TODO Clean up after markdown formatter*/ listResult);
+		this.addAssertion(listResult.matches, expected, listResult);
 		return this;
 	}
 };

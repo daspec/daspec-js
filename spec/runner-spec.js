@@ -19,7 +19,7 @@ describe('Runner', function () {
 				expect([{name: 'yum'}]).toEqualUnorderedTable(table);
 			});
 			context.defineStep(/list of ([a-z]*)/, function (title, list) {
-				expect([title]).toEqualSet(list.items);
+				expect([title]).toEqualSet(list);
 			});
 			context.defineStep(/throw ([a-z]*)/, function (msg) {
 				throw msg;
@@ -267,17 +267,19 @@ describe('Runner', function () {
 				);
 			});
 			it('receives a simple call with an attachment', function () {
+				var expected = { type: 'list', ordered: false, items: ['yum'], symbol: '* ' };
 				runner.execute('list of yum\n\n* yum\n> comment', 'thespecname');
 				expect(listeners.stepResult).toHaveBeenCalledWith(jasmine.objectContaining({
 						matcher: /list of ([a-z]*)/,
 						stepText: 'list of yum',
-						attachment: { type: 'list', ordered: false, items: ['yum'], symbol: '* ' },
+						attachment: expected,
 						assertions: [
 							{
-								expected: ['yum'],
+								expected: expected,
 								actual: ['yum'],
 								detail: { matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
-								passed: true
+								passed: true,
+								position: 1
 							}
 						]
 					}),

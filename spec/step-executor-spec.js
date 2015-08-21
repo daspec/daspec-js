@@ -93,19 +93,20 @@ describe('StepExecutor', function () {
 
 		it('receives a simple call for a list attachment', function () {
 			underTest = new StepExecutor({matcher: /list of ([a-z]*)/, processFunction: function (title, list) {
-					expect([title]).toEqualSet(list.items);
+					expect([title]).toEqualSet(list);
 				}}, specContext);
-			var result = underTest.execute('list of yum', { type: 'list', ordered: false, items: ['yum'], symbol: '* ' });
+			var expected = { type: 'list', ordered: false, items: ['yum'], symbol: '* ' }, result = underTest.execute('list of yum', expected);
 			expect(result).toEqual(jasmine.objectContaining({
 				matcher: /list of ([a-z]*)/,
 				stepText: 'list of yum',
-				attachment: { type: 'list', ordered: false, items: ['yum'], symbol: '* ' },
+				attachment: expected,
 				assertions: [
 					{
-						expected: ['yum'],
+						expected: expected,
 						actual: ['yum'],
 						detail: { matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
-						passed: true
+						passed: true,
+						position: 1
 					}
 				]
 			}));
@@ -115,17 +116,18 @@ describe('StepExecutor', function () {
 			underTest = new StepExecutor({matcher: /table of ([a-z]*)/, processFunction: function (title, table) {
 				expect([{name: 'yum'}]).toEqualUnorderedTable(table);
 			}}, specContext);
-			var result = underTest.execute('table of yum', { type: 'table', titles: ['name'], items: [['yum']]});
+			var expected = { type: 'table', titles: ['name'], items: [['yum']]}, result = underTest.execute('table of yum', expected);
 			expect(result).toEqual(jasmine.objectContaining({
 				matcher: /table of ([a-z]*)/,
 				stepText: 'table of yum',
-				attachment: { type: 'table', titles: ['name'], items: [['yum']]},
+				attachment: expected,
 				assertions: [
 					{
-						expected: [['yum']],
+						expected: expected,
 						detail: { matches: true, missing: [], additional: [], matching: [['yum']]},
 						actual: [{name: 'yum'}],
-						passed: true
+						passed: true,
+						position: 1
 					}
 				]
 			}));
