@@ -275,7 +275,8 @@ describe('Runner', function () {
 						assertions: [
 							{
 								expected: ['yum'],
-								actual: { matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
+								actual: ['yum'],
+								detail: { matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
 								passed: true
 							}
 						]

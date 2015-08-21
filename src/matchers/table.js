@@ -4,12 +4,11 @@ module.exports = {
 		'use strict';
 		var TableUtil = require('../table-util'),
 			tableUtil = new TableUtil(),
-			listMatchers = require('./list'),
-			Expect = require('../expect'),
-			exp = this,
+			ListUtil = require('../list-util'),
+			listUtil = new ListUtil(),
+			actual = this.actual,
 			comparisonObject,
-			actual = exp.actual,
-			tableExpect;
+			listResult;
 
 		if (!expected.titles) {
 			comparisonObject = actual;
@@ -23,9 +22,8 @@ module.exports = {
 				comparisonObject = tableUtil.objectArrayValuesForTitles(actual, expected.titles);
 			}
 		}
-		tableExpect = new Expect(comparisonObject, listMatchers);
-		tableExpect.toEqualSet(expected.items);
-		exp.pushAssertions(tableExpect.assertions);
-		return exp;
+		listResult = listUtil.unorderedMatch(expected.items, comparisonObject);
+		this.addAssertion(listResult.matches, expected.items, /*TODO Clean up after markdown formatter*/ listResult);
+		return this;
 	}
 };

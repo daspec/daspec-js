@@ -22,14 +22,17 @@ module.exports = function Expect(actualValue, matchersArray) {
 			assertions = assertions.concat(pushedAssertions);
 		}
 	};
-	self.addAssertion = function (didPass, expected, actual) {
+	self.addAssertion = function (didPass, expected, detail) {
 			var calcPassed = function (didPass) {
 					if (negated) {
 						return !didPass;
 					}
 					return didPass;
 				},
-				assertion = {actual: actual || actualValue, passed: calcPassed(didPass)};
+				assertion = {actual: self.actual, passed: calcPassed(didPass)};
+			if (detail) {
+				assertion.detail = detail;
+			}
 			if (expected) {
 				assertion.expected = expected;
 			}

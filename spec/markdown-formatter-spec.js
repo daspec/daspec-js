@@ -119,7 +119,7 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						assertions: [{passed: false, expected: list, actual: {additional: ['f', 'g'] }}]
+						assertions: [{passed: false, expected: list, detail: {additional: ['f', 'g'] }}]
 					})).toEqual(
 						'**~~Before list~~**\n\n' +
 						'* **[+] f**\n' +
@@ -132,7 +132,7 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						assertions: [{passed: false, expected: list, actual: {additional: ['f', 'g'] }}]
+						assertions: [{passed: false, expected: list, detail: {additional: ['f', 'g'] }}]
 					})).toEqual(
 						'**~~Before list~~**\n\n' +
 						' 1. **[+] f**\n' +
@@ -158,7 +158,7 @@ describe('MarkDownFormatter', function () {
 						stepText: 'Before list',
 						attachment: list,
 						matcher: /.* (\d)/,
-						assertions: [{passed: false, expected: list, actual: {additional: ['f', 'g'] }}, {passed: true, expected: list.items}]
+						assertions: [{passed: false, expected: list, detail: {additional: ['f', 'g'] }}, {passed: true, expected: list.items}]
 					})).toEqual(
 						'**~~Before list~~**\n\n' +
 						'* **[+] f**\n' +
@@ -186,7 +186,7 @@ describe('MarkDownFormatter', function () {
 							stepText: 'Before table',
 							attachment: attachment,
 							matcher: /.* (\d)/,
-							assertions: [{passed: false, expected: attachment, actual: {additional: [['f', 'g']]}}]
+							assertions: [{passed: false, expected: attachment, detail: {additional: [['f', 'g']]}}]
 						})).toEqual(
 							'**~~Before table~~**\n\n' +
 							'| ? | A     | B     |\n' +
@@ -214,7 +214,7 @@ describe('MarkDownFormatter', function () {
 							stepText: 'Before table',
 							attachment: attachment,
 							matcher: /.* (\d)/,
-							assertions: [{passed: true, expected: attachment}, {passed: false, expected: attachment, actual: {additional: [['f', 'g']]}}]
+							assertions: [{passed: true, expected: attachment}, {passed: false, expected: attachment, detail: {additional: [['f', 'g']]}}]
 						})).toEqual(
 							'**~~Before table~~**\n\n' +
 							'| ? | A     | B     |\n' +

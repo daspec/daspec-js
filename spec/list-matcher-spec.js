@@ -10,7 +10,8 @@ describe('toEqualsSet', function () {
 	it('should pass if items are same irrespective of order', function () {
 		expect(underTest.toEqualSet([2, 3, 1]).assertions).toEqual([
 			{
-				actual: {
+				actual: [1, 2, 3],
+				detail: {
 					matches: true,
 					additional: [],
 					missing: [],
@@ -23,7 +24,8 @@ describe('toEqualsSet', function () {
 	it('should return failure information', function () {
 		expect(underTest.toEqualSet([2, 1, 4]).assertions).toEqual([
 			{
-				actual: {
+				actual: [1, 2, 3],
+				detail: {
 					matches: false,
 					additional: [3],
 					missing: [4],
@@ -37,7 +39,8 @@ describe('toEqualsSet', function () {
 	it('should match the items property of an object if passed', function () {
 		expect(underTest.toEqualSet({ordered: true, items: [2, 3, 1]}).assertions).toEqual([
 			{
-				actual: {
+				actual: [1, 2, 3],
+				detail: {
 					matches: true,
 					additional: [],
 					missing: [],

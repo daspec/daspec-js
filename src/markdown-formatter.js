@@ -125,7 +125,7 @@ module.exports = function MarkDownFormatter() {
 							values = stepResult.attachment.items,
 							symbol = stepResult.attachment.symbol || '* ';
 						if (notEmpty(failedListAssertions)) {
-							values = self.formatListResult(failedListAssertions[0].actual);
+							values = self.formatListResult(failedListAssertions[0].detail);
 						} else if (notEmpty(passedListAssertions)) {
 							values = self.formatListResult({matching: stepResult.attachment.items});
 						}
@@ -147,7 +147,7 @@ module.exports = function MarkDownFormatter() {
 							if (resultTitles) {
 								resultTitles.unshift('?');
 							}
-							values = self.getTableResult(failedTableAssertions[0].actual);
+							values = self.getTableResult(failedTableAssertions[0].detail);
 						} else if (notEmpty(passedTableAssertions)) {
 							if (resultTitles) {
 								resultTitles.unshift('?');

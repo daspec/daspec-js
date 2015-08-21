@@ -103,7 +103,8 @@ describe('StepExecutor', function () {
 				assertions: [
 					{
 						expected: ['yum'],
-						actual: { matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
+						actual: ['yum'],
+						detail: { matches: true, missing: [  ], additional: [  ], matching: ['yum'] },
 						passed: true
 					}
 				]
@@ -122,7 +123,8 @@ describe('StepExecutor', function () {
 				assertions: [
 					{
 						expected: [['yum']],
-						actual: { matches: true, missing: [], additional: [], matching: [['yum']]},
+						detail: { matches: true, missing: [], additional: [], matching: [['yum']]},
+						actual: [{name: 'yum'}],
 						passed: true
 					}
 				]
