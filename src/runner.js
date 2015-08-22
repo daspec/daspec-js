@@ -9,7 +9,8 @@ module.exports = function Runner(stepFunc, config) {
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),
 		self = observable(this),
-		standardMatchers = [require('./matchers/table'), require('./matchers/list')];
+		standardMatchers = [require('./matchers/table'), require('./matchers/list')],
+		context = new Context();
 	self.executeSuite = function (suite) {
 		var counts = new CountingResultListener(self),
 			executeSpecs = true;
@@ -36,8 +37,7 @@ module.exports = function Runner(stepFunc, config) {
 		return true;
 	};
 	self.execute = function (inputText, exampleName) {
-		var context = new Context(),
-			blocks = new ExampleBlocks(inputText),
+		var blocks = new ExampleBlocks(inputText),
 			lineNumber = 0,
 			counts = new CountingResultListener(self),
 			sendLineEvent = function (eventName, line) {
@@ -52,7 +52,6 @@ module.exports = function Runner(stepFunc, config) {
 					stepDefinition,
 					executor,
 					headerLine,
-					// tableResultBlock,
 					startNewTable = function (line) {
 						stepDefinition = context.getStepDefinitionForLine(line);
 						if (!stepDefinition) {
@@ -116,9 +115,6 @@ module.exports = function Runner(stepFunc, config) {
 					lineNumber += attachmentLines.length;
 				});
 			};
-		context.exportToGlobal();
-		standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);
-		stepFunc.apply(context, [context]);
 		self.dispatchEvent('specStarted', exampleName);
 		blocks.getBlocks().forEach(function (block) {
 			if (block.isTableBlock()) {
@@ -128,6 +124,9 @@ module.exports = function Runner(stepFunc, config) {
 			}
 		});
 		self.dispatchEvent('specEnded', exampleName, counts.current);
-		context.unexportFromGlobal();
 	};
+	context.exportToGlobal();
+	standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);
+	stepFunc.apply(context, [context]);
+	context.resetGlobal();
 };

@@ -29,21 +29,6 @@ describe('Context', function () {
 			expect(global.addMatchers).toBe(underTest.addMatchers);
 		});
 	});
-	describe('unexportFromGlobal', function () {
-		it('reverts an export to global', function () {
-			underTest.exportToGlobal();
-			underTest.unexportFromGlobal();
-			expect(global.defineStep).toEqual('old-global-definestep');
-			expect(global.addMatchers).toBe('old-global-addmatchers');
-		});
-		it('works even if export called several times in sequence', function () {
-			underTest.exportToGlobal();
-			underTest.exportToGlobal();
-			underTest.unexportFromGlobal();
-			expect(global.defineStep).toEqual('old-global-definestep');
-			expect(global.addMatchers).toBe('old-global-addmatchers');
-		});
-	});
 	describe('overrideGlobal', function () {
 		it('replaces a named property in global', function () {
 			underTest.overrideGlobal('subkey', 'new one');
@@ -80,11 +65,11 @@ describe('Context', function () {
 			underTest.resetGlobal();
 			expect(global.subkey).toEqual('old-global-subkey');
 		});
-		it('does not revert exported properties', function () {
+		it('reverts an export to global', function () {
 			underTest.exportToGlobal();
 			underTest.resetGlobal();
-			expect(global.defineStep).toBe(underTest.defineStep);
-			expect(global.addMatchers).toBe(underTest.addMatchers);
+			expect(global.defineStep).toEqual('old-global-definestep');
+			expect(global.addMatchers).toBe('old-global-addmatchers');
 		});
 	});
 

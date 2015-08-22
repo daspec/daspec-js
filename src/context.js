@@ -18,27 +18,11 @@ module.exports = function Context() {
 				return stepMatch(stepDefinition, stepText);
 			});
 		},
-		globalOverrides = {},
-		exportedOverrides = {},
-		overrideGlobal = function (map, propname, value) {
-			if (!map[propname]) {
-				map[propname] = global[propname];
-			}
-			global[propname] = value;
-		},
-		resetGlobal = function (map) {
-			var propname;
-			for (propname in map) {
-				global[propname] = map[propname];
-				delete map[propname];
-			}
-		};
+		globalOverrides = {};
 	self.exportToGlobal = function () {
-		overrideGlobal(exportedOverrides, 'defineStep',  self.defineStep);
-		overrideGlobal(exportedOverrides, 'addMatchers',  self.addMatchers);
-	};
-	self.unexportFromGlobal = function () {
-		resetGlobal(exportedOverrides);
+		['defineStep', 'addMatchers'].forEach(function (prop) {
+			self.overrideGlobal(prop, self[prop]);
+		});
 	};
 	self.addMatchers = function (matcherObject) {
 		expectationMatchers.push(matcherObject);
@@ -47,10 +31,17 @@ module.exports = function Context() {
 		return expectationMatchers;
 	};
 	self.overrideGlobal = function (propname, value) {
-		overrideGlobal(globalOverrides, propname, value);
+		if (!globalOverrides[propname]) {
+			globalOverrides[propname] = global[propname];
+		}
+		global[propname] = value;
 	};
 	self.resetGlobal = function () {
-		resetGlobal(globalOverrides);
+		var propname;
+		for (propname in globalOverrides) {
+			global[propname] = globalOverrides[propname];
+			delete globalOverrides[propname];
+		}
 	};
 	self.defineStep = function (regexMatcher, processFunction) {
 		if (!regexMatcher) {
