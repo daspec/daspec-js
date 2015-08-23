@@ -1,4 +1,133 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var pSlice = Array.prototype.slice;
+var objectKeys = require('./lib/keys.js');
+var isArguments = require('./lib/is_arguments.js');
+
+var deepEqual = module.exports = function (actual, expected, opts) {
+  if (!opts) opts = {};
+  // 7.1. All identical values are equivalent, as determined by ===.
+  if (actual === expected) {
+    return true;
+
+  } else if (actual instanceof Date && expected instanceof Date) {
+    return actual.getTime() === expected.getTime();
+
+  // 7.3. Other pairs that do not both pass typeof value == 'object',
+  // equivalence is determined by ==.
+  } else if (typeof actual != 'object' && typeof expected != 'object') {
+    return opts.strict ? actual === expected : actual == expected;
+
+  // 7.4. For all other Object pairs, including Array objects, equivalence is
+  // determined by having the same number of owned properties (as verified
+  // with Object.prototype.hasOwnProperty.call), the same set of keys
+  // (although not necessarily the same order), equivalent values for every
+  // corresponding key, and an identical 'prototype' property. Note: this
+  // accounts for both named and indexed properties on Arrays.
+  } else {
+    return objEquiv(actual, expected, opts);
+  }
+}
+
+function isUndefinedOrNull(value) {
+  return value === null || value === undefined;
+}
+
+function isBuffer (x) {
+  if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
+  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
+    return false;
+  }
+  if (x.length > 0 && typeof x[0] !== 'number') return false;
+  return true;
+}
+
+function objEquiv(a, b, opts) {
+  var i, key;
+  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
+    return false;
+  // an identical 'prototype' property.
+  if (a.prototype !== b.prototype) return false;
+  //~~~I've managed to break Object.keys through screwy arguments passing.
+  //   Converting to array solves the problem.
+  if (isArguments(a)) {
+    if (!isArguments(b)) {
+      return false;
+    }
+    a = pSlice.call(a);
+    b = pSlice.call(b);
+    return deepEqual(a, b, opts);
+  }
+  if (isBuffer(a)) {
+    if (!isBuffer(b)) {
+      return false;
+    }
+    if (a.length !== b.length) return false;
+    for (i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+  try {
+    var ka = objectKeys(a),
+        kb = objectKeys(b);
+  } catch (e) {//happens when one is a string literal and the other isn't
+    return false;
+  }
+  // having the same number of owned properties (keys incorporates
+  // hasOwnProperty)
+  if (ka.length != kb.length)
+    return false;
+  //the same set of keys (although not necessarily the same order),
+  ka.sort();
+  kb.sort();
+  //~~~cheap key test
+  for (i = ka.length - 1; i >= 0; i--) {
+    if (ka[i] != kb[i])
+      return false;
+  }
+  //equivalent values for every corresponding key, and
+  //~~~possibly expensive deep test
+  for (i = ka.length - 1; i >= 0; i--) {
+    key = ka[i];
+    if (!deepEqual(a[key], b[key], opts)) return false;
+  }
+  return typeof a === typeof b;
+}
+
+},{"./lib/is_arguments.js":2,"./lib/keys.js":3}],2:[function(require,module,exports){
+var supportsArgumentsClass = (function(){
+  return Object.prototype.toString.call(arguments)
+})() == '[object Arguments]';
+
+exports = module.exports = supportsArgumentsClass ? supported : unsupported;
+
+exports.supported = supported;
+function supported(object) {
+  return Object.prototype.toString.call(object) == '[object Arguments]';
+};
+
+exports.unsupported = unsupported;
+function unsupported(object){
+  return object &&
+    typeof object == 'object' &&
+    typeof object.length == 'number' &&
+    Object.prototype.hasOwnProperty.call(object, 'callee') &&
+    !Object.prototype.propertyIsEnumerable.call(object, 'callee') ||
+    false;
+};
+
+},{}],3:[function(require,module,exports){
+exports = module.exports = typeof Object.keys === 'function'
+  ? Object.keys : shim;
+
+exports.shim = shim;
+function shim (obj) {
+  var keys = [];
+  for (var key in obj) keys.push(key);
+  return keys;
+}
+
+},{}],4:[function(require,module,exports){
 /*global module*/
 module.exports = function AssertionCounts() {
 	'use strict';
@@ -35,7 +164,7 @@ module.exports = function AssertionCounts() {
 	};
 };
 
-},{}],2:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 (function (global){
 /*global module, global*/
 module.exports = function Context() {
@@ -57,27 +186,11 @@ module.exports = function Context() {
 				return stepMatch(stepDefinition, stepText);
 			});
 		},
-		globalOverrides = {},
-		exportedOverrides = {},
-		overrideGlobal = function (map, propname, value) {
-			if (!map[propname]) {
-				map[propname] = global[propname];
-			}
-			global[propname] = value;
-		},
-		resetGlobal = function (map) {
-			var propname;
-			for (propname in map) {
-				global[propname] = map[propname];
-				delete map[propname];
-			}
-		};
+		globalOverrides = {};
 	self.exportToGlobal = function () {
-		overrideGlobal(exportedOverrides, 'defineStep',  self.defineStep);
-		overrideGlobal(exportedOverrides, 'addMatchers',  self.addMatchers);
-	};
-	self.unexportFromGlobal = function () {
-		resetGlobal(exportedOverrides);
+		['defineStep', 'addMatchers'].forEach(function (prop) {
+			self.overrideGlobal(prop, self[prop]);
+		});
 	};
 	self.addMatchers = function (matcherObject) {
 		expectationMatchers.push(matcherObject);
@@ -86,10 +199,17 @@ module.exports = function Context() {
 		return expectationMatchers;
 	};
 	self.overrideGlobal = function (propname, value) {
-		overrideGlobal(globalOverrides, propname, value);
+		if (!globalOverrides[propname]) {
+			globalOverrides[propname] = global[propname];
+		}
+		global[propname] = value;
 	};
 	self.resetGlobal = function () {
-		resetGlobal(globalOverrides);
+		var propname;
+		for (propname in globalOverrides) {
+			global[propname] = globalOverrides[propname];
+			delete globalOverrides[propname];
+		}
 	};
 	self.defineStep = function (regexMatcher, processFunction) {
 		if (!regexMatcher) {
@@ -116,7 +236,7 @@ module.exports = function Context() {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],3:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /*global module, require*/
 module.exports = function CountingResultListener(runner) {
 	'use strict';
@@ -144,23 +264,24 @@ module.exports = function CountingResultListener(runner) {
 	});
 };
 
-},{"./assertion-counts":1}],4:[function(require,module,exports){
+},{"./assertion-counts":4}],7:[function(require,module,exports){
 /*global module, require */
 module.exports = {
 	Runner: require('./runner'),
 	MarkdownResultFormatter: require('./markdown-result-formatter'),
 	CountingResultListener: require('./counting-result-listener'),
+	ExpectationBuilder: require('./expectation-builder'),
 	TableUtil: require('./table-util')
 };
 
-},{"./counting-result-listener":3,"./markdown-result-formatter":12,"./runner":18,"./table-util":21}],5:[function(require,module,exports){
+},{"./counting-result-listener":6,"./expectation-builder":12,"./markdown-result-formatter":15,"./runner":21,"./table-util":24}],8:[function(require,module,exports){
 (function (global){
 /*global require, global*/
 
 global.DaSpec = require('./daspec-npm-main');
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./daspec-npm-main":4}],6:[function(require,module,exports){
+},{"./daspec-npm-main":7}],9:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlock() {
 	'use strict';
@@ -298,7 +419,7 @@ module.exports = function ExampleBlock() {
 	};
 };
 
-},{"./normaliser":15,"./regex-util":17,"./table-util":21}],7:[function(require,module,exports){
+},{"./normaliser":18,"./regex-util":20,"./table-util":24}],10:[function(require,module,exports){
 /*global module, require*/
 module.exports = function ExampleBlocks(inputText) {
 	'use strict';
@@ -319,8 +440,8 @@ module.exports = function ExampleBlocks(inputText) {
 	};
 };
 
-},{"./example-block":6}],8:[function(require,module,exports){
-/*global module */
+},{"./example-block":9}],11:[function(require,module,exports){
+/*global module, require */
 module.exports = function Expect(actualValue, matchersArray) {
 	'use strict';
 	var self = this,
@@ -333,7 +454,8 @@ module.exports = function Expect(actualValue, matchersArray) {
 					self[matcherName] = matchers[matcherName].bind(self);
 				}
 			}
-		};
+		},
+		deepEqual = require('deep-equal');
 	if (Array.isArray(matchersArray)) {
 		matchersArray.forEach(addMatchers);
 	} else if (matchersArray) {
@@ -383,7 +505,7 @@ module.exports = function Expect(actualValue, matchersArray) {
 		return self;
 	};
 	self.toEqual = function (expected) {
-		self.addAssertion(self.actual === expected, expected);
+		self.addAssertion(deepEqual(self.actual, expected), expected);
 		return self;
 	};
 
@@ -433,7 +555,7 @@ module.exports = function Expect(actualValue, matchersArray) {
 
 };
 
-},{}],9:[function(require,module,exports){
+},{"deep-equal":1}],12:[function(require,module,exports){
 /*global module, require */
 module.exports = function ExpectationBuilder(stepArgumentArray, matchersArray) {
 	'use strict';
@@ -476,7 +598,7 @@ module.exports = function ExpectationBuilder(stepArgumentArray, matchersArray) {
 	};
 };
 
-},{"./expect":8}],10:[function(require,module,exports){
+},{"./expect":11}],13:[function(require,module,exports){
 /*global module*/
 module.exports = function ListUtil() {
 	'use strict';
@@ -521,7 +643,7 @@ module.exports = function ListUtil() {
 	};
 };
 
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkDownFormatter() {
 	'use strict';
@@ -698,7 +820,7 @@ module.exports = function MarkDownFormatter() {
 	};
 };
 
-},{"./regex-util":17,"./table-util":21}],12:[function(require,module,exports){
+},{"./regex-util":20,"./table-util":24}],15:[function(require,module,exports){
 /*global module, require*/
 module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 	'use strict';
@@ -767,7 +889,7 @@ module.exports = function MarkdownResultFormatter(runner, globalConfig) {
 
 };
 
-},{"./counting-result-listener":3,"./markdown-formatter":11,"./table-util":21}],13:[function(require,module,exports){
+},{"./counting-result-listener":6,"./markdown-formatter":14,"./table-util":24}],16:[function(require,module,exports){
 /*global module, require*/
 module.exports = {
 	toEqualSet: function (expected) {
@@ -793,7 +915,7 @@ module.exports = {
 	}
 };
 
-},{"../list-util":10}],14:[function(require,module,exports){
+},{"../list-util":13}],17:[function(require,module,exports){
 /*global module, require*/
 module.exports = {
 	toEqualUnorderedTable: function (expected) {
@@ -824,7 +946,7 @@ module.exports = {
 	}
 };
 
-},{"../list-util":10,"../table-util":21}],15:[function(require,module,exports){
+},{"../list-util":13,"../table-util":24}],18:[function(require,module,exports){
 /*global module*/
 module.exports = function Normaliser() {
 	'use strict';
@@ -878,7 +1000,7 @@ module.exports = function Normaliser() {
 	};
 };
 
-},{}],16:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /*global module, console*/
 /*jshint unused:false */
 module.exports = function observable(base) {
@@ -927,7 +1049,7 @@ module.exports = function observable(base) {
 	return base;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /*global module, require*/
 module.exports = function RegexUtil() {
 	'use strict';
@@ -1028,7 +1150,7 @@ module.exports = function RegexUtil() {
 	};
 };
 
-},{"./normaliser":15}],18:[function(require,module,exports){
+},{"./normaliser":18}],21:[function(require,module,exports){
 /*global module, require*/
 module.exports = function Runner(stepFunc, config) {
 	'use strict';
@@ -1040,7 +1162,8 @@ module.exports = function Runner(stepFunc, config) {
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),
 		self = observable(this),
-		standardMatchers = [require('./matchers/table'), require('./matchers/list')];
+		standardMatchers = [require('./matchers/table'), require('./matchers/list')],
+		context = new Context();
 	self.executeSuite = function (suite) {
 		var counts = new CountingResultListener(self),
 			executeSpecs = true;
@@ -1067,8 +1190,7 @@ module.exports = function Runner(stepFunc, config) {
 		return true;
 	};
 	self.execute = function (inputText, exampleName) {
-		var context = new Context(),
-			blocks = new ExampleBlocks(inputText),
+		var blocks = new ExampleBlocks(inputText),
 			lineNumber = 0,
 			counts = new CountingResultListener(self),
 			sendLineEvent = function (eventName, line) {
@@ -1083,7 +1205,6 @@ module.exports = function Runner(stepFunc, config) {
 					stepDefinition,
 					executor,
 					headerLine,
-					// tableResultBlock,
 					startNewTable = function (line) {
 						stepDefinition = context.getStepDefinitionForLine(line);
 						if (!stepDefinition) {
@@ -1147,9 +1268,6 @@ module.exports = function Runner(stepFunc, config) {
 					lineNumber += attachmentLines.length;
 				});
 			};
-		context.exportToGlobal();
-		standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);
-		stepFunc.apply(context, [context]);
 		self.dispatchEvent('specStarted', exampleName);
 		blocks.getBlocks().forEach(function (block) {
 			if (block.isTableBlock()) {
@@ -1159,11 +1277,14 @@ module.exports = function Runner(stepFunc, config) {
 			}
 		});
 		self.dispatchEvent('specEnded', exampleName, counts.current);
-		context.unexportFromGlobal();
 	};
+	context.exportToGlobal();
+	standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);
+	stepFunc.apply(context, [context]);
+	context.resetGlobal();
 };
 
-},{"./context":2,"./counting-result-listener":3,"./example-blocks":7,"./matchers/list":13,"./matchers/table":14,"./observable":16,"./regex-util":17,"./step-executor":19}],19:[function(require,module,exports){
+},{"./context":5,"./counting-result-listener":6,"./example-blocks":10,"./matchers/list":16,"./matchers/table":17,"./observable":19,"./regex-util":20,"./step-executor":22}],22:[function(require,module,exports){
 /*global module, require*/
 module.exports = function StepExecutor(stepDefinition, specContext) {
 	'use strict';
@@ -1202,7 +1323,7 @@ module.exports = function StepExecutor(stepDefinition, specContext) {
 	};
 };
 
-},{"./regex-util":17,"./step":20,"./table-util":21}],20:[function(require,module,exports){
+},{"./regex-util":20,"./step":23,"./table-util":24}],23:[function(require,module,exports){
 /*global module, require */
 module.exports = function Step(specContext, processFunction) {
 	'use strict';
@@ -1230,7 +1351,7 @@ module.exports = function Step(specContext, processFunction) {
 	};
 };
 
-},{"./expectation-builder":9}],21:[function(require,module,exports){
+},{"./expectation-builder":12}],24:[function(require,module,exports){
 /*global module, require*/
 module.exports = function TableUtil() {
 	'use strict';
@@ -1324,4 +1445,4 @@ module.exports = function TableUtil() {
 	};
 };
 
-},{"./normaliser":15,"./regex-util":17}]},{},[5]);
+},{"./normaliser":18,"./regex-util":20}]},{},[8]);

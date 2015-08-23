@@ -7,9 +7,17 @@ describe('Expect', function () {
 		underTest = new Expect(2000);
 	});
 	describe('equality assertions', function () {
-		it('should allow toEqual', function () {
+		it('should compare numbers', function () {
 			expect(underTest.toEqual(20000).lastAssertion).toEqual({ expected: 20000, actual: 2000, passed: false });
 			expect(underTest.toEqual(2000).lastAssertion).toEqual({ expected: 2000, actual: 2000, passed: true });
+		});
+		it('should compare objects', function () {
+			expect(new Expect({'a': 1, 'b': 2}).toEqual({'b': 2, 'a': 1}).lastAssertion.passed).toBeTruthy();
+			expect(new Expect({'a': 1, 'b': 2}).toEqual({'b': 2, 'a': 2}).lastAssertion.passed).toBeFalsy();
+			expect(new Expect({'a': 1}).toEqual({'b': 2, 'a': 1}).lastAssertion.passed).toBeFalsy();
+			expect(new Expect({'a': 1, 'b': 2}).toEqual({'b': 2}).lastAssertion.passed).toBeFalsy();
+			expect(new Expect({'a': 1, 'b': {'c': 3}}).toEqual({'b': {'c': 3}, 'a': 1}).lastAssertion.passed).toBeTruthy();
+			expect(new Expect({'a': 1, 'b': {'c': 3}}).toEqual({'b': {'c': 4}, 'a': 1}).lastAssertion.passed).toBeFalsy();
 		});
 	});
 	describe('truthfulness assertions', function () {
@@ -38,6 +46,7 @@ describe('Expect', function () {
 			expect(underTest.toBeGreaterThan(1999.999).lastAssertion).toEqual({expected: 1999.999, actual: 2000, passed: true });
 			expect(underTest.toBeGreaterThan(2000.001).lastAssertion).toEqual({expected:2000.001, actual: 2000, passed: false });
 			expect(underTest.toBeGreaterThan(2000).lastAssertion).toEqual({expected:2000, actual: 2000, passed: false});
+			expect(new Expect(undefined).toBeGreaterThan(2000).lastAssertion).toEqual({expected:2000, actual: undefined, passed: false});
 		});
 		it('should allow toBeGreaterThanOrEqual assertion', function () {
 			expect(underTest.toBeGreaterThanOrEqual(1999.999).lastAssertion).toEqual({expected: 1999.999, actual: 2000, passed: true });
@@ -65,6 +74,12 @@ describe('Expect', function () {
 				expect(underTest.toBeBetween(2500, 2000.001).assertions).toEqual([
 					{expected: 2000.001, actual: 2000, passed: false },
 					{expected: 2500, actual: 2000, passed: true }
+					]);
+			});
+			it('should fail when the actual is undefined', function () {
+				expect(new Expect(undefined).toBeBetween(2500, 2000.001).assertions).toEqual([
+					{expected: 2000.001, actual: undefined, passed: false },
+					{expected: 2500, actual: undefined, passed: false }
 					]);
 			});
 			it('should allow toBeBetween assertion with arguments reversed', function () {

@@ -1,4 +1,4 @@
-/*global module */
+/*global module, require */
 module.exports = function Expect(actualValue, matchersArray) {
 	'use strict';
 	var self = this,
@@ -11,7 +11,8 @@ module.exports = function Expect(actualValue, matchersArray) {
 					self[matcherName] = matchers[matcherName].bind(self);
 				}
 			}
-		};
+		},
+		deepEqual = require('deep-equal');
 	if (Array.isArray(matchersArray)) {
 		matchersArray.forEach(addMatchers);
 	} else if (matchersArray) {
@@ -61,7 +62,7 @@ module.exports = function Expect(actualValue, matchersArray) {
 		return self;
 	};
 	self.toEqual = function (expected) {
-		self.addAssertion(self.actual === expected, expected);
+		self.addAssertion(deepEqual(self.actual, expected), expected);
 		return self;
 	};
 

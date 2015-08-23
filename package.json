@@ -1,6 +1,6 @@
 {
   "name": "daspec-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Official DaSpec core package for Node.js projects.",
   "license": "MIT",
   "repository": {
@@ -35,5 +35,8 @@
     "jasmine": "^2.3.1",
     "jasmine-spec-reporter": "^2.4.0",
     "jshint": "^2.8.0"
+  },
+  "dependencies": {
+    "deep-equal": "^1.0.0"
   }
 }
