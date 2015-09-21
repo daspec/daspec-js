@@ -1,4 +1,4 @@
-/*global describe, it, expect, require, beforeEach, jasmine*/
+/*global describe, it, expect, require, beforeEach, jasmine, Promise, setTimeout*/
 
 describe('StepExecutor', function () {
 	'use strict';
@@ -107,7 +107,69 @@ describe('StepExecutor', function () {
 				}
 			).then(done, done.fail);
 		});
-
+		describe('promise handling', function () {
+			var hasResolved, hasRejected;
+			beforeEach(function () {
+				underTest = new StepExecutor({matcher: /promise ([a-z]*)/,
+					processFunction: function (msg) {
+						var promise = new Promise(
+								function (resolve, reject) {
+									setTimeout(function () {
+										if (msg === 'fail') {
+											hasRejected = true;
+											reject('total fail');
+										} else {
+											expect('expected').toEqual(msg);
+											hasResolved = true;
+											resolve();
+										}
+									}, 10);
+								});
+						return promise;
+					}
+				}, specContext);
+			});
+			it('should block on promise', function (done) {
+				underTest.execute('promise expected', false).then (
+					function (result) {
+						expect(hasResolved).toBeTruthy();
+						expect(result).toEqual(jasmine.objectContaining({
+							matcher: /promise ([a-z]*)/,
+							stepText: 'promise expected',
+							attachment: false,
+							assertions: [{position: 0, expected: 'expected', actual: 'expected', passed: true}]
+						}));
+					}
+				).then(done, done.fail);
+			});
+			it('should record failed expectations in promise', function (done) {
+				underTest.execute('promise unexpected', false).then (
+					function (result) {
+						expect(hasResolved).toBeTruthy();
+						expect(result).toEqual(jasmine.objectContaining({
+							matcher: /promise ([a-z]*)/,
+							stepText: 'promise unexpected',
+							attachment: false,
+							assertions: [{position: 0, expected: 'unexpected', actual: 'expected', passed: false}]
+						}));
+					}
+				).then(done, done.fail);
+			});
+			it('should fail on promise rejection', function (done) {
+				underTest.execute('promise fail', false).then (
+					function (result) {
+						expect(hasResolved).toBeTruthy();
+						expect(result).toEqual(jasmine.objectContaining({
+							matcher: /promise ([a-z]*)/,
+							stepText: 'promise fail',
+							attachment: false,
+							assertions: [],
+							exception: 'total fail'
+						}));
+					}
+				).then(done, done.fail);
+			});
+		});
 		it('receives a simple call for a list attachment', function (done) {
 			var expected;
 			underTest = new StepExecutor({matcher: /list of ([a-z]*)/, processFunction: function (title, list) {

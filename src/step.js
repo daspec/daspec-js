@@ -5,14 +5,26 @@ module.exports = function Step(specContext, processFunction) {
 		ExpectationBuilder = require('./expectation-builder'),
 		makePromise = function (expect) {
 			return new Promise(function (resolve, reject) {
+				var execResult;
 				specContext.overrideGlobal('expect', expect);
 				try {
-					processFunction.apply({}, self.stepArgs);
-					resolve();
+					execResult = processFunction.apply({}, self.stepArgs);
+					if (execResult && execResult.then) {
+						execResult.then(function () {
+							specContext.resetGlobal();
+							resolve();
+						}, function (reason) {
+							specContext.resetGlobal();
+							reject(reason);
+						});
+					} else {
+						specContext.resetGlobal();
+						resolve();
+					}
 				} catch (e) {
+					specContext.resetGlobal();
 					reject(e);
 				}
-				specContext.resetGlobal();
 			});
 		};
 	self.assertions = [];
