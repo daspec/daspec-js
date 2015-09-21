@@ -1,12 +1,25 @@
-/*global module, require */
+/*global module, require, Promise */
 module.exports = function Step(specContext, processFunction) {
 	'use strict';
 	var self = this,
-		ExpectationBuilder = require('./expectation-builder');
+		ExpectationBuilder = require('./expectation-builder'),
+		makePromise = function (expect) {
+			return new Promise(function (resolve, reject) {
+				specContext.overrideGlobal('expect', expect);
+				try {
+					processFunction.apply({}, self.stepArgs);
+					resolve();
+				} catch (e) {
+					reject(e);
+				}
+				specContext.resetGlobal();
+			});
+		};
 	self.assertions = [];
 	if (!specContext || !processFunction) {
 		throw new Error('invalid intialisation');
 	}
+
 	self.execute = function () {
 		var expectationBuilder;
 		if (!self.stepArgs) {
@@ -14,14 +27,16 @@ module.exports = function Step(specContext, processFunction) {
 		}
 		self.assertions = [];
 		expectationBuilder = new ExpectationBuilder(self.stepArgs, specContext.getMatchers());
-		specContext.overrideGlobal('expect', expectationBuilder.expect);
-		try {
-			processFunction.apply({}, self.stepArgs);
-			self.assertions = self.assertions.concat(expectationBuilder.getAssertions());
-		} catch (e) {
-			/* geniuine error, not assertion fail */
-			self.exception = e;
-		}
-		specContext.resetGlobal();
+
+		return new Promise(function (resolve) {
+			makePromise(expectationBuilder.expect).then(function () {
+				self.assertions = self.assertions.concat(expectationBuilder.getAssertions());
+				resolve(self);
+			},	function (e) {
+				self.exception = e;
+				resolve(self);
+			});
+		});
+
 	};
 };

@@ -9,12 +9,12 @@ describe('Key Examples from test-data', function () {
 		exampleFiles = helper.getExamples();
 	exampleFiles.forEach(function (exampleName) {
 		var example = helper.loadExample(exampleName);
-		it(example.title, function () {
+		it(example.title, function (done) {
 			var runner = new Runner(stepDefinitions),
 				resultFormatter = new MarkDownResultFormatter(runner);
-			runner.execute(example.input);
-			expect(resultFormatter.formattedResults()).toEqual(example.output);
-
+			runner.execute(example.input).then(function () {
+				expect(resultFormatter.formattedResults()).toEqual(example.output);
+			}).then(done, done.fail);
 		});
 	});
 });

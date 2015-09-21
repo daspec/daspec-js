@@ -1,10 +1,11 @@
-/*global module, require*/
+/*global module, require, Promise*/
 module.exports = function Runner(stepFunc, config) {
 	'use strict';
 	var Context = require('./context'),
 		CountingResultListener = require('./counting-result-listener'),
 		RegexUtil = require('./regex-util'),
 		StepExecutor = require('./step-executor'),
+		PromisingIterator = require('./promising-iterator'),
 		observable = require('./observable'),
 		regexUtil = new RegexUtil(),
 		ExampleBlocks = require('./example-blocks'),
@@ -13,28 +14,35 @@ module.exports = function Runner(stepFunc, config) {
 		context = new Context();
 	self.executeSuite = function (suite) {
 		var counts = new CountingResultListener(self),
-			executeSpecs = true;
-
-		suite.forEach(function (spec) {
-			if (!executeSpecs) {
-				return;
-			}
-			if (typeof spec.content === 'function') {
-				self.execute(spec.content(), spec.name);
-			} else {
-				self.execute(spec.content, spec.name);
-			}
-			if (config && config.failFast) {
-				if (counts.current.error ||  counts.current.failed || (!config.allowSkipped && counts.current.skipped) || !counts.current.passed) {
-					executeSpecs = false;
+			executeSpecs = true,
+			iterator = new PromisingIterator(suite, function (spec) {
+				var specPromise;
+				if (!executeSpecs) {
+					return;
 				}
-			}
+				if (typeof spec.content === 'function') {
+					specPromise = self.execute(spec.content(), spec.name);
+				} else {
+					specPromise = self.execute(spec.content, spec.name);
+				}
+				specPromise.then(function () {
+					if (config && config.failFast) {
+						if (counts.current.error ||  counts.current.failed || (!config.allowSkipped && counts.current.skipped) || !counts.current.passed) {
+							executeSpecs = false;
+						}
+					}
+				});
+				return specPromise;
+			});
+		return new Promise(function (resolve, reject) {
+			iterator.iterate().then(function () {
+				self.dispatchEvent('suiteEnded', counts.total);
+				if (counts.total.failed || counts.total.error || (!config.allowSkipped && counts.total.skipped) || !counts.current.passed) {
+					return resolve(false);
+				}
+				resolve(true);
+			}, reject);
 		});
-		self.dispatchEvent('suiteEnded', counts.total);
-		if (counts.total.failed || counts.total.error || (!config.allowSkipped && counts.total.skipped) || !counts.current.passed) {
-			return false;
-		}
-		return true;
 	};
 	self.execute = function (inputText, exampleName) {
 		var blocks = new ExampleBlocks(inputText),
@@ -68,7 +76,7 @@ module.exports = function Runner(stepFunc, config) {
 							stepDefinition = false;
 						}
 					};
-				blockLines.forEach(function (line) {
+				return new PromisingIterator(blockLines, function (line) {
 					lineNumber++;
 					if (!regexUtil.isTableItem(line)) {
 						endCurrentTable();
@@ -77,19 +85,21 @@ module.exports = function Runner(stepFunc, config) {
 						startNewTable(line);
 					} else if (regexUtil.isTableDataRow(line)) {
 						executor = new StepExecutor(stepDefinition, context);
-						sendLineEvent('stepResult', executor.executeTableRow(line, headerLine));
+						return executor.executeTableRow(line, headerLine).then(function (result) {
+							sendLineEvent('stepResult', result);
+						});
 					} else {
 						sendLineEvent('nonAssertionLine', line);
 					}
-				});
-				endCurrentTable();
+				}).iterate().then(endCurrentTable);
 			},
 			processBlock = function (block) {
 				var blockLines = block.getMatchText(),
 					blockParam = block.getAttachment(),
 					attachmentLines = block.getAttachmentLines(),
 					executor;
-				blockLines.forEach(function (line) {
+
+				return new PromisingIterator(blockLines, function (line) {
 					var stepDefinition;
 					lineNumber++;
 					if (!regexUtil.assertionLine(line)) { //Move to block?
@@ -111,19 +121,22 @@ module.exports = function Runner(stepFunc, config) {
 						return;
 					}
 					executor = new StepExecutor(stepDefinition, context);
-					sendLineEvent('stepResult', executor.execute(line, blockParam));
-					lineNumber += attachmentLines.length;
-				});
+					return executor.execute(line, blockParam).then(function (result) {
+						sendLineEvent('stepResult', result);
+						lineNumber += attachmentLines.length;
+					});
+				}).iterate();
 			};
 		self.dispatchEvent('specStarted', exampleName);
-		blocks.getBlocks().forEach(function (block) {
+		return new PromisingIterator(blocks.getBlocks(), function (block) {
 			if (block.isTableBlock()) {
-				processTableBlock(block);
+				return processTableBlock(block);
 			} else {
-				processBlock(block);
+				return processBlock(block);
 			}
+		}).iterate().then(function () {
+			self.dispatchEvent('specEnded', exampleName, counts.current);
 		});
-		self.dispatchEvent('specEnded', exampleName, counts.current);
 	};
 	context.exportToGlobal();
 	standardMatchers.concat((config && config.matchers) || []).forEach(context.addMatchers);

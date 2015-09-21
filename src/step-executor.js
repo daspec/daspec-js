@@ -16,8 +16,7 @@ module.exports = function StepExecutor(stepDefinition, specContext) {
 		if (attachment) {
 			step.stepArgs.push(attachment);
 		}
-		step.execute();
-		return step;
+		return step.execute();
 	};
 	self.executeTableRow = function (dataRow, titleRow) {
 		var titleMatch = titleRow && titleRow.match(stepDefinition.matcher),
@@ -31,7 +30,6 @@ module.exports = function StepExecutor(stepDefinition, specContext) {
 		if (titleArgs) {
 			step.stepArgs = step.stepArgs.concat(titleArgs);
 		}
-		step.execute();
-		return step;
+		return step.execute();
 	};
 };
