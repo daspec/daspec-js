@@ -44,13 +44,14 @@ module.exports = function Context() {
 		}
 	};
 	self.defineStep = function (regexMatcher, processFunction) {
+		var matching;
 		if (!regexMatcher) {
 			throw new Error('Empty matchers are not supported');
 		}
 		if (regexMatcher.source.indexOf('(?:') >= 0) {
 			throw new Error('Non-capturing regex groups are not supported');
 		}
-		var matching = matchingSteps(regexMatcher);
+		matching = matchingSteps(regexMatcher);
 		if (matching.length > 0) {
 			throw new Error('The matching step is already defined');
 		}

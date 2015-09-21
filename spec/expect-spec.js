@@ -22,46 +22,46 @@ describe('Expect', function () {
 	});
 	describe('truthfulness assertions', function () {
 		it('should allow for truthy assertions', function () {
-			expect(new Expect(true).toBeTruthy().lastAssertion).toEqual({actual:true, passed: true });
-			expect(new Expect('a').toBeTruthy().lastAssertion).toEqual({actual:'a', passed: true });
-			expect(new Expect(1).toBeTruthy().lastAssertion).toEqual({actual:1, passed: true });
+			expect(new Expect(true).toBeTruthy().lastAssertion).toEqual({actual: true, passed: true });
+			expect(new Expect('a').toBeTruthy().lastAssertion).toEqual({actual: 'a', passed: true });
+			expect(new Expect(1).toBeTruthy().lastAssertion).toEqual({actual: 1, passed: true });
 		});
 		it('should allow for falsy assertions', function () {
-			expect(new Expect(false).toBeFalsy().lastAssertion).toEqual({actual:false, passed: true });
-			expect(new Expect('').toBeFalsy().lastAssertion).toEqual({actual:'', passed: true });
-			expect(new Expect(0).toBeFalsy().lastAssertion).toEqual({actual:0, passed: true });
-			expect(new Expect().toBeFalsy().lastAssertion).toEqual({actual:undefined, passed: true });
+			expect(new Expect(false).toBeFalsy().lastAssertion).toEqual({actual: false, passed: true });
+			expect(new Expect('').toBeFalsy().lastAssertion).toEqual({actual: '', passed: true });
+			expect(new Expect(0).toBeFalsy().lastAssertion).toEqual({actual: 0, passed: true });
+			expect(new Expect().toBeFalsy().lastAssertion).toEqual({actual: undefined, passed: true });
 		});
 		it('should allow for absolutely true assertions', function () {
-			expect(new Expect(true).toBeTrue().lastAssertion).toEqual({actual:true, passed: true });
-			expect(new Expect('a').toBeTrue().lastAssertion).toEqual({actual:'a', passed: false });
+			expect(new Expect(true).toBeTrue().lastAssertion).toEqual({actual: true, passed: true });
+			expect(new Expect('a').toBeTrue().lastAssertion).toEqual({actual: 'a', passed: false });
 		});
 		it('should allow for absolutely false assertions', function () {
-			expect(new Expect(false).toBeFalse().lastAssertion).toEqual({actual:false, passed: true });
-			expect(new Expect().toBeFalse().lastAssertion).toEqual({actual:undefined, passed: false });
+			expect(new Expect(false).toBeFalse().lastAssertion).toEqual({actual: false, passed: true });
+			expect(new Expect().toBeFalse().lastAssertion).toEqual({actual: undefined, passed: false });
 		});
 	});
 	describe('range assertions', function () {
 		it('should allow toBeGreaterThan assertion', function () {
 			expect(underTest.toBeGreaterThan(1999.999).lastAssertion).toEqual({expected: 1999.999, actual: 2000, passed: true });
-			expect(underTest.toBeGreaterThan(2000.001).lastAssertion).toEqual({expected:2000.001, actual: 2000, passed: false });
-			expect(underTest.toBeGreaterThan(2000).lastAssertion).toEqual({expected:2000, actual: 2000, passed: false});
-			expect(new Expect(undefined).toBeGreaterThan(2000).lastAssertion).toEqual({expected:2000, actual: undefined, passed: false});
+			expect(underTest.toBeGreaterThan(2000.001).lastAssertion).toEqual({expected: 2000.001, actual: 2000, passed: false });
+			expect(underTest.toBeGreaterThan(2000).lastAssertion).toEqual({expected: 2000, actual: 2000, passed: false});
+			expect(new Expect(undefined).toBeGreaterThan(2000).lastAssertion).toEqual({expected: 2000, actual: undefined, passed: false});
 		});
 		it('should allow toBeGreaterThanOrEqual assertion', function () {
 			expect(underTest.toBeGreaterThanOrEqual(1999.999).lastAssertion).toEqual({expected: 1999.999, actual: 2000, passed: true });
-			expect(underTest.toBeGreaterThanOrEqual(2000.001).lastAssertion).toEqual({expected:2000.001, actual: 2000, passed: false });
-			expect(underTest.toBeGreaterThanOrEqual(2000).lastAssertion).toEqual({expected:2000, actual: 2000, passed: true });
+			expect(underTest.toBeGreaterThanOrEqual(2000.001).lastAssertion).toEqual({expected: 2000.001, actual: 2000, passed: false });
+			expect(underTest.toBeGreaterThanOrEqual(2000).lastAssertion).toEqual({expected: 2000, actual: 2000, passed: true });
 		});
 		it('should allow toBeLessThan assertion', function () {
 			expect(underTest.toBeLessThan(1999.999).lastAssertion).toEqual({expected: 1999.999, actual: 2000, passed: false });
-			expect(underTest.toBeLessThan(2000.001).lastAssertion).toEqual({expected:2000.001, actual: 2000, passed: true });
-			expect(underTest.toBeLessThan(2000).lastAssertion).toEqual({expected:2000, actual: 2000, passed: false });
+			expect(underTest.toBeLessThan(2000.001).lastAssertion).toEqual({expected: 2000.001, actual: 2000, passed: true });
+			expect(underTest.toBeLessThan(2000).lastAssertion).toEqual({expected: 2000, actual: 2000, passed: false });
 		});
 		it('should allow toBeLessThanOrEqual assertion', function () {
 			expect(underTest.toBeLessThanOrEqual(1999.999).lastAssertion).toEqual({expected: 1999.999, actual: 2000, passed: false });
-			expect(underTest.toBeLessThanOrEqual(2000.001).lastAssertion).toEqual({expected:2000.001, actual: 2000, passed: true });
-			expect(underTest.toBeLessThanOrEqual(2000).lastAssertion).toEqual({expected:2000, actual: 2000, passed: true });
+			expect(underTest.toBeLessThanOrEqual(2000.001).lastAssertion).toEqual({expected: 2000.001, actual: 2000, passed: true });
+			expect(underTest.toBeLessThanOrEqual(2000).lastAssertion).toEqual({expected: 2000, actual: 2000, passed: true });
 		});
 		describe('toBeBetween', function () {
 			it('should pass both when actual is within range', function () {

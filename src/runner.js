@@ -90,6 +90,7 @@ module.exports = function Runner(stepFunc, config) {
 					attachmentLines = block.getAttachmentLines(),
 					executor;
 				blockLines.forEach(function (line) {
+					var stepDefinition;
 					lineNumber++;
 					if (!regexUtil.assertionLine(line)) { //Move to block?
 						if (!blockParam) {
@@ -97,8 +98,7 @@ module.exports = function Runner(stepFunc, config) {
 						}
 						return;
 					}
-
-					var stepDefinition = context.getStepDefinitionForLine(line);
+					stepDefinition = context.getStepDefinitionForLine(line);
 					if (!stepDefinition) {
 						sendLineEvent('skippedLine', line);
 						if (attachmentLines.length) {

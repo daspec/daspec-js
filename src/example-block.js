@@ -35,10 +35,11 @@ module.exports = function ExampleBlock() {
 			return toTable(tableLines);
 		},
 		getAttachmentList = function (listLines) {
+			var listSymbol;
 			if (!regexUtil.isListItem(listLines[0])) {
 				return false;
 			}
-			var listSymbol = regexUtil.getListSymbol(listLines[0]);
+			listSymbol = regexUtil.getListSymbol(listLines[0]);
 			return {type: 'list',
 				ordered: !isNaN(parseFloat(listSymbol)),
 				items: listLines.map(regexUtil.lineItemContent),
@@ -57,22 +58,20 @@ module.exports = function ExampleBlock() {
 		return getAttachmentList(attachmentLines) || getAttachmentTable(attachmentLines);
 	};
 	self.getAttachmentLines = function () {
-		if (lines.length === 0) {
-			return [];
-		}
-		var topLine = lines[0],
+		var topLine,
 			isAttachmentLine = function (line) {
 				return regexUtil.isTableItem(line) || regexUtil.isListItem(line);
 			};
+		if (lines.length === 0) {
+			return [];
+		}
+		topLine = lines[0];
 		if (!regexUtil.assertionLine(topLine) || regexUtil.isTableItem(topLine) || regexUtil.isListItem(topLine)) {
 			return [];
 		}
 		return lines.filter(isAttachmentLine);
 	};
 	self.canAddLine = function (line) {
-		if (lines.length === 0) {
-			return true;
-		}
 		var lineType = function (theLine) {
 				if (regexUtil.isListItem(theLine)) {
 					return 'list';
@@ -86,9 +85,13 @@ module.exports = function ExampleBlock() {
 					return 'comment';
 				}
 			},
-			topline = lines[0],
-			newLineType = lineType(line),
-			topLineType = lineType(topline);
+			topline, newLineType, topLineType;
+		if (lines.length === 0) {
+			return true;
+		}
+		topline = lines[0];
+		newLineType = lineType(line);
+		topLineType = lineType(topline);
 
 		if (topLineType == 'assertion') {
 			return false;
@@ -120,13 +123,14 @@ module.exports = function ExampleBlock() {
 	};
 
 	self.getMatchText = function () {
-		if (lines.length === 0) {
-			return [];
-		}
 		var nonAttachmentLine = function (line) {
 				return !regexUtil.isListItem(line) && !regexUtil.isTableItem(line);
 			},
-			topLine = lines[0];
+			topLine;
+		if (lines.length === 0) {
+			return [];
+		}
+		topLine = lines[0];
 		if (nonAttachmentLine(topLine) && regexUtil.assertionLine(topLine)) {
 			return lines.filter(nonAttachmentLine);
 		} else {

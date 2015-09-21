@@ -5,13 +5,14 @@ module.exports = function ExpectationBuilder(stepArgumentArray, matchersArray) {
 		Expect = require('./expect'),
 		expectations = [],
 		findPosition = function (expectation) {
+			var lastIndex;
 			if (expectation.position !== undefined) {
 				if (expectation.position >= 0 && expectation.position < stepArgumentArray.length) {
 					return expectation.position;
 				}
 				return;
 			}
-			var lastIndex = stepArgumentArray.lastIndexOf(expectation.expected);
+			lastIndex = stepArgumentArray.lastIndexOf(expectation.expected);
 			if (lastIndex >= 0) {
 				return lastIndex;
 			}

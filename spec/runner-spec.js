@@ -50,18 +50,18 @@ describe('Runner', function () {
 			describe('uses the content for each spec', function () {
 				it('when provided as a string', function () {
 					runner.executeSuite([
-						{name:'spec1', content:'content1'},
-						{name:'spec2', content:'content2'}
+						{name: 'spec1', content: 'content1'},
+						{name: 'spec2', content: 'content2'}
 					]);
 					expect(runner.execute).toHaveBeenCalledWith('content1', 'spec1');
 					expect(runner.execute).toHaveBeenCalledWith('content2', 'spec2');
 				});
 				it('when provided as a function', function () {
 					runner.executeSuite([
-						{name:'spec1', content: function () {
+						{name: 'spec1', content: function () {
 							return 'content1';
 						}},
-						{name:'spec2', content:function () {
+						{name: 'spec2', content: function () {
 							return 'content2';
 						}}
 					]);
@@ -70,8 +70,8 @@ describe('Runner', function () {
 				});
 				it('when provided as a mixture of functions, strings', function () {
 					runner.executeSuite([
-						{name:'spec1', content: 'content1'},
-						{name:'spec2', content:function () {
+						{name: 'spec1', content: 'content1'},
+						{name: 'spec2', content: function () {
 							return 'content2';
 						}}
 					]);
@@ -86,9 +86,9 @@ describe('Runner', function () {
 			});
 			it('when a spec has failures and config has failFast:true', function () {
 				runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will fail'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will fail'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(runner.execute).toHaveBeenCalledWith('this will pass', 'spec1');
 				expect(runner.execute).toHaveBeenCalledWith('this will fail', 'spec2');
@@ -96,9 +96,9 @@ describe('Runner', function () {
 			});
 			it('when a spec has skipped lines and config has failFast:true and does not have allowSkipped:true', function () {
 				runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will be skipped'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will be skipped'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(runner.execute).toHaveBeenCalledWith('this will pass', 'spec1');
 				expect(runner.execute).toHaveBeenCalledWith('this will be skipped', 'spec2');
@@ -107,9 +107,9 @@ describe('Runner', function () {
 			});
 			it('when a spec has errors and config has failFast:true', function () {
 				runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will pass\nthis will throw foo'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will pass\nthis will throw foo'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(runner.execute).toHaveBeenCalledWith('this will pass', 'spec1');
 				expect(runner.execute).toHaveBeenCalledWith('this will pass\nthis will throw foo', 'spec2');
@@ -118,9 +118,9 @@ describe('Runner', function () {
 			});
 			it('when a specs does not contain any assertions and config has failFast:true', function () {
 				runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this has no assertions'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this has no assertions'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(runner.execute).toHaveBeenCalledWith('this will pass', 'spec1');
 				expect(runner.execute).toHaveBeenCalledWith('this has no assertions', 'spec2');
@@ -131,9 +131,9 @@ describe('Runner', function () {
 		describe('does not terminate suite execution before all specs have been executed', function () {
 			it('when a spec has failures and config has failFast:false', function () {
 				runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will fail'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will fail'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(runner.execute).toHaveBeenCalledWith('this will pass', 'spec1');
 				expect(runner.execute).toHaveBeenCalledWith('this will fail', 'spec2');
@@ -141,9 +141,9 @@ describe('Runner', function () {
 			});
 			it('when a spec has skipped lines and config has failFast:false and does not have allowSkipped:true', function () {
 				runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will be skipped'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will be skipped'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(runner.execute).toHaveBeenCalledWith('this will pass', 'spec1');
 				expect(runner.execute).toHaveBeenCalledWith('this will be skipped', 'spec2');
@@ -152,9 +152,9 @@ describe('Runner', function () {
 			});
 			it('when a spec has errors and config has failFast:false', function () {
 				runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will pass\nthis will throw foo'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will pass\nthis will throw foo'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(runner.execute).toHaveBeenCalledWith('this will pass', 'spec1');
 				expect(runner.execute).toHaveBeenCalledWith('this will pass\nthis will throw foo', 'spec2');
@@ -163,9 +163,9 @@ describe('Runner', function () {
 			});
 			it('when a specs does not contain any assertions and config has failFast:false', function () {
 				runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this has no assertions'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this has no assertions'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(runner.execute).toHaveBeenCalledWith('this will pass', 'spec1');
 				expect(runner.execute).toHaveBeenCalledWith('this has no assertions', 'spec2');
@@ -175,50 +175,51 @@ describe('Runner', function () {
 		describe('returns a boolean value of', function () {
 			it('true if all specs passed', function () {
 				var result = runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(result).toBeTruthy();
 			});
 			it('true if some specs contained skipped assertions when config does have allowSkipped:true', function () {
+				var result;
 				config.allowSkipped = true;
-				var result = runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will be skipped'},
-					{name:'spec3', content:'this will pass'}
+				result = runner.executeSuite([
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will be skipped'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(result).toBeTruthy();
 			});
 			it('false if any specs contained failed assertions', function () {
 				var result = runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will fail'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will fail'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(result).toBeFalsy();
 			});
 			it('false if any specs contained errors', function () {
 				var result = runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will pass\nthis will throw foo'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will pass\nthis will throw foo'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(result).toBeFalsy();
 			});
 			it('false if any specs contained skipped assertions when config does not have allowSkipped:true', function () {
 				var result = runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this will be skipped'},
-					{name:'spec3', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this will be skipped'},
+					{name: 'spec3', content: 'this will pass'}
 				]);
 				expect(result).toBeFalsy();
 
 			});
 			it('false no specs contain any assertions', function () {
 				var result = runner.executeSuite([
-					{name:'spec1', content:'this has no assertions'},
-					{name:'spec2', content:'this has no assertions'},
-					{name:'spec3', content:'this has no assertions'}
+					{name: 'spec1', content: 'this has no assertions'},
+					{name: 'spec2', content: 'this has no assertions'},
+					{name: 'spec3', content: 'this has no assertions'}
 				]);
 				expect(result).toBeFalsy();
 
@@ -227,12 +228,12 @@ describe('Runner', function () {
 		describe('sends suite events', function () {
 			it('sends a suiteEnded event with total counts', function () {
 				runner.executeSuite([
-					{name:'spec1', content:'this will pass'},
-					{name:'spec2', content:'this has no assertions'},
-					{name:'spec3', content:'this will be skipped'},
-					{name:'spec4', content:'this will fail'},
-					{name:'spec5', content:'this will throw foo'},
-					{name:'spec6', content:'this will pass'}
+					{name: 'spec1', content: 'this will pass'},
+					{name: 'spec2', content: 'this has no assertions'},
+					{name: 'spec3', content: 'this will be skipped'},
+					{name: 'spec4', content: 'this will fail'},
+					{name: 'spec5', content: 'this will throw foo'},
+					{name: 'spec6', content: 'this will pass'}
 				]);
 				expect(listeners.suiteEnded).toHaveBeenCalledWith(jasmine.objectContaining({executed: 3, passed: 2, failed: 1, error: 1, skipped: 1}));
 			});
@@ -332,7 +333,6 @@ describe('Runner', function () {
 			it('the tableResultBlock result receives table data rows as stepResult', function () {
 				runner.execute('#comment 1\n| number one | number two |\n|------|\n| 4 | 4 |\n|--|--|\n| 4 | 5 |', 'thespecname');
 				expect(listeners.stepResult.calls.argsFor(0)).toEqual(
-				// expect(listeners.stepResult.calls.allArgs()).toEqual([
 					[jasmine.objectContaining({ matcher: /\|(.*)\|(.*)\|/, stepText: '| 4 | 4 |', assertions: [
 						{
 							expected: 4,
@@ -341,7 +341,6 @@ describe('Runner', function () {
 							position: 1
 						}]}), 4, 'thespecname'
 					]);
-					// [
 				expect(listeners.stepResult.calls.argsFor(1)).toEqual([
 					jasmine.objectContaining(
 						{
@@ -352,7 +351,6 @@ describe('Runner', function () {
 					6,
 					'thespecname'
 				]);
-				// ]);
 			});
 		});
 		it('sends specStarted and specEnded events', function () {

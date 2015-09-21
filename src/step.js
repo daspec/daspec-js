@@ -8,11 +8,12 @@ module.exports = function Step(specContext, processFunction) {
 		throw new Error('invalid intialisation');
 	}
 	self.execute = function () {
+		var expectationBuilder;
 		if (!self.stepArgs) {
 			throw new Error('Step args not defined');
 		}
 		self.assertions = [];
-		var expectationBuilder = new ExpectationBuilder(self.stepArgs, specContext.getMatchers());
+		expectationBuilder = new ExpectationBuilder(self.stepArgs, specContext.getMatchers());
 		specContext.overrideGlobal('expect', expectationBuilder.expect);
 		try {
 			processFunction.apply({}, self.stepArgs);

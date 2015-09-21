@@ -40,7 +40,7 @@ describe('table matchers', function () {
 		});
 
 		it('uses table column titles to match key-value domain objects, if titles are provided', function () {
-			var actual = [{benefit:2, cost:4}, {benefit:2, cost:1, extra: 3}, { benefit: 4}],
+			var actual = [{benefit: 2, cost: 4}, {benefit: 2, cost: 1, extra: 3}, {benefit: 4}],
 				expected = {type: 'table', titles: ['cost', 'benefit'], items: [[1, 2], [3, 4]]},
 				result = underTest.expect(actual).toEqualUnorderedTable(expected);
 			expect(result.assertions.length).toBe(1);

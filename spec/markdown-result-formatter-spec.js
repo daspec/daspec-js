@@ -33,8 +33,8 @@ describe('MarkdownResultFormatter', function () {
 	describe('stepResult', function () {
 		it('appends the execution result and adds to passed/executed all passed assertions', function () {
 			dispatch('stepResult', {
-				stepText:'This will pass',
-				assertions: [{expected: 'a', actual:'a', passed: true}]
+				stepText: 'This will pass',
+				assertions: [{expected: 'a', actual: 'a', passed: true}]
 			});
 
 			expect(underTest.formattedResults()).toEqual('**This will pass**');
@@ -94,16 +94,17 @@ describe('MarkdownResultFormatter', function () {
 		});
 		describe('stepResult', function () {
 			it('should create a markdown formatted table lines', function () {
+				var results;
 				dispatch('stepResult', {
-					stepText:'|a|b|',
+					stepText: '|a|b|',
 					assertions: [{expected: 'a', actual: 'a', passed: true}]
 				});
 				dispatch('stepResult', {
-					stepText:'|c|d|',
+					stepText: '|c|d|',
 					assertions: [{expected: 'a', actual: 'a', passed: true}]
 				});
 				dispatch('tableEnded');
-				var results = underTest.formattedResults();
+				results = underTest.formattedResults();
 				expect(results).toEqual([
 					'| **a** | **b** |',
 					'| **c** | **d** |'
@@ -112,10 +113,11 @@ describe('MarkdownResultFormatter', function () {
 		});
 		describe('nonAssertionLine', function () {
 			it('should create a markdown formatted table lines', function () {
+				var results;
 				dispatch('nonAssertionLine', '| a | b |');
 				dispatch('nonAssertionLine', '| c | d |');
 				dispatch('tableEnded');
-				var results = underTest.formattedResults();
+				results = underTest.formattedResults();
 				expect(results).toEqual([
 					'| a | b |',
 					'| c | d |'
@@ -124,10 +126,11 @@ describe('MarkdownResultFormatter', function () {
 		});
 		describe('table column width formatting', function () {
 			it('should size the columns to fit the longest data in all the data rows', function () {
+				var results;
 				dispatch('nonAssertionLine', '| aaaaaaaaaaaaaa| b |');
 				dispatch('nonAssertionLine', '| c |**d**|');
 				dispatch('tableEnded');
-				var results = underTest.formattedResults();
+				results = underTest.formattedResults();
 				expect(results).toEqual([
 					'| aaaaaaaaaaaaaa | b     |',
 					'| c              | **d** |'
@@ -139,25 +142,25 @@ describe('MarkdownResultFormatter', function () {
 
 		it('specEnded appends multiple lines together, and adds counts', function () {
 			dispatch('stepResult', {
-				stepText:'This will pass',
+				stepText: 'This will pass',
 				assertions: [{expected: 'a', actual: 'a', passed: true}]
 			});
 			dispatch('stepResult', {
-				stepText:'This will fail',
-				assertions: [{expected:'a', actual: 'a', passed: false}]
+				stepText: 'This will fail',
+				assertions: [{expected: 'a', actual: 'a', passed: false}]
 			});
 			dispatch('specEnded');
 			expect(underTest.formattedResults()).toEqual('> **In da spec:** executed: 2, passed: 1, failed: 1\n\n**This will pass**\n**~~This will fail~~**');
 		});
 		it('specStarted clears out the buffer', function () {
 			dispatch('stepResult', {
-				stepText:'This will pass',
+				stepText: 'This will pass',
 				assertions: [{expected: 'a', actual: 'a', passed: true}]
 			});
 			dispatch('specEnded');
 			dispatch('specStarted');
 			dispatch('stepResult', {
-				stepText:'This will fail',
+				stepText: 'This will fail',
 				assertions: [{expected: 'a', actual: 'a', passed: false}]
 			});
 			dispatch('specEnded');

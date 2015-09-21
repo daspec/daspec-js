@@ -81,10 +81,11 @@ module.exports = function MarkDownFormatter() {
 				return array && array.length;
 			},
 			headingLine = function () {
+				var noIndexAssertions;
 				if (stepResult.exception) {
 					return crossValue(stepResult.stepText);
 				}
-				var noIndexAssertions = stepResult.assertions.filter(withoutPosition);
+				noIndexAssertions = stepResult.assertions.filter(withoutPosition);
 				if (noIndexAssertions.length === 0) {
 					return regexUtil.replaceMatchGroup(stepResult.stepText, stepResult.matcher, stepResult.assertions.map(self.formatPrimitiveResult));
 				}
@@ -112,56 +113,62 @@ module.exports = function MarkDownFormatter() {
 				return stepResult.stepText;
 			},
 			attachmentLines = function () {
-				if (!stepResult.attachment) {
-					return '';
-				}
 				var formatList = function () {
-						if (stepResult.attachment.type !== 'list') {
-							return false;
-						}
-						var failedListAssertions = stepResult.assertions.filter(failed).filter(forAttachment),
+						var innerFormat = function () {
+							var failedListAssertions = stepResult.assertions.filter(failed).filter(forAttachment),
 							passedListAssertions = stepResult.assertions.filter(passed).filter(forAttachment),
 							values = stepResult.attachment.items,
 							symbol = stepResult.attachment.symbol || '* ';
-						if (notEmpty(failedListAssertions)) {
-							values = self.formatListResult(failedListAssertions[0].detail);
-						} else if (notEmpty(passedListAssertions)) {
-							values = self.formatListResult({matching: stepResult.attachment.items});
+							if (notEmpty(failedListAssertions)) {
+								values = self.formatListResult(failedListAssertions[0].detail);
+							} else if (notEmpty(passedListAssertions)) {
+								values = self.formatListResult({matching: stepResult.attachment.items});
+							}
+							return '\n\n' + symbol + values.join('\n' + symbol);
+						};
+						if (stepResult.attachment.type !== 'list') {
+							return false;
 						}
-						return '\n\n' + symbol + values.join('\n' + symbol);
+						return innerFormat();
 					},
 					formatTableItem = function (item) {
 						return '|' + item.join('|') + '|';
 					},
 					formatTable = function () {
-						if (stepResult.attachment.type !== 'table') {
-							return false;
-						}
-						var resultTitles = stepResult.attachment.titles && stepResult.attachment.titles.slice(0),
+						var innerFormat = function () {
+							var resultTitles = stepResult.attachment.titles && stepResult.attachment.titles.slice(0),
 								failedTableAssertions = stepResult.assertions.filter(failed).filter(forAttachment),
 								passedTableAssertions = stepResult.assertions.filter(passed).filter(forAttachment),
 								values = stepResult.attachment.items,
 								resultRows = [];
-						if (notEmpty(failedTableAssertions)) {
-							if (resultTitles) {
-								resultTitles.unshift('?');
+							if (notEmpty(failedTableAssertions)) {
+								if (resultTitles) {
+									resultTitles.unshift('?');
+								}
+								values = self.getTableResult(failedTableAssertions[0].detail);
+							} else if (notEmpty(passedTableAssertions)) {
+								if (resultTitles) {
+									resultTitles.unshift('?');
+								}
+								values =  self.getTableResult({matching: stepResult.attachment.items});
 							}
-							values = self.getTableResult(failedTableAssertions[0].detail);
-						} else if (notEmpty(passedTableAssertions)) {
 							if (resultTitles) {
-								resultTitles.unshift('?');
+								resultRows.push(formatTableItem(resultTitles));
+								resultRows.push(resultTitles.map(function () {
+									return '|-';
+								}).join('') + '|');
 							}
-							values =  self.getTableResult({matching: stepResult.attachment.items});
+							resultRows = resultRows.concat(values.map(formatTableItem));
+							return '\n\n' + tableUtil.justifyTable(resultRows).join('\n');
+						};
+						if (stepResult.attachment.type !== 'table') {
+							return false;
 						}
-						if (resultTitles) {
-							resultRows.push(formatTableItem(resultTitles));
-							resultRows.push(resultTitles.map(function () {
-								return '|-';
-							}).join('') + '|');
-						}
-						resultRows = resultRows.concat(values.map(formatTableItem));
-						return '\n\n' + tableUtil.justifyTable(resultRows).join('\n');
+						return innerFormat();
 					};
+				if (!stepResult.attachment) {
+					return '';
+				}
 				return formatList() || formatTable();
 			},
 			exceptionReport = function () {

@@ -11,10 +11,10 @@ describe('MarkDownFormatter', function () {
 	});
 	describe('formatPrimitiveResult', function () {
 		it('bolds the expected result if passed', function () {
-			expect(underTest.formatPrimitiveResult({expected: 3, actual: 6, passed:true, position: 5})).toEqual({position:5, actual:'**3**'});
+			expect(underTest.formatPrimitiveResult({expected: 3, actual: 6, passed: true, position: 5})).toEqual({position: 5, actual: '**3**'});
 		});
 		it('crosses out and bolds the expected and bolds actual result if failed', function () {
-			expect(underTest.formatPrimitiveResult({expected:3, actual:6, passed:false, position: 1})).toEqual({position:1, actual:'**~~3~~ [6]**'});
+			expect(underTest.formatPrimitiveResult({expected: 3, actual: 6, passed: false, position: 1})).toEqual({position: 1, actual: '**~~3~~ [6]**'});
 		});
 	});
 	describe('markResult', function () {

@@ -65,11 +65,11 @@ module.exports = function RegexUtil() {
 		return line.match(listSymbolRegex)[0];
 	};
 	this.assertionLine = function (stepText) {
+		var linestartignores = ['#', '\t', '>', '    ', '![', '[', '***', '* * *', '---', '- - -', '===', '= = ='],
+			result = true;
 		if (stepText.length === 0 || stepText.trim().length === 0) {
 			return false;
 		}
-		var linestartignores = ['#', '\t', '>', '    ', '![', '[', '***', '* * *', '---', '- - -', '===', '= = ='],
-			result = true;
 		linestartignores.forEach(function (lineStart) {
 			if (stepText.substring(0, lineStart.length) === lineStart) {
 				result = false;
@@ -78,12 +78,12 @@ module.exports = function RegexUtil() {
 		return result;
 	};
 	this.regexForTableDataRow = function (cells) {
-		if (!cells || cells < 0) {
-			return false;
-		}
 		var regexTemplate = '\\|',
 			cellTemplate = '(.*)\\|',
 			i;
+		if (!cells || cells < 0) {
+			return false;
+		}
 		for (i = 0; i < cells; i++) {
 			regexTemplate = regexTemplate + cellTemplate;
 		}

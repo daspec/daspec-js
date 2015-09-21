@@ -6,21 +6,21 @@ module.exports = function Normaliser() {
 		return string.toLocaleLowerCase().replace(/\s/g, '');
 	};
 	self.normaliseObject = function (object) {
+		var result = {};
 		if (Array.isArray(object)) {
 			return object;
 		}
-		var result = {};
 		Object.keys(object).forEach(function (key) {
 			result[self.normaliseString(key)] = object[key];
 		});
 		return result;
 	};
 	self.containsDuplicates = function (stringArray) {
+		var normalised, i, j;
 		if (!stringArray || !stringArray.length) {
 			return false;
 		}
-		var normalised = stringArray.map(self.normaliseString),
-			i, j;
+		normalised = stringArray.map(self.normaliseString);
 		for (i = 0; i < normalised.length - 1; i++) {
 			for (j = i + 1; j < normalised.length; j++) {
 				if (normalised[i] === normalised[j]) {
@@ -38,10 +38,11 @@ module.exports = function Normaliser() {
 				return val;
 			},
 			toNum = function (val) {
+				var result;
 				if (isNaN(val)) {
 					return val;
 				}
-				var result = parseFloat(val);
+				result = parseFloat(val);
 				if (isNaN(result)) {
 					return val;
 				}

@@ -31,7 +31,7 @@ describe('toEqualsSet', function () {
 					missing: [4],
 					matching: [2, 1]
 				},
-				expected:[2, 1, 4],
+				expected: [2, 1, 4],
 				passed: false}
 			]);
 

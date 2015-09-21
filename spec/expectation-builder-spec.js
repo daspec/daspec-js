@@ -14,6 +14,7 @@ describe('ExpectationBuilder', function () {
 	});
 	describe('adding extension matchers', function () {
 		it('allows extension methods to be added to the expect', function () {
+			var result;
 			underTest = new ExpectationBuilder(['manager', 20000, 'manager'], {
 				toFoo: function () {
 					this.addAssertion(this.actual === 'foo', 'foo');
@@ -24,7 +25,7 @@ describe('ExpectationBuilder', function () {
 					return this;
 				}
 			});
-			var result = underTest.expect('bar').toFoo().toBar();
+			result = underTest.expect('bar').toFoo().toBar();
 			expect(result.assertions.length).toEqual(2);
 			expect(result.assertions[0]).toEqual({
 				passed: false,

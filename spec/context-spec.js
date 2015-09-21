@@ -76,8 +76,9 @@ describe('Context', function () {
 	describe('defineStep', function () {
 
 		it('adds a processor function for a regular expression', function () {
+			var executor;
 			underTest.defineStep(/Who is (.*)/, processor);
-			var executor = underTest.getStepDefinitionForLine('Who is Mike');
+			executor = underTest.getStepDefinitionForLine('Who is Mike');
 			expect(executor.matcher.test('Who is Mike')).toBeTruthy();
 			expect(executor.processFunction).toEqual(processor);
 		});
@@ -100,17 +101,19 @@ describe('Context', function () {
 	});
 	describe('getStepDefinitionForLine', function () {
 		it('can be called multiple times for sub-matched regex searches', function () {
+			var first, second;
 			underTest.defineStep(/guest/gi, processor);
 
-			var first = underTest.getStepDefinitionForLine('guest001'),
-				second = underTest.getStepDefinitionForLine('guest001');
+			first = underTest.getStepDefinitionForLine('guest001');
+			second = underTest.getStepDefinitionForLine('guest001');
 			expect(first).toEqual(second);
 		});
 		it('retrieves a step matching the line by regex', function () {
+			var executor;
 			underTest.defineStep(/Who is (.*)/, processor);
 			underTest.defineStep(/Who was (.*)/, processorTwo);
 
-			var executor = underTest.getStepDefinitionForLine('Who was Mike');
+			executor = underTest.getStepDefinitionForLine('Who was Mike');
 			expect(executor.processFunction).toBe(processorTwo);
 		});
 		it('throws an error if multiple steps match the line', function () {

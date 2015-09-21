@@ -8,10 +8,11 @@ module.exports = function TableUtil() {
 		normaliser = new Normaliser();
 
 	self.cellValuesForRow = function (dataRow) {
+		var values;
 		if (!dataRow || dataRow.trim() === '') {
 			return [];
 		}
-		var values = dataRow.split('|');
+		values = dataRow.split('|');
 		if (values.length < 3) {
 			return [];
 		}
@@ -20,29 +21,29 @@ module.exports = function TableUtil() {
 		return values.map(normaliser.normaliseValue);
 	};
 	self.tableValuesForTitles = function (table, titles) {
+		var pickItems = function (tableRow) {
+				return columnIndexes.map(function (val) {
+					return tableRow[val];
+				});
+			},
+			normalisedTitles,
+			normalisedTableTitles,
+			columnIndexes;
 		if (!titles || titles.length === 0) {
 			return false;
 		}
 		if (!table.titles) {
 			return table.items;
 		}
-		var pickItems = function (tableRow) {
-				return columnIndexes.map(function (val) {
-					return tableRow[val];
-				});
-			},
-			normalisedTitles = titles.map(normaliser.normaliseString),
-			normalisedTableTitles = table.titles.map(normaliser.normaliseString),
-			columnIndexes = normalisedTitles.map(function (title) {
-				return normalisedTableTitles.indexOf(title);
-			});
+		normalisedTitles = titles.map(normaliser.normaliseString);
+		normalisedTableTitles = table.titles.map(normaliser.normaliseString);
+		columnIndexes = normalisedTitles.map(function (title) {
+			return normalisedTableTitles.indexOf(title);
+		});
 		return table.items.map(pickItems);
 	};
 	self.objectArrayValuesForTitles = function (list, titles) {
-		if (!titles || titles.length === 0) {
-			return false;
-		}
-		var normalisedTitles = titles.map(normaliser.normaliseString),
+		var normalisedTitles,
 			pickItems = function (item) {
 				if (Array.isArray(item)) {
 					return item;
@@ -51,14 +52,19 @@ module.exports = function TableUtil() {
 					return item[title];
 				});
 			};
+		if (!titles || titles.length === 0) {
+			return false;
+		}
+		normalisedTitles = titles.map(normaliser.normaliseString);
 		return list.map(normaliser.normaliseObject).map(pickItems);
 	};
 	self.justifyTable = function (stringArray) {
 		var maxCellLengths = function (maxSoFar, tableRow, index) {
+				var currentLengths;
 				if (dividerRows[index]) {
 					return maxSoFar;
 				}
-				var currentLengths = tableRow.map(function (s) {
+				currentLengths = tableRow.map(function (s) {
 					return String(s).length;
 				});
 				if (!maxSoFar) {

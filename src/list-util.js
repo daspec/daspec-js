@@ -22,17 +22,18 @@ module.exports = function ListUtil() {
 				}
 			};
 	self.unorderedMatch = function (array1, array2) {
+		var matching, missing, additional;
 		array1 = array1 || [];
 		array2 = array2 || [];
-		var matching = array1.filter(function (el) {
-				return array2.some(equals, el);
-			}),
-			missing = array1.filter(function (el) {
-				return !array2.some(equals, el);
-			}),
-			additional = array2.filter(function (el) {
-				return !array1.some(equals, el);
-			});
+		matching = array1.filter(function (el) {
+			return array2.some(equals, el);
+		});
+		missing = array1.filter(function (el) {
+			return !array2.some(equals, el);
+		});
+		additional = array2.filter(function (el) {
+			return !array1.some(equals, el);
+		});
 		return {
 			matches: missing.length === 0 && additional.length === 0,
 			missing: missing,

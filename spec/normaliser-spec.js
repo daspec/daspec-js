@@ -63,7 +63,7 @@ describe('Normaliser', function () {
 			expect(underTest.normaliseValue()).toBeUndefined();
 		});
 		it('returns non string values untouched', function () {
-			expect(underTest.normaliseValue({foo:1})).toEqual({foo:1});
+			expect(underTest.normaliseValue({foo: 1})).toEqual({foo: 1});
 			expect(underTest.normaliseValue(10.1)).toEqual(10.1);
 			expect(underTest.normaliseValue(false)).toBe(false);
 			expect(underTest.normaliseValue(NaN)).toBeNaN();
