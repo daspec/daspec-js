@@ -4,7 +4,7 @@ module.exports = function ExampleBlocks(inputText) {
 	var self = this,
 		ExampleBlock = require('./example-block');
 	self.getBlocks = function () {
-		var lines = inputText && inputText.split('\n').reverse(),
+		var lines = inputText && inputText.split(/\r?\n/).reverse(),
 			current = new ExampleBlock(),
 			blocks = [current];
 		lines.forEach(function (line) {
