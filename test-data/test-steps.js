@@ -1,6 +1,7 @@
 /*global module, expect, defineStep*/
 module.exports = function () {
 	'use strict';
+	var films = {}, tables = {};
 	defineStep(/Simple arithmetic: (\d*) plus (\d*) is (\d*)/, function (firstArg, secondArg, expectedResult) {
 		expect(firstArg + secondArg).toEqual(expectedResult);
 	});
@@ -23,7 +24,6 @@ module.exports = function () {
 			'Return of the Jedi'];
 		expect(episodes).toEqualSet(listOfEpisodes);
 	});
-	var films = {}, tables = {};
 	defineStep(/These are the ([A-Za-z ]*) Films/, function (seriesName, tableOfReleases) {
 		films[seriesName] = tableOfReleases.items;
 		tables[seriesName] = tableOfReleases;
@@ -70,4 +70,7 @@ module.exports = function () {
 		expect(actualYear).toEqual(yearOfRelease).atPosition(1);
 	});
 
+	defineStep(/Order ORD001 has status (\w+) if service SVC001 has status (\w+)/, function (ordStatus, svcStatus) {
+		expect(svcStatus).toEqual(ordStatus).atPosition(0);
+	});
 };
